@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>VDS 司機打卡</title>
+  <style>
+    /* === 全局設定 === */
+    body { 
+      background-color: #f4f7f6; 
+      padding: 15px; 
+      font-family: "Microsoft JhengHei", sans-serif; 
+      color: #333; 
+      /* 關鍵修正：確保內容永遠垂直置中，防止下方出現大片空白 */
+      min-height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: center; 
+      box-sizing: border-box;
+      margin: 0;
+    }
+
+    /* 卡片主體 */
+    .card { 
+      background: white; 
+      padding: 25px 20px; 
+      border-radius: 24px; /* 更圓潤 */
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+      width: 100%; 
+      max-width: 500px; 
+      margin: 0 auto; 
+      box-sizing: border-box;
+    }
+    
+    h3 { color: #2c3e50; text-align: center; margin: 0 0 20px 0; font-weight: 800; font-size: 22px; }
+    .sub-title { font-size: 13px; color: #95a5a6; font-weight: normal; margin-top: 4px; display: block; }
+
+    /* 表單元件 */
+    label { display: block; font-weight: 700; margin-top: 15px; margin-bottom: 8px; font-size: 15px; color: #34495e; }
+    
+    select { 
+      width: 100%; height: 55px; font-size: 18px; font-weight: 500;
+      border: 2px solid #eaedf1; border-radius: 16px; background-color: #fcfcfc; padding-left: 15px;
+      appearance: none; outline: none; transition: border 0.2s;
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+      background-repeat: no-repeat; background-position: right 15px top 50%; background-size: 10px auto;
+    }
+    select:focus { border-color: #0d6efd; background-color: #fff; }
+    
+    #dest-label { color: #198754; } 
+    #destination { border: 2px solid #d1e7dd; background-color: #f8fffb; }
+    #destination:focus { border-color: #198754; }
+
+    /* 選項卡 (Radio Chips) */
+    .radio-group { display: flex; gap: 8px; margin-top: 8px; }
+    .radio-option { flex: 1; position: relative; }
+    .radio-option input { position: absolute; opacity: 0; cursor: pointer; }
+    
+    .radio-content { 
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #f8f9fa; border: 2px solid transparent; border-radius: 12px; padding: 10px 0; 
+      cursor: pointer; transition: 0.2s; color: #6c757d;
+    }
+    .radio-text-main { font-size: 16px; font-weight: bold; }
+    .radio-text-sub { font-size: 11px; margin-top: 2px; }
+
+    .radio-option input:checked + .radio-content { 
+      background-color: #eef5ff; border-color: #0d6efd; color: #0d6efd;
+    }
+
+    /* 按鈕群組 */
+    .btn-row { display: flex; gap: 10px; margin-top: 25px; }
+    button { 
+      flex: 1; height: 56px; border: none; border-radius: 28px; 
+      color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.1s, box-shadow 0.1s;
+      font-family: inherit;
+    }
+    button:active { transform: scale(0.96); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    
+    .btn-text-main { font-size: 17px; font-weight: 800; line-height: 1.2; }
+    .btn-text-sub { font-size: 11px; opacity: 0.9; }
+
+    .btn-go { background: linear-gradient(135deg, #198754, #146c43); } 
+    .btn-arrive { background: linear-gradient(135deg, #0d6efd, #0b5ed7); } 
+    .btn-end { background: linear-gradient(135deg, #dc3545, #b02a37); width: 100%; margin-top: 12px; } 
+    .btn-gps { background: linear-gradient(135deg, #6c757d, #495057); width: 100%; margin-top: 12px; } 
+
+    /* 載入遮罩 */
+    #loading-mask { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #0d6efd; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    #loading-text { font-size: 18px; color: #0d6efd; font-weight: bold; }
+
+    /* 救援按鈕 (美化版) */
+    #manual-area { 
+        display: none; 
+        margin-top: 20px; 
+        padding: 15px; 
+        background: #fff8e1; 
+        border: 2px dashed #ffc107; 
+        border-radius: 16px; 
+        text-align: center;
+        animation: fadeIn 0.5s;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* 將救援按鈕做得跟上面按鈕一樣大，方便點擊 */
+    #manual-btn { 
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        width: 100%; height: 56px; 
+        background: linear-gradient(135deg, #198754, #146c43); 
+        color: white; text-decoration: none; 
+        border-radius: 28px; 
+        margin-top: 10px; 
+        box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3);
+        /* 呼吸燈效果，提示司機按這裡 */
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7); }
+        70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+    }
+
+    #status { text-align:center; margin-top:15px; color:#adb5bd; font-size:12px; }
+  </style>
+</head>
+<body>
+
+<div id="loading-mask">
+  <div class="spinner"></div>
+  <div id="loading-text">系統啟動中...</div>
+</div>
+
+<div class="card">
+  <h3>🚚 VDS 司機打卡<span class="sub-title">Hệ thống chấm công tài xế</span></h3>
+  
+  <label>👤 司機姓名 <span>(Tên tài xế)</span></label>
+  <select id="driver">
+    <option value="" disabled selected>載入中...</option>
+    <option value="劉文生">劉文生 (A Sanh)</option>
+    <option value="阮謝練">阮謝練 (Ta Luyện)</option>
+    <option value="郭文統">郭文統 (Văn Thống)</option>
+    <option value="林冠宇">林冠宇 (Quán Vũ)</option>
+    <option value="陳衍介">陳衍介 (A Giới)</option>
+    <option value="測試">測試員 (Test)</option>
+  </select>
+
+  <label>📍 目前地點 <span>(Vị trí hiện tại)</span></label>
+  <select id="location">
+    <optgroup label="常用地點">
+      <option value="公司">🏢 公司 (Công ty)</option>
+      <option value="田間">🌾 田間 (Ngoài đồng)</option>
+      <option value="馬光">🥕 馬光 (Mã Quang)</option>
+      <option value="行口">🏪 行口 (Chợ đầu mối)</option>
+    </optgroup>
+    <optgroup label="工廠/其他">
+      <option value="西螺">🚛 西螺 (Tây Loa)</option>
+      <option value="北斗">🚛 北斗 (Bắc Đẩu)</option>
+      <option value="佳美">🏭 佳美 (Giai Mỹ)</option>
+      <option value="光泉">🏭 光泉 (Quang Tuyền)</option>
+      <option value="元長">🏭 元長 (Nguyên Trường)</option>
+      <option value="達群">🏭 達群 (Đạt Quần)</option>
+      <option value="台中">🏙️ 台中 (Đài Trung)</option>
+      <option value="嘉義">🏙️ 嘉義 (Gia Nghĩa)</option>
+      <option value="淑貞">🏙️ 淑貞 (Thục Trinh)</option>
+      <option value="陳俐霖">🏙️ 陳俐霖 (Trần Lợi Lâm)</option>
+      <option value="吳淑玲">🏙️ 吳淑玲 (Ngô Thục Linh)</option>      
+      <option value="楊鴻隆">🏙️ 楊鴻隆 (Dương Hồng Long)</option>
+      <option value="斗南保養廠">🔧 斗南保養廠 (Xưởng bảo trì Đấu Nam)</option>
+      <option value="農場晃晃">🌾 晃晃農場 (Nông trường Hoảng Hoảng)</option>
+    </optgroup>
+  </select>
+
+  <label id="dest-label">🏁 預計前往 <span>(Nơi đến dự kiến)</span></label>
+  <select id="destination">
+    <option value="" disabled selected>請選擇目的地...</option>
+    <optgroup label="常用地點">
+      <option value="田間">🌾 田間 (Ngoài đồng)</option>
+      <option value="公司">🏢 公司 (Công ty)</option>
+      <option value="馬光">🥕 馬光 (Mã Quang)</option>
+      <option value="行口">🏪 行口 (Chợ đầu mối)</option>
+    </optgroup>
+    <optgroup label="工廠/其他">
+      <option value="西螺">🚛 西螺 (Tây Loa)</option>
+      <option value="北斗">🚛 北斗 (Bắc Đẩu)</option>
+      <option value="佳美">🏭 佳美 (Giai Mỹ)</option>
+      <option value="光泉">🏭 光泉 (Quang Tuyền)</option>
+      <option value="元長">🏭 元長 (Nguyên Trường)</option>
+      <option value="達群">🏭 達群 (Đạt Quần)</option>
+      <option value="台中">🏙️ 台中 (Đài Trung)</option>
+      <option value="嘉義">🏙️ 嘉義 (Gia Nghĩa)</option>
+      <option value="淑貞">🏙️ 淑貞 (Thục Trinh)</option>
+      <option value="陳俐霖">🏙️ 陳俐霖 (Trần Lợi Lâm)</option>
+      <option value="吳淑玲">🏙️ 吳淑玲 (Ngô Thục Linh)</option>      
+      <option value="楊鴻隆">🏙️ 楊鴻隆 (Dương Hồng Long)</option>
+      <option value="斗南保養廠">🔧 斗南保養廠 (Xưởng bảo trì Đấu Nam)</option>
+      <option value="農場晃晃">🌾 晃晃農場 (Nông trường Hoảng Hoảng)</option>
+    </optgroup>
+  </select>
+
+  <label>⚙️ 作業/趟次 <span>(Loại công việc)</span></label>
+  <div class="radio-group">
+    <label class="radio-option"><input type="radio" name="taskType" value="" checked><div class="radio-content"><span class="radio-text-main">無</span><span class="radio-text-sub">Không</span></div></label>
+    <label class="radio-option"><input type="radio" name="taskType" value="機採"><div class="radio-content"><span class="radio-text-main">機採</span><span class="radio-text-sub">Máy thu</span></div></label>
+    <label class="radio-option"><input type="radio" name="taskType" value="人採"><div class="radio-content"><span class="radio-text-main">人採</span><span class="radio-text-sub">Người thu</span></div></label>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-go" onclick="processClick('出車')">
+        <span class="btn-text-main">🚀 出發/出車</span>
+        <span class="btn-text-sub">Xuất phát</span>
+    </button>
+    <button class="btn-arrive" onclick="processClick('抵達')">
+        <span class="btn-text-main">🏁 抵達/回到</span>
+        <span class="btn-text-sub">Đến nơi</span>
+    </button>
+  </div>
+  
+  <button class="btn-end" onclick="processClick('作業結束')">
+      <span class="btn-text-main">🛑 結束今日作業</span>
+      <span class="btn-text-sub">Kết thúc công việc</span>
+  </button>
+  
+  <button class="btn-gps" onclick="getLocation()">
+      <span class="btn-text-main">📍 傳送地圖定位</span>
+      <span class="btn-text-sub">Gửi vị trí bản đồ</span>
+  </button>
+
+  <div id="status">LIFF 初始化中...</div>
+
+  <div id="manual-area">
+      <div style="color: #d63384; font-weight: bold; margin-bottom:5px;">⚠️ 請點擊下方按鈕發送</div>
+      <a id="manual-btn" href="#" target="_blank">
+          <span style="font-size:18px; font-weight:bold;">🟢 點我發送 (Nhấn vào đây)</span>
+      </a>
+  </div>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+var LIFF_ID = "2008961063-iwAJvIC3";
+
+window.onload = function() {
+  // 3秒安全閥：如果卡住，強制關閉遮罩
+  setTimeout(function() { 
+      var mask = document.getElementById('loading-mask');
+      if(mask) mask.style.display = 'none'; 
+  }, 3000);
+
+  liff.init({ liffId: LIFF_ID }).then(function() {
+    if (!liff.isLoggedIn()) { liff.login(); return; }
+
+    liff.getProfile().then(function(profile) {
+        updateDriverSelect(profile.displayName);
+        document.getElementById('loading-mask').style.display = 'none';
+        document.getElementById('status').innerText = "✅ 系統就緒";
+        document.getElementById('status').style.color = "green";
+    }).catch(function() {
+        document.getElementById('loading-mask').style.display = 'none';
+        var saved = localStorage.getItem('vds_driver');
+        if(saved) document.getElementById('driver').value = saved;
+    });
+  }).catch(function() {
+    document.getElementById('loading-mask').style.display = 'none';
+  });
+};
+
+function updateDriverSelect(lineName) {
+    var driverSelect = document.getElementById('driver');
+    var found = false;
+    for (var i = 0; i < driverSelect.options.length; i++) {
+        if (driverSelect.options[i].text.includes(lineName) || lineName.includes(driverSelect.options[i].value)) {
+            driverSelect.selectedIndex = i; found = true; break;
+        }
+    }
+    if (!found) {
+        var newOpt = document.createElement("option");
+        newOpt.text = lineName + " (LINE)"; newOpt.value = lineName;
+        if (driverSelect.length > 0) driverSelect.add(newOpt, driverSelect.options[1]);
+        else driverSelect.add(newOpt);
+        driverSelect.value = lineName;
+    }
+}
+
+function processClick(action) {
+  try {
+    document.getElementById('loading-mask').style.display = 'flex';
+    document.getElementById('manual-area').style.display = 'none';
+    
+    var driver = document.getElementById('driver').value;
+    var loc = document.getElementById('location').value;
+    var dest = document.getElementById('destination').value; 
+    var type = "";
+    var radios = document.getElementsByName('taskType');
+    for (var i = 0; i < radios.length; i++) { if (radios[i].checked) { type = radios[i].value; break; } }
+
+    if (!driver) {
+      document.getElementById('loading-mask').style.display = 'none';
+      alert("請先選擇司機！\nVui lòng chọn tài xế!");
+      return;
+    }
+    localStorage.setItem('vds_driver', driver);
+
+    var now = new Date();
+    var hh = now.getHours().toString().padStart(2, '0');
+    var mm = now.getMinutes().toString().padStart(2, '0');
+    var timeStr = hh + ":" + mm;
+    var msg = "";
+
+    if (action === "作業結束") {
+      msg = driver + " 結束時間" + timeStr;
+    } else if (action === "出車") {
+      if (!dest) {
+          document.getElementById('loading-mask').style.display = 'none';
+          alert("⚠️ 請選擇「預計前往」的目的地！");
+          document.getElementById('destination').focus();
+          document.getElementById('destination').style.boxShadow = "0 0 10px red";
+          return;
+      }
+      document.getElementById('destination').style.boxShadow = "none";
+      var prefix = (type === "") ? "" : type;
+      msg = driver + " " + prefix + loc + "出發前往" + dest + " " + timeStr;
+    } else if (action === "抵達") {
+      if (loc === "公司") { msg = driver + " 回到公司 " + timeStr; } 
+      else { msg = driver + " 抵達" + loc + " " + timeStr; }
+    }
+
+    tryAutoSend(msg);
+
+  } catch (e) {
+    alert("Error: " + e.message);
+    document.getElementById('loading-mask').style.display = 'none';
+  }
+}
+
+function getLocation() {
+  if(!liff.isInClient()) { alert("請在 LINE App 使用"); return; }
+  document.getElementById('loading-mask').style.display = 'flex';
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    var link = "http://googleusercontent.com/maps.google.com/maps?q=" + pos.coords.latitude + "," + pos.coords.longitude;
+    var msg = "【傳送了地圖位置】\n" + link;
+    tryAutoSend(msg);
+  }, function(err) {
+    document.getElementById('loading-mask').style.display = 'none';
+    alert("GPS Error: " + err.message);
+  });
+}
+
+function tryAutoSend(msg) {
+  if (!liff.isInClient()) { showManualButton(msg); return; }
+
+  liff.sendMessages([{ type: 'text', text: msg }])
+    .then(function() {
+      document.getElementById('loading-mask').style.display = 'none';
+      liff.closeWindow();
+    })
+    .catch(function(err) {
+      // 2. 失敗 -> 先嘗試選單
+      if (liff.isApiAvailable('shareTargetPicker')) {
+        liff.shareTargetPicker([{ type: "text", text: msg }])
+          .then(function(res) {
+            document.getElementById('loading-mask').style.display = 'none';
+            if (res) liff.closeWindow();
+          })
+          .catch(function() { showManualButton(msg); });
+      } else {
+         showManualButton(msg);
+      }
+    });
+}
+
+function showManualButton(msg) {
+  document.getElementById('loading-mask').style.display = 'none';
+  var area = document.getElementById('manual-area');
+  var btn = document.getElementById('manual-btn');
+  btn.href = "https://line.me/R/msg/text/?" + encodeURIComponent(msg);
+  
+  // 顯示區域
+  area.style.display = 'block';
+  
+  // ★★★ 關鍵修正：溫柔地捲動到按鈕位置 (置中) ★★★
+  // 不再使用 scrollTo 底端，改用 scrollIntoView
+  setTimeout(function() {
+      area.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 100);
+}
+</script>
+</body>
+</html>
