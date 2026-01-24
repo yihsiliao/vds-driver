@@ -104,69 +104,132 @@
   </select>
   <input type="text" id="driver-custom" class="custom-input" placeholder="請輸入姓名 (Tên)">
 
-  <label>📍 目前地點 <span>(Vị trí hiện tại)</span></label>
+<label>📍 目前地點 <span>(Vị trí hiện tại)</span></label>
+
   <select id="location" onchange="checkCustomInput('location')">
+
     <optgroup label="常用地點">
+
       <option value="公司">🏢 公司 (Công ty)</option>
+
       <option value="田間">🌾 田間 (Ngoài đồng)</option>
+
     </optgroup>
+
     <optgroup label="地點列表 (Danh sách)">
+
       <option value="農場晃晃">🌾 農場晃晃 (Nông trường Hoảng Hoảng)</option>
+
       <option value="馬光">🥕 馬光 (Mã Quang)</option>
+
       <option value="佳美">🏭 佳美 (Giai Mỹ)</option>
+
       <option value="光泉">🏭 光泉 (Quang Tuyền)</option>
+
       <option value="久津">🏭 久津 (Cửu Tân)</option>
+
       <option value="達群">🏭 達群 (Đạt Quần)</option>
+
       <option value="淑貞">🏙️ 淑貞 (Thục Trinh)</option>
+
       <option value="陳俐霖">🏙️ 陳俐霖 (Trần Lợi Lâm)</option>
+
       <option value="吳淑玲">🏙️ 吳淑玲 (Ngô Thục Linh)</option>      
+
       <option value="楊鴻隆">🏙️ 楊鴻隆 (Dương Hồng Long)</option>
+
       <option value="西螺">🏙️ 西螺 (Tây Loa)</option>
+
       <option value="北斗">🏙️ 北斗 (Bắc Đẩu)</option>
+
       <option value="台中">🏙️ 台中 (Đài Trung)</option>
+
       <option value="斗六">🏙️ 斗六 (Đấu Lục)</option>
+
       <option value="嘉義">🏙️ 嘉義 (Gia Nghĩa)</option>
+
       <option value="元長">🏙️ 元長 (Nguyên Trường)</option>
+
       <option value="台南">🏙️ 台南 (Đài Nam)</option>
+
       <option value="斗南保養廠">🔧 斗南保養廠 (Xưởng bảo trì Đấu Nam)</option>
+
       <option value="花壇保養廠">🔧 花壇保養廠 (Xưởng bảo trì Hoa Đàn)</option>
+
       <option value="台中港">🚢 台中港 (Cảng Đài Trung)</option>
+
       <option value="高雄港">🚢 高雄港 (Cảng Cao Hùng)</option>
+
       <option value="新社種苗場">🌱 新社種苗場 (Trại giống Tân Xã)</option>
+
     </optgroup>
+
     <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
+
   </select>
+
   <input type="text" id="location-custom" class="custom-input" placeholder="請輸入地點 (Vị trí)">
 
+
+
   <label id="dest-label">🏁 預計前往 <span>(Nơi đến dự kiến)</span></label>
+
   <select id="destination" onchange="checkCustomInput('destination')">
+
     <option value="" disabled selected>請選擇目的地...</option>
+
     <optgroup label="常用地點">
+
       <option value="田間">🌾 田間 (Ngoài đồng)</option>
+
       <option value="公司">🏢 公司 (Công ty)</option>
+
     </optgroup>
+
     <optgroup label="地點列表 (Danh sách)">
+
       <option value="農場晃晃">🌾 農場晃晃 (Nông trường Hoảng Hoảng)</option>
+
       <option value="馬光">🥕 馬光 (Mã Quang)</option>
+
       <option value="佳美">🏭 佳美 (Giai Mỹ)</option>
+
       <option value="光泉">🏭 光泉 (Quang Tuyền)</option>
+
       <option value="久津">🏭 久津 (Cửu Tân)</option>
+
       <option value="達群">🏭 達群 (Đạt Quần)</option>
+
       <option value="淑貞">🏙️ 淑貞 (Thục Trinh)</option>
+
       <option value="陳俐霖">🏙️ 陳俐霖 (Trần Lợi Lâm)</option>
+
       <option value="吳淑玲">🏙️ 吳淑玲 (Ngô Thục Linh)</option>      
+
       <option value="楊鴻隆">🏙️ 楊鴻隆 (Dương Hồng Long)</option>
+
       <option value="西螺">🏙️ 西螺 (Tây Loa)</option>
+
       <option value="北斗">🏙️ 北斗 (Bắc Đẩu)</option>
+
       <option value="台中">🏙️ 台中 (Đài Trung)</option>
+
       <option value="斗六">🏙️ 斗六 (Đấu Lục)</option>
+
       <option value="嘉義">🏙️ 嘉義 (Gia Nghĩa)</option>
+
       <option value="元長">🏙️ 元長 (Nguyên Trường)</option>
+
       <option value="台南">🏙️ 台南 (Đài Nam)</option>
+
       <option value="斗南保養廠">🔧 斗南保養廠 (Xưởng bảo trì Đấu Nam)</option>
+
       <option value="花壇保養廠">🔧 花壇保養廠 (Xưởng bảo trì Hoa Đàn)</option>
+
       <option value="台中港">🚢 台中港 (Cảng Đài Trung)</option>
+
       <option value="高雄港">🚢 高雄港 (Cảng Cao Hùng)</option>
+
       <option value="新社種苗場">🌱 新社種苗場 (Trại giống Tân Xã)</option>
     </optgroup>
     <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
@@ -175,7 +238,7 @@
 
   <label>⚙️ 作業/趟次 <span>(Loại công việc)</span></label>
   <div class="radio-group">
-    <label class="radio-option"><input type="radio" name="taskType" value="" checked><div class="radio-content"><span class="radio-text-main">無</span><span class="radio-text-sub">Không</span></div></label>
+    <label class="radio-option"><input type="radio" name="taskType" value="" checked><div class="radio-content"><span class="radio-text-main">其他</span><span class="radio-text-sub">Khác</span></div></label>
     <label class="radio-option"><input type="radio" name="taskType" value="機採"><div class="radio-content"><span class="radio-text-main">機採</span><span class="radio-text-sub">Máy thu</span></div></label>
     <label class="radio-option"><input type="radio" name="taskType" value="人採"><div class="radio-content"><span class="radio-text-main">人採</span><span class="radio-text-sub">Người thu</span></div></label>
   </div>
@@ -339,6 +402,9 @@ function processClick(action) {
     var mm = now.getMinutes().toString().padStart(2, '0');
     var timeStr = hh + ":" + mm;
     var msg = "";
+    
+    // ★ 格式化後綴：有選類型就加括號，沒選(其他)就留空
+    var taskSuffix = (type === "") ? "" : "(" + type + ")";
 
     if (action === "作業結束") {
       msg = driver + " 結束時間" + timeStr;
@@ -355,8 +421,8 @@ function processClick(action) {
       }
       if(destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest');
       
-      var prefix = (type === "") ? "" : type;
-      msg = driver + " " + prefix + loc + "出發前往" + dest + " " + timeStr;
+      // ★ 組合訊息：(人採) 放在時間前面
+      msg = driver + " " + loc + "出發前往" + dest + taskSuffix + " " + timeStr;
     } else if (action === "抵達") {
       if (loc === "公司") { msg = driver + " 回到公司 " + timeStr; } 
       else { msg = driver + " 抵達" + loc + " " + timeStr; }
