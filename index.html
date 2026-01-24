@@ -169,7 +169,7 @@
       <option value="吳淑玲">🏙️ 吳淑玲 (Ngô Thục Linh)</option>      
       <option value="楊鴻隆">🏙️ 楊鴻隆 (Dương Hồng Long)</option>
       <option value="斗南保養廠">🔧 斗南保養廠 (Xưởng bảo trì Đấu Nam)</option>
-      <option value="農場晃晃">🌾 晃晃農場 (Nông trường Hoảng Hoảng)</option>
+      <option value="農場晃晃">🌾 農場晃晃 (Nông trường Hoảng Hoảng)</option>
     </optgroup>
   </select>
 
@@ -196,13 +196,13 @@
       <option value="吳淑玲">🏙️ 吳淑玲 (Ngô Thục Linh)</option>      
       <option value="楊鴻隆">🏙️ 楊鴻隆 (Dương Hồng Long)</option>
       <option value="斗南保養廠">🔧 斗南保養廠 (Xưởng bảo trì Đấu Nam)</option>
-      <option value="農場晃晃">🌾 晃晃農場 (Nông trường Hoảng Hoảng)</option>
+      <option value="農場晃晃">🌾 農場晃晃 (Nông trường Hoảng Hoảng)</option>
     </optgroup>
   </select>
 
   <label>⚙️ 作業/趟次 <span>(Loại công việc)</span></label>
   <div class="radio-group">
-    <label class="radio-option"><input type="radio" name="taskType" value="" checked><div class="radio-content"><span class="radio-text-main">無</span><span class="radio-text-sub">Không</span></div></label>
+    <label class="radio-option"><input type="radio" name="taskType" value="" checked><div class="radio-content"><span class="radio-text-main">其他</span><span class="radio-text-sub">Khác</span></div></label>
     <label class="radio-option"><input type="radio" name="taskType" value="機採"><div class="radio-content"><span class="radio-text-main">機採</span><span class="radio-text-sub">Máy thu</span></div></label>
     <label class="radio-option"><input type="radio" name="taskType" value="人採"><div class="radio-content"><span class="radio-text-main">人採</span><span class="radio-text-sub">Người thu</span></div></label>
   </div>
@@ -269,17 +269,43 @@ window.onload = function() {
 
 function updateDriverSelect(lineName) {
     var driverSelect = document.getElementById('driver');
-    var found = false;
-    for (var i = 0; i < driverSelect.options.length; i++) {
-        if (driverSelect.options[i].text.includes(lineName) || lineName.includes(driverSelect.options[i].value)) {
-            driverSelect.selectedIndex = i; found = true; break;
+    var savedDriver = localStorage.getItem('vds_driver'); // 1. 先讀取記憶
+
+    // 2.【關鍵修改】如果有記憶，且名單裡有這個人，直接選他 (最高優先權)
+    if (savedDriver) {
+        for (var i = 0; i < driverSelect.options.length; i++) {
+            if (driverSelect.options[i].value === savedDriver) {
+                driverSelect.selectedIndex = i;
+                console.log("已恢復上次選擇的司機: " + savedDriver);
+                // 可以在狀態列提示一下 (選填)
+                var statusDiv = document.getElementById('status');
+                if(statusDiv) statusDiv.innerHTML += " <span style='color:#198754'>(已記憶)</span>";
+                return; // ★ 找到了就直接結束，不理會 LINE 名字了
+            }
         }
     }
+
+    // 3. 如果沒有記憶 (或是新司機第一次用)，才開始比對 LINE 名字
+    var found = false;
+    for (var i = 0; i < driverSelect.options.length; i++) {
+        // 比對：選單文字包含 LINE 名字
+        if (driverSelect.options[i].text.includes(lineName) || lineName.includes(driverSelect.options[i].value)) {
+            driverSelect.selectedIndex = i;
+            found = true;
+            break;
+        }
+    }
+
+    // 4. 真的都找不到，才新增一個選項顯示 LINE 名字 (方便除錯)
     if (!found) {
         var newOpt = document.createElement("option");
-        newOpt.text = lineName + " (LINE)"; newOpt.value = lineName;
+        newOpt.text = lineName + " (LINE)";
+        newOpt.value = lineName;
+        // 插在第二個位置
         if (driverSelect.length > 0) driverSelect.add(newOpt, driverSelect.options[1]);
         else driverSelect.add(newOpt);
+        
+        // 預設選中這個新選項，提示司機去改
         driverSelect.value = lineName;
     }
 }
