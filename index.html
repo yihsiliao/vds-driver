@@ -80,8 +80,7 @@
     .btn-go { background: linear-gradient(135deg, #198754, #146c43); } 
     .btn-arrive { background: linear-gradient(135deg, #0d6efd, #0b5ed7); } 
     .btn-end { background: linear-gradient(135deg, #dc3545, #b02a37); width: 100%; margin-top: 12px; } 
-    .btn-gps { background: linear-gradient(135deg, #6c757d, #495057); width: 100%; margin-top: 12px; } 
-
+    
     #loading-mask { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s; }
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #0d6efd; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -214,8 +213,6 @@
   
   <button class="btn-end" onclick="processClick('作業結束')"><span class="btn-text-main">🛑 結束今日作業</span><span class="btn-text-sub">Kết thúc công việc</span></button>
   
-  <button class="btn-gps" onclick="getLocation()"><span class="btn-text-main">📍 傳送地圖定位</span><span class="btn-text-sub">Gửi vị trí bản đồ</span></button>
-
   <div id="status">LIFF 初始化中...</div>
 
   <div id="manual-area">
@@ -226,7 +223,6 @@
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-// ★★★ 已更新 ID ★★★
 var LIFF_ID = "2008961063-iwAJvIC3";
 
 // 顯示/隱藏自訂輸入框
@@ -438,27 +434,6 @@ function processClick(action) {
     document.getElementById('loading-mask').style.display = 'none';
     toggleButtons(false); 
   }
-}
-
-function getLocation() {
-  if(!liff.isInClient()) { alert("請在 LINE App 使用"); return; }
-  toggleButtons(true);
-  document.getElementById('loading-mask').style.display = 'flex';
-  
-  navigator.geolocation.getCurrentPosition(function(pos) {
-    var link = "http://googleusercontent.com/maps.google.com/maps?q=" + pos.coords.latitude + "," + pos.coords.longitude;
-    var driver = document.getElementById('driver').value || "司機";
-    var plateSelect = document.getElementById('plate');
-    var plate = plateSelect.value === 'custom' ? document.getElementById('plate-custom').value : plateSelect.value;
-    var plateStr = (plate) ? "[" + plate + "] " : "";
-    
-    var msg = plateStr + driver + "【傳送了地圖位置】\n" + link;
-    tryAutoSend(msg);
-  }, function(err) {
-    document.getElementById('loading-mask').style.display = 'none';
-    alert("GPS Error: " + err.message);
-    toggleButtons(false);
-  });
 }
 
 function tryAutoSend(msg) {
