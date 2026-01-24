@@ -15,8 +15,8 @@
       display: flex; 
       flex-direction: column; 
       justify-content: center; 
-      box-sizing: border-box;
-      margin: 0;
+      box-sizing: border-box; 
+      margin: 0; 
     }
 
     /* 卡片主體 */
@@ -28,7 +28,7 @@
       width: 100%; 
       max-width: 500px; 
       margin: 0 auto; 
-      box-sizing: border-box;
+      box-sizing: border-box; 
     }
     
     h3 { color: #2c3e50; text-align: center; margin: 0 0 20px 0; font-weight: 800; font-size: 22px; }
@@ -51,6 +51,9 @@
 
     /* 自定義輸入框樣式 */
     .custom-input { display: none; margin-top: 10px; border-color: #ffc107 !important; background-color: #fffdf5 !important; }
+    
+    /* 車牌輸入框預設大寫 */
+    #plate-custom { text-transform: uppercase; }
 
     .radio-group { display: flex; gap: 8px; margin-top: 8px; }
     .radio-option { flex: 1; position: relative; }
@@ -104,7 +107,21 @@
   </select>
   <input type="text" id="driver-custom" class="custom-input" placeholder="請輸入姓名 (Tên)">
 
-<label>📍 目前地點 <span>(Vị trí hiện tại)</span></label>
+  <label>🚛 車牌號碼 <span>(Biển số xe)</span></label>
+  <select id="plate" onchange="checkCustomInput('plate')">
+    <option value="" disabled selected>請選擇車牌...</option>
+    <optgroup label="公司車輛">
+        <option value="027-TN">027-TN</option>
+        <option value="KEM-9277">KEM-9277</option>
+        <option value="KER-1677">KER-1677</option>
+        <option value="AAR-227">AAR-227</option>
+        <option value="KEN-6977">KEN-6977</option>
+    </optgroup>
+    <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
+  </select>
+  <input type="text" id="plate-custom" class="custom-input" placeholder="請輸入車牌 (例如 KEA-1234)">
+
+  <label>📍 目前地點 <span>(Vị trí hiện tại)</span></label>
   <select id="location" onchange="checkCustomInput('location')">
     <optgroup label="常用地點">
       <option value="公司">🏢 公司 (Công ty)</option>
@@ -137,8 +154,6 @@
     <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
   </select>
   <input type="text" id="location-custom" class="custom-input" placeholder="請輸入地點 (Vị trí)">
-
-
 
   <label id="dest-label">🏁 預計前往 <span>(Nơi đến dự kiến)</span></label>
   <select id="destination" onchange="checkCustomInput('destination')">
@@ -201,6 +216,7 @@
 <script>
 var LIFF_ID = "2008961063-iwAJvIC3";
 
+// 顯示/隱藏自訂輸入框
 function checkCustomInput(type) {
     var select = document.getElementById(type);
     var input = document.getElementById(type + '-custom');
@@ -219,7 +235,9 @@ window.onload = function() {
       if(mask) mask.style.display = 'none'; 
   }, 3000);
 
+  // 載入歷史紀錄 (包含車牌)
   loadHistory('driver', 'vds_history_driver');
+  loadHistory('plate', 'vds_history_plate'); // ★ 車牌也支援歷史記錄
   loadHistory('location', 'vds_history_loc');
   loadHistory('destination', 'vds_history_dest');
 
@@ -233,14 +251,18 @@ window.onload = function() {
         document.getElementById('status').style.color = "green";
     }).catch(function() {
         document.getElementById('loading-mask').style.display = 'none';
-        var saved = localStorage.getItem('vds_driver');
-        if(saved) document.getElementById('driver').value = saved;
+        
+        // 恢復上次選擇的司機
+        restoreSelection('driver', 'vds_driver');
+        // 恢復上次選擇的車牌
+        restoreSelection('plate', 'vds_plate');
     });
   }).catch(function() {
     document.getElementById('loading-mask').style.display = 'none';
   });
 };
 
+// 載入歷史記錄到下拉選單
 function loadHistory(selectId, storageKey) {
     var history = JSON.parse(localStorage.getItem(storageKey) || '[]');
     if (history.length > 0) {
@@ -257,32 +279,56 @@ function loadHistory(selectId, storageKey) {
     }
 }
 
+// 儲存新的歷史記錄
 function saveHistory(val, storageKey) {
     if(!val) return;
     var history = JSON.parse(localStorage.getItem(storageKey) || '[]');
     var index = history.indexOf(val);
-    if (index > -1) { history.splice(index, 1); }
-    history.push(val);
-    if (history.length > 5) history.shift();
+    if (index > -1) { history.splice(index, 1); } // 移除舊的
+    history.push(val); // 加到最新
+    if (history.length > 5) history.shift(); // 只留5筆
     localStorage.setItem(storageKey, JSON.stringify(history));
+}
+
+// 恢復上次的選擇 (通用函式)
+function restoreSelection(elementId, storageKey) {
+    var saved = localStorage.getItem(storageKey);
+    if(saved) {
+        var select = document.getElementById(elementId);
+        var found = false;
+        // 1. 嘗試在選單中找
+        for(var i=0; i<select.options.length; i++) {
+            if(select.options[i].value === saved) {
+                select.selectedIndex = i;
+                found = true;
+                break;
+            }
+        }
+        // 2. 如果沒找到 (代表是手動輸入的，且被擠出歷史記錄了)，這裡暫時不處理，讓使用者重選
+    }
 }
 
 function updateDriverSelect(lineName) {
     var driverSelect = document.getElementById('driver');
     var savedDriver = localStorage.getItem('vds_driver'); 
-
+    
+    // 1. 優先使用記憶的司機
     if (savedDriver) {
         for (var i = 0; i < driverSelect.options.length; i++) {
             if (driverSelect.options[i].value === savedDriver) {
                 driverSelect.selectedIndex = i;
-                console.log("已恢復記憶: " + savedDriver);
+                console.log("已恢復司機記憶: " + savedDriver);
                 var statusDiv = document.getElementById('status');
                 if(statusDiv) statusDiv.innerHTML += " <span style='color:#198754'>(已記憶)</span>";
+                
+                // ★ 順便恢復車牌記憶
+                restoreSelection('plate', 'vds_plate');
                 return; 
             }
         }
     }
 
+    // 2. 沒有記憶才比對 LINE 名字
     var found = false;
     for (var i = 0; i < driverSelect.options.length; i++) {
         if (driverSelect.options[i].text.includes(lineName) || lineName.includes(driverSelect.options[i].value)) {
@@ -296,6 +342,9 @@ function updateDriverSelect(lineName) {
         else driverSelect.add(newOpt);
         driverSelect.value = lineName;
     }
+    
+    // 無論如何都嘗試恢復車牌
+    restoreSelection('plate', 'vds_plate');
 }
 
 function processClick(action) {
@@ -303,8 +352,12 @@ function processClick(action) {
     document.getElementById('loading-mask').style.display = 'flex';
     document.getElementById('manual-area').style.display = 'none';
     
+    // 取得資料 (支援手動輸入)
     var driverSelect = document.getElementById('driver');
     var driver = driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value;
+    
+    var plateSelect = document.getElementById('plate');
+    var plate = plateSelect.value === 'custom' ? document.getElementById('plate-custom').value.trim().toUpperCase() : plateSelect.value;
     
     var locSelect = document.getElementById('location');
     var loc = locSelect.value === 'custom' ? document.getElementById('location-custom').value : locSelect.value;
@@ -316,6 +369,7 @@ function processClick(action) {
     var radios = document.getElementsByName('taskType');
     for (var i = 0; i < radios.length; i++) { if (radios[i].checked) { type = radios[i].value; break; } }
 
+    // 檢查司機
     if (!driver || driver.trim() === "") {
       document.getElementById('loading-mask').style.display = 'none';
       alert("請選擇或輸入司機姓名！");
@@ -323,7 +377,13 @@ function processClick(action) {
       return;
     }
     if(driverSelect.value === 'custom') saveHistory(driver, 'vds_history_driver');
-    
+    localStorage.setItem('vds_driver', driver); // 記憶司機
+
+    // 檢查車牌 (選填，但有填就記憶)
+    if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate');
+    if (plate) localStorage.setItem('vds_plate', plate); // 記憶車牌
+
+    // 檢查地點 (非作業結束時)
     if (action !== "作業結束") {
         if (!loc || loc.trim() === "") {
             document.getElementById('loading-mask').style.display = 'none';
@@ -334,19 +394,18 @@ function processClick(action) {
         if(locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc');
     }
 
-    localStorage.setItem('vds_driver', driver);
-
     var now = new Date();
     var hh = now.getHours().toString().padStart(2, '0');
     var mm = now.getMinutes().toString().padStart(2, '0');
     var timeStr = hh + ":" + mm;
-    var msg = "";
     
-    // ★ 格式化後綴：有選類型就加括號，沒選(其他)就留空
+    // ★ 訊息組合
+    var plateStr = (plate) ? "[" + plate + "] " : ""; // 車牌加框
     var taskSuffix = (type === "") ? "" : "(" + type + ")";
+    var msg = "";
 
     if (action === "作業結束") {
-      msg = driver + " 結束時間" + timeStr;
+      msg = plateStr + driver + " 結束時間" + timeStr;
     } else if (action === "出車") {
       if (!dest || dest.trim() === "") {
           document.getElementById('loading-mask').style.display = 'none';
@@ -360,11 +419,10 @@ function processClick(action) {
       }
       if(destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest');
       
-      // ★ 組合訊息：(人採) 放在時間前面
-      msg = driver + " " + loc + "出發前往" + dest + taskSuffix + " " + timeStr;
+      msg = plateStr + driver + " " + loc + "出發前往" + dest + taskSuffix + " " + timeStr;
     } else if (action === "抵達") {
-      if (loc === "公司") { msg = driver + " 回到公司 " + timeStr; } 
-      else { msg = driver + " 抵達" + loc + " " + timeStr; }
+      if (loc === "公司") { msg = plateStr + driver + " 回到公司 " + timeStr; } 
+      else { msg = plateStr + driver + " 抵達" + loc + " " + timeStr; }
     }
 
     tryAutoSend(msg);
