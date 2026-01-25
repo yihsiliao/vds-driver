@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>VDS司機打卡</title>
+  <title>🥕VDS司機打卡🥕</title>
   <style>
     /* === 全局設定 === */
     body { background-color: #f4f7f6; padding: 15px; font-family: "Microsoft JhengHei", sans-serif; color: #333; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; margin: 0; }
@@ -54,7 +54,7 @@
 </div>
 
 <div class="card">
-  <h3>🥕VDS 司機打卡🥕<span class="sub-title">Hệ thống chấm công tài xế</span></h3>
+  <h3>🥕VDS司機打卡🥕<span class="sub-title">Hệ thống chấm công tài xế</span></h3>
   
   <label>👨🏼‍🌾 司機姓名 <span>(Tên tài xế)</span></label>
   <select id="driver" onchange="checkCustomInput('driver')">
@@ -190,11 +190,6 @@
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-// ★★★ 第一步：填寫 ID 清單 ★★★
-// 目前是空的，代表「設定模式」。
-// 範例 (群組ID + 個人ID)： var ALLOWED_IDS = ["C123...", "U987..."];
-var ALLOWED_IDS = [""]; 
-
 var LIFF_ID = "2008961063-iwAJvIC3";
 
 function checkCustomInput(type) {
@@ -225,71 +220,23 @@ window.onload = function() {
   loadHistory('location', 'vds_history_loc');
   loadHistory('destination', 'vds_history_dest');
   
+  // ★ 智慧趟次記憶 (隔日重置)
   var savedDate = localStorage.getItem('vds_trip_date');
-  var today = new Date().toDateString();
+  var today = new Date().toDateString(); // 取得今天日期 (例如 "Fri Oct 27 2023")
+  
   if (savedDate === today) {
+      // 如果是同一天，恢復上次的趟次
       var savedTrip = localStorage.getItem('vds_trip_val');
       if(savedTrip) document.getElementById('trip').value = savedTrip;
   } else {
+      // 如果是不同天 (或沒紀錄)，不恢復 -> 預設就是第1趟
+      // 清空舊紀錄比較乾淨 (選用)
       localStorage.removeItem('vds_trip_val');
       localStorage.removeItem('vds_trip_date');
   }
 
   liff.init({ liffId: LIFF_ID }).then(function() {
     if (!liff.isLoggedIn()) { liff.login(); return; }
-
-    var context = liff.getContext();
-    var currentId = null;
-    var typeLabel = "";
-
-    // 辨識目前是群組還是個人
-    if (context) {
-        if (context.type === 'group') {
-            currentId = context.groupId;
-            typeLabel = "群組 ID (Group ID)";
-        } else if (context.type === 'utou') {
-            currentId = context.userId; // 1對1聊天，抓個人ID
-            typeLabel = "個人 ID (User ID)";
-        } else if (context.type === 'room') {
-            currentId = context.roomId;
-            typeLabel = "聊天室 ID (Room ID)";
-        }
-    }
-
-    // ★★★ 門禁檢查邏輯 (修復版 v9.9) ★★★
-    
-    // 檢查是否還在設定模式 (清單是空的)
-    var isSetupMode = (ALLOWED_IDS.length === 0) || (ALLOWED_IDS.length === 1 && ALLOWED_IDS[0] === "");
-
-    if (isSetupMode) {
-        // 設定模式：無論如何都擋住，並顯示 ID
-        document.body.innerHTML = `
-            <div style="text-align:center; padding:30px; background:#fff; height:100vh;">
-                <h2 style="color:#d63384;">⚠️ 系統設定中</h2>
-                <p>請將下方 ${typeLabel} 複製，<br>填入程式碼的 <strong>ALLOWED_IDS</strong> 欄位：</p>
-                <div style="background:#f8f9fa; padding:15px; border:2px dashed #333; margin:20px 0; font-weight:bold; font-size:18px; word-break:break-all; color:#0d6efd;">
-                    ${currentId || "無法讀取 ID (請在 LINE 內開啟)"}
-                </div>
-                <p style="color:#666; font-size:13px;">(填入後再次 Commit 更新，此畫面就會消失)</p>
-            </div>
-        `;
-        return; // ★★★ 絕對停止 ★★★
-    } 
-    
-    // --- 正式模式：檢查 ID 是否在清單內 ---
-    if (!currentId || !ALLOWED_IDS.includes(currentId)) {
-        // ID 不在清單內 -> 擋住
-        document.body.innerHTML = `
-            <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#fff; text-align:center; padding:20px;">
-                <div style="font-size:60px;">🚫</div>
-                <h2 style="color:#dc3545; margin-top:20px;">無權限使用</h2>
-                <p style="color:#666;">本系統僅限 VDS 指定群組或人員使用。</p>
-                <p style="color:#ccc; font-size:10px; margin-top:50px;">Your ID: ${currentId || 'Unknown'}</p>
-            </div>
-        `;
-        return;
-    }
-    // ★★★ 檢查通過，繼續執行 ★★★
 
     liff.getProfile().then(function(profile) {
         updateDriverSelect(profile.displayName);
@@ -380,7 +327,7 @@ function updateDriverSelect(lineName) {
 
 function processClick(action) {
   try {
-    toggleButtons(true); 
+    toggleButtons(true); // 鎖定防手抖
 
     document.getElementById('loading-mask').style.display = 'flex';
     document.getElementById('manual-area').style.display = 'none';
@@ -416,6 +363,7 @@ function processClick(action) {
     if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate');
     if (plate) localStorage.setItem('vds_plate', plate);
     
+    // ★ 存入包含日期的趟次記憶
     var today = new Date().toDateString();
     localStorage.setItem('vds_trip_date', today);
     localStorage.setItem('vds_trip_val', trip);
@@ -457,6 +405,7 @@ function processClick(action) {
       
       msg = plateStr + driver + " " + trip + " " + loc + "出發前往" + dest + taskSuffix + " " + timeStr;
     } else if (action === "抵達") {
+      // 抵達: 隱藏車牌/趟次
       if (loc === "公司") { msg = driver + " 回到公司 " + timeStr; } 
       else { msg = driver + " 抵達" + loc + " " + timeStr; }
     }
