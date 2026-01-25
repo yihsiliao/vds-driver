@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>VDS司機打卡</title>
+  <title>VDS 司機打卡</title>
   <style>
     /* === 全局設定 === */
     body { background-color: #f4f7f6; padding: 15px; font-family: "Microsoft JhengHei", sans-serif; color: #333; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; margin: 0; }
@@ -192,7 +192,8 @@
 <script>
 // ★★★ 第一步：填寫 ID 清單 ★★★
 // 目前是空的，代表「設定模式」。
-var ALLOWED_GROUP_IDS = ["78a77245-856f-4bdd-a2ae-88ec231c0068",""]; 
+// 範例 (群組ID + 個人ID)： var ALLOWED_IDS = ["C123...", "U987..."];
+var ALLOWED_IDS = [""]; 
 
 var LIFF_ID = "2008961063-iwAJvIC3";
 
@@ -238,47 +239,52 @@ window.onload = function() {
     if (!liff.isLoggedIn()) { liff.login(); return; }
 
     var context = liff.getContext();
-    var currentGroupId = (context && context.type === 'group') ? context.groupId : null;
+    var currentId = null;
+    var typeLabel = "";
 
-    // ★★★ 門禁檢查邏輯 (修復版) ★★★
+    // 辨識目前是群組還是個人
+    if (context) {
+        if (context.type === 'group') {
+            currentId = context.groupId;
+            typeLabel = "群組 ID (Group ID)";
+        } else if (context.type === 'utou') {
+            currentId = context.userId; // 1對1聊天，抓個人ID
+            typeLabel = "個人 ID (User ID)";
+        } else if (context.type === 'room') {
+            currentId = context.roomId;
+            typeLabel = "聊天室 ID (Room ID)";
+        }
+    }
+
+    // ★★★ 門禁檢查邏輯 (修復版 v9.9) ★★★
     
-    // 檢查是否還在設定模式 (ID 清單是空的)
-    var isSetupMode = (ALLOWED_GROUP_IDS.length === 0) || (ALLOWED_GROUP_IDS.length === 1 && ALLOWED_GROUP_IDS[0] === "");
+    // 檢查是否還在設定模式 (清單是空的)
+    var isSetupMode = (ALLOWED_IDS.length === 0) || (ALLOWED_IDS.length === 1 && ALLOWED_IDS[0] === "");
 
     if (isSetupMode) {
-        // --- 設定模式：一律擋住！ ---
-        if (currentGroupId) {
-            // 如果在群組，顯示 ID
-            document.body.innerHTML = `
-                <div style="text-align:center; padding:30px; background:#fff; height:100vh;">
-                    <h2 style="color:#d63384;">⚠️ 系統設定中</h2>
-                    <p>您的群組 ID 如下，請複製並填入程式碼：</p>
-                    <div style="background:#f8f9fa; padding:15px; border:2px dashed #333; margin:20px 0; font-weight:bold; font-size:18px; word-break:break-all; color:#0d6efd;">
-                        ${currentGroupId}
-                    </div>
-                    <p style="color:#666; font-size:13px;">(填入 ALLOWED_GROUP_IDS = ["${currentGroupId}"]; 後更新)</p>
+        // 設定模式：無論如何都擋住，並顯示 ID
+        document.body.innerHTML = `
+            <div style="text-align:center; padding:30px; background:#fff; height:100vh;">
+                <h2 style="color:#d63384;">⚠️ 系統設定中</h2>
+                <p>請將下方 ${typeLabel} 複製，<br>填入程式碼的 <strong>ALLOWED_IDS</strong> 欄位：</p>
+                <div style="background:#f8f9fa; padding:15px; border:2px dashed #333; margin:20px 0; font-weight:bold; font-size:18px; word-break:break-all; color:#0d6efd;">
+                    ${currentId || "無法讀取 ID (請在 LINE 內開啟)"}
                 </div>
-            `;
-        } else {
-            // 如果不在群組 (1對1或瀏覽器)，提示去群組
-            document.body.innerHTML = `
-                <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#fff; text-align:center; padding:20px;">
-                    <h2 style="color:#6c757d;">🛠️ 設定模式</h2>
-                    <p style="margin-top:20px;">請在 <strong>VDS 群組內</strong> 開啟此連結，<br>以獲取群組 ID 並完成設定。</p>
-                </div>
-            `;
-        }
-        return; // ★★★ 關鍵：絕對不往下執行，直到設定完成 ★★★
+                <p style="color:#666; font-size:13px;">(填入後再次 Commit 更新，此畫面就會消失)</p>
+            </div>
+        `;
+        return; // ★★★ 絕對停止 ★★★
     } 
     
-    // --- 正式模式：檢查 ID ---
-    if (!currentGroupId || !ALLOWED_GROUP_IDS.includes(currentGroupId)) {
-        // 不在白名單群組內 -> 擋住
+    // --- 正式模式：檢查 ID 是否在清單內 ---
+    if (!currentId || !ALLOWED_IDS.includes(currentId)) {
+        // ID 不在清單內 -> 擋住
         document.body.innerHTML = `
             <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#fff; text-align:center; padding:20px;">
                 <div style="font-size:60px;">🚫</div>
                 <h2 style="color:#dc3545; margin-top:20px;">無權限使用</h2>
-                <p style="color:#666;">本系統僅限 VDS 指定群組使用。</p>
+                <p style="color:#666;">本系統僅限 VDS 指定群組或人員使用。</p>
+                <p style="color:#ccc; font-size:10px; margin-top:50px;">Your ID: ${currentId || 'Unknown'}</p>
             </div>
         `;
         return;
