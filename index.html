@@ -190,6 +190,12 @@
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
+// ★★★ 第一步：填寫 ID 清單 ★★★
+// 用逗號分隔多個 ID，每個 ID 都要用引號包起來
+// 目前是空的 [""]，程式會顯示 ID 給您看，查到後請填入
+// 範例： var ALLOWED_GROUP_IDS = ["C12345xxxxx", "C98765yyyyy"];
+var ALLOWED_GROUP_IDS = [""]; 
+
 var LIFF_ID = "2008961063-iwAJvIC3";
 
 function checkCustomInput(type) {
@@ -220,23 +226,56 @@ window.onload = function() {
   loadHistory('location', 'vds_history_loc');
   loadHistory('destination', 'vds_history_dest');
   
-  // ★ 智慧趟次記憶 (隔日重置)
   var savedDate = localStorage.getItem('vds_trip_date');
-  var today = new Date().toDateString(); // 取得今天日期 (例如 "Fri Oct 27 2023")
-  
+  var today = new Date().toDateString();
   if (savedDate === today) {
-      // 如果是同一天，恢復上次的趟次
       var savedTrip = localStorage.getItem('vds_trip_val');
       if(savedTrip) document.getElementById('trip').value = savedTrip;
   } else {
-      // 如果是不同天 (或沒紀錄)，不恢復 -> 預設就是第1趟
-      // 清空舊紀錄比較乾淨 (選用)
       localStorage.removeItem('vds_trip_val');
       localStorage.removeItem('vds_trip_date');
   }
 
   liff.init({ liffId: LIFF_ID }).then(function() {
     if (!liff.isLoggedIn()) { liff.login(); return; }
+
+    var context = liff.getContext();
+    var currentGroupId = (context && context.type === 'group') ? context.groupId : null;
+
+    // ★★★ 門禁檢查邏輯 (多群組版) ★★★
+    // 1. 如果清單是空的(第一次用)，顯示當前 ID
+    var isSetupMode = (ALLOWED_GROUP_IDS.length === 0) || (ALLOWED_GROUP_IDS.length === 1 && ALLOWED_GROUP_IDS[0] === "");
+
+    if (isSetupMode) {
+        if (currentGroupId) {
+            document.body.innerHTML = `
+                <div style="text-align:center; padding:30px; background:#fff; height:100vh;">
+                    <h2 style="color:#d63384;">⚠️ 系統設定中</h2>
+                    <p>您的群組 ID 如下，請複製並填入程式碼：</p>
+                    <div style="background:#f8f9fa; padding:15px; border:2px dashed #333; margin:20px 0; font-weight:bold; font-size:18px; word-break:break-all; color:#0d6efd;">
+                        ${currentGroupId}
+                    </div>
+                    <p style="color:#666; font-size:13px;">(填入 ALLOWED_GROUP_IDS = ["${currentGroupId}"]; 後更新)</p>
+                </div>
+            `;
+            return;
+        }
+    } else {
+        // 2. 正常模式：檢查當前 ID 是否在清單內
+        if (!currentGroupId || !ALLOWED_GROUP_IDS.includes(currentGroupId)) {
+            // 不在清單內，顯示無權限 (順便偷偷顯示 ID 方便管理員加新人)
+            document.body.innerHTML = `
+                <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#fff; text-align:center; padding:20px;">
+                    <div style="font-size:60px;">🚫</div>
+                    <h2 style="color:#dc3545; margin-top:20px;">無權限使用</h2>
+                    <p style="color:#666;">本系統僅限 VDS 指定群組使用。</p>
+                    <p style="color:#ccc; font-size:10px; margin-top:50px;">Debug: ${currentGroupId || 'Unknown'}</p>
+                </div>
+            `;
+            return;
+        }
+    }
+    // ★★★ 檢查結束 ★★★
 
     liff.getProfile().then(function(profile) {
         updateDriverSelect(profile.displayName);
@@ -327,7 +366,7 @@ function updateDriverSelect(lineName) {
 
 function processClick(action) {
   try {
-    toggleButtons(true); // 鎖定防手抖
+    toggleButtons(true); 
 
     document.getElementById('loading-mask').style.display = 'flex';
     document.getElementById('manual-area').style.display = 'none';
@@ -363,7 +402,6 @@ function processClick(action) {
     if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate');
     if (plate) localStorage.setItem('vds_plate', plate);
     
-    // ★ 存入包含日期的趟次記憶
     var today = new Date().toDateString();
     localStorage.setItem('vds_trip_date', today);
     localStorage.setItem('vds_trip_val', trip);
@@ -405,7 +443,6 @@ function processClick(action) {
       
       msg = plateStr + driver + " " + trip + " " + loc + "出發前往" + dest + taskSuffix + " " + timeStr;
     } else if (action === "抵達") {
-      // 抵達: 隱藏車牌/趟次
       if (loc === "公司") { msg = driver + " 回到公司 " + timeStr; } 
       else { msg = driver + " 抵達" + loc + " " + timeStr; }
     }
@@ -455,3 +492,14 @@ function showManualButton(msg) {
 </script>
 </body>
 </html>
+
+### 設定步驟 (小提醒)：
+1.  **第一步**：先上傳這份程式碼 (ID 保持空白)。
+2.  **第二步**：去群組點開連結，抄下畫面上顯示的 ID (例如 `C123...`)。
+3.  **第三步**：如果還有第二個群組，也去那個群組點開，抄下 ID。
+4.  **第四步**：回來修改程式碼第 307 行：
+    ```javascript
+    var ALLOWED_GROUP_IDS = ["C123...", "C456..."];
+    ```
+    (記得用引號包起來，中間用逗號隔開)
+5.  **最後更新**：上傳修改後的程式碼，完工！
