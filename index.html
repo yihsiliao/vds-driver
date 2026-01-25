@@ -80,7 +80,8 @@
     .btn-go { background: linear-gradient(135deg, #198754, #146c43); } 
     .btn-arrive { background: linear-gradient(135deg, #0d6efd, #0b5ed7); } 
     .btn-end { background: linear-gradient(135deg, #dc3545, #b02a37); width: 100%; margin-top: 12px; } 
-    
+    .btn-gps { background: linear-gradient(135deg, #6c757d, #495057); width: 100%; margin-top: 12px; } 
+
     #loading-mask { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s; }
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #0d6efd; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -129,6 +130,21 @@
     <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
   </select>
   <input type="text" id="plate-custom" class="custom-input" placeholder="請輸入車牌 (例如 KEA-1234)">
+
+  <label>🔢 趟次 <span>(Số chuyến)</span></label>
+  <select id="trip">
+    <option value="第1趟" selected>第1趟 (Chuyến 1)</option>
+    <option value="第2趟">第2趟 (Chuyến 2)</option>
+    <option value="第3趟">第3趟 (Chuyến 3)</option>
+    <option value="第4趟">第4趟 (Chuyến 4)</option>
+    <option value="第5趟">第5趟 (Chuyến 5)</option>
+    <option value="第6趟">第6趟 (Chuyến 6)</option>
+    <option value="第7趟">第7趟 (Chuyến 7)</option>
+    <option value="第8趟">第8趟 (Chuyến 8)</option>
+    <option value="第9趟">第9趟 (Chuyến 9)</option>
+    <option value="第10趟">第10趟 (Chuyến 10)</option>
+    <option value="加班">加班 (Tăng ca)</option>
+  </select>
 
   <label>📍 目前地點 <span>(Vị trí hiện tại)</span></label>
   <select id="location" onchange="checkCustomInput('location')">
@@ -212,7 +228,7 @@
   </div>
   
   <button class="btn-end" onclick="processClick('作業結束')"><span class="btn-text-main">🛑 結束今日作業</span><span class="btn-text-sub">Kết thúc công việc</span></button>
-  
+
   <div id="status">LIFF 初始化中...</div>
 
   <div id="manual-area">
@@ -223,6 +239,7 @@
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
+// ★★★ LIFF ID ★★★
 var LIFF_ID = "2008961063-iwAJvIC3";
 
 // 顯示/隱藏自訂輸入框
@@ -255,6 +272,10 @@ window.onload = function() {
   loadHistory('plate', 'vds_history_plate');
   loadHistory('location', 'vds_history_loc');
   loadHistory('destination', 'vds_history_dest');
+  
+  // 載入趟次記憶
+  var savedTrip = localStorage.getItem('vds_trip');
+  if(savedTrip) document.getElementById('trip').value = savedTrip;
 
   liff.init({ liffId: LIFF_ID }).then(function() {
     if (!liff.isLoggedIn()) { liff.login(); return; }
@@ -362,6 +383,9 @@ function processClick(action) {
     var plateSelect = document.getElementById('plate');
     var plate = plateSelect.value === 'custom' ? document.getElementById('plate-custom').value.trim().toUpperCase() : plateSelect.value;
     
+    // ★ 取得趟次
+    var trip = document.getElementById('trip').value;
+    
     var locSelect = document.getElementById('location');
     var loc = locSelect.value === 'custom' ? document.getElementById('location-custom').value : locSelect.value;
     
@@ -385,6 +409,9 @@ function processClick(action) {
 
     if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate');
     if (plate) localStorage.setItem('vds_plate', plate);
+    
+    // 記憶趟次
+    localStorage.setItem('vds_trip', trip);
 
     if (action !== "作業結束") {
         if (!loc || loc.trim() === "") {
@@ -406,7 +433,7 @@ function processClick(action) {
     var msg = "";
 
     if (action === "作業結束") {
-      msg = plateStr + driver + " 結束時間" + timeStr;
+      msg = plateStr + driver + " " + trip + " 結束時間" + timeStr;
     } else if (action === "出車") {
       if (!dest || dest.trim() === "") {
           document.getElementById('loading-mask').style.display = 'none';
@@ -421,10 +448,12 @@ function processClick(action) {
       }
       if(destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest');
       
-      msg = plateStr + driver + " " + loc + "出發前往" + dest + taskSuffix + " " + timeStr;
+      // ★ 組合訊息：加入趟次
+      // 格式：[車牌] 司機 趟次 地點出發前往目的地(類型) 時間
+      msg = plateStr + driver + " " + trip + " " + loc + "出發前往" + dest + taskSuffix + " " + timeStr;
     } else if (action === "抵達") {
-      if (loc === "公司") { msg = plateStr + driver + " 回到公司 " + timeStr; } 
-      else { msg = plateStr + driver + " 抵達" + loc + " " + timeStr; }
+      if (loc === "公司") { msg = plateStr + driver + " " + trip + " 回到公司 " + timeStr; } 
+      else { msg = plateStr + driver + " " + trip + " 抵達" + loc + " " + timeStr; }
     }
 
     tryAutoSend(msg);
