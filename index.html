@@ -6,44 +6,81 @@
   <title>🥕VDS 司機打卡🥕</title>
   <style>
     /* === 全局設定 === */
-    body { background-color: #f4f7f6; padding: 15px; font-family: "Microsoft JhengHei", sans-serif; color: #333; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; margin: 0; }
-    .card { background: white; padding: 25px 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 100%; max-width: 500px; margin: 0 auto; box-sizing: border-box; }
-    h3 { color: #2c3e50; text-align: center; margin: 0 0 20px 0; font-weight: 800; font-size: 22px; }
-    .sub-title { font-size: 13px; color: #95a5a6; font-weight: normal; margin-top: 4px; display: block; }
-    label { display: block; font-weight: 700; margin-top: 15px; margin-bottom: 8px; font-size: 15px; color: #34495e; }
-    select, input[type="text"] { width: 100%; height: 55px; font-size: 18px; font-weight: 500; border: 2px solid #eaedf1; border-radius: 16px; background-color: #fcfcfc; padding-left: 15px; appearance: none; outline: none; transition: border 0.2s; box-sizing: border-box; }
-    select { background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 15px top 50%; background-size: 10px auto; }
-    select:focus, input[type="text"]:focus { border-color: #0d6efd; background-color: #fff; }
-    #dest-label { color: #198754; } 
-    #destination { border: 2px solid #d1e7dd; background-color: #f8fffb; }
-    #destination:focus { border-color: #198754; }
+    body { background-color: #f0f2f5; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; margin: 0; }
+    
+    /* 卡片優化：更強的立體感 */
+    .card { background: white; padding: 25px 20px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin: 0 auto; box-sizing: border-box; }
+    
+    /* 標題優化 */
+    h3 { color: #198754; text-align: center; margin: 0 0 25px 0; font-weight: 900; font-size: 26px; letter-spacing: 1px; }
+    .sub-title { font-size: 14px; color: #6c757d; font-weight: normal; margin-top: 5px; display: block; letter-spacing: 0; }
+
+    /* 表單優化：字體加大，間距拉開 */
+    label { display: block; font-weight: 700; margin-top: 18px; margin-bottom: 8px; font-size: 17px; color: #343a40; }
+    
+    /* 輸入框優化：邊框加深(戶外可見)，字體加大 */
+    select, input[type="text"] { 
+      width: 100%; height: 60px; /* 加高 */
+      font-size: 20px; /* 加大 */
+      font-weight: 500;
+      border: 2px solid #ced4da; /* 加深邊框 */
+      border-radius: 12px; 
+      background-color: #fff; 
+      padding-left: 15px; 
+      appearance: none; outline: none; transition: all 0.2s; box-sizing: border-box; color: #212529;
+    }
+    select:focus, input[type="text"]:focus { border-color: #198754; box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15); }
+    
+    /* 下拉選單箭頭優化 */
+    select { background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 20px top 50%; background-size: 14px auto; }
+
+    /* 重點欄位凸顯 */
+    #dest-label { color: #198754; font-size: 18px; } 
+    #destination { border: 2px solid #198754; background-color: #f8fff9; }
+
     .custom-input { display: none; margin-top: 10px; border-color: #ffc107 !important; background-color: #fffdf5 !important; }
     #plate-custom { text-transform: uppercase; }
-    .radio-group { display: flex; gap: 8px; margin-top: 8px; }
+
+    /* 選項按鈕優化 */
+    .radio-group { display: flex; gap: 10px; margin-top: 10px; }
     .radio-option { flex: 1; position: relative; }
     .radio-option input { position: absolute; opacity: 0; cursor: pointer; }
-    .radio-content { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; border: 2px solid transparent; border-radius: 12px; padding: 10px 0; cursor: pointer; transition: 0.2s; color: #6c757d; }
-    .radio-text-main { font-size: 16px; font-weight: bold; }
-    .radio-text-sub { font-size: 11px; margin-top: 2px; }
-    .radio-option input:checked + .radio-content { background-color: #eef5ff; border-color: #0d6efd; color: #0d6efd; }
-    .btn-row { display: flex; gap: 10px; margin-top: 25px; }
-    button { flex: 1; height: 56px; border: none; border-radius: 28px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.1s, box-shadow 0.1s; font-family: inherit; }
-    button:active { transform: scale(0.96); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    button:disabled { background: #adb5bd !important; cursor: not-allowed; transform: none; box-shadow: none; }
-    .btn-text-main { font-size: 17px; font-weight: 800; line-height: 1.2; }
-    .btn-text-sub { font-size: 11px; opacity: 0.9; }
-    .btn-go { background: linear-gradient(135deg, #198754, #146c43); } 
+    .radio-content { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 12px; padding: 12px 0; cursor: pointer; transition: 0.2s; color: #495057; }
+    .radio-text-main { font-size: 18px; font-weight: bold; }
+    .radio-text-sub { font-size: 12px; margin-top: 2px; }
+    .radio-option input:checked + .radio-content { background-color: #e6f4ea; border-color: #198754; color: #198754; box-shadow: 0 4px 10px rgba(25, 135, 84, 0.15); }
+
+    /* 分隔線 */
+    .divider { height: 1px; background: #e9ecef; margin: 25px 0 10px 0; }
+
+    /* 按鈕優化 */
+    .btn-row { display: flex; gap: 12px; margin-top: 30px; }
+    button { 
+        flex: 1; height: 64px; /* 加高 */
+        border: none; border-radius: 16px; 
+        color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.1s, box-shadow 0.1s; 
+        font-family: inherit; position: relative; overflow: hidden;
+    }
+    button:active { transform: scale(0.98); box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
+    button:disabled { background: #ced4da !important; cursor: not-allowed; transform: none; box-shadow: none; opacity: 0.8; }
+
+    .btn-text-main { font-size: 19px; font-weight: 800; line-height: 1.2; letter-spacing: 0.5px; }
+    .btn-text-sub { font-size: 12px; opacity: 0.9; margin-top: 2px; }
+    
+    .btn-go { background: linear-gradient(135deg, #198754, #157347); } 
     .btn-arrive { background: linear-gradient(135deg, #0d6efd, #0b5ed7); } 
-    .btn-end { background: linear-gradient(135deg, #dc3545, #b02a37); width: 100%; margin-top: 12px; } 
+    .btn-end { background: linear-gradient(135deg, #dc3545, #bb2d3b); width: 100%; margin-top: 15px; } 
+
     #loading-mask { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s; }
-    .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #0d6efd; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+    .spinner { width: 45px; height: 45px; border: 5px solid #f3f3f3; border-top: 5px solid #198754; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    #loading-text { font-size: 18px; color: #0d6efd; font-weight: bold; }
+    #loading-text { font-size: 18px; color: #198754; font-weight: bold; }
+    
     #manual-area { display: none; margin-top: 20px; padding: 15px; background: #fff8e1; border: 2px dashed #ffc107; border-radius: 16px; text-align: center; animation: fadeIn 0.5s; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    #manual-btn { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 56px; background: linear-gradient(135deg, #198754, #146c43); color: white; text-decoration: none; border-radius: 28px; margin-top: 10px; box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3); animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7); } 70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); } }
-    #status { text-align:center; margin-top:15px; color:#adb5bd; font-size:12px; }
+    #manual-btn { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 60px; background: linear-gradient(135deg, #198754, #146c43); color: white; text-decoration: none; border-radius: 12px; margin-top: 10px; box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3); }
+    
+    #status { text-align:center; margin-top:20px; color:#adb5bd; font-size:13px; font-family: monospace; }
   </style>
 </head>
 <body>
@@ -96,6 +133,8 @@
     <option value="第9趟">第9趟 (Chuyến 9)</option>
     <option value="第10趟">第10趟 (Chuyến 10)</option>
   </select>
+
+  <div class="divider"></div>
 
   <label>📍 目前地點 <span>(Vị trí hiện tại)</span></label>
   <select id="location" onchange="checkCustomInput('location')">
@@ -173,6 +212,8 @@
     <label class="radio-option"><input type="radio" name="taskType" value="人採"><div class="radio-content"><span class="radio-text-main">人採</span><span class="radio-text-sub">Người thu</span></div></label>
   </div>
 
+  <div class="divider"></div>
+
   <div class="btn-row">
     <button class="btn-go" onclick="processClick('出車')"><span class="btn-text-main">🚀 出發/出車</span><span class="btn-text-sub">Xuất phát</span></button>
     <button class="btn-arrive" onclick="processClick('抵達')"><span class="btn-text-main">🏁 抵達/回到</span><span class="btn-text-sub">Đến nơi</span></button>
@@ -222,15 +263,12 @@ window.onload = function() {
   
   // ★ 智慧趟次記憶 (隔日重置)
   var savedDate = localStorage.getItem('vds_trip_date');
-  var today = new Date().toDateString(); // 取得今天日期 (例如 "Fri Oct 27 2023")
+  var today = new Date().toDateString(); 
   
   if (savedDate === today) {
-      // 如果是同一天，恢復上次的趟次
       var savedTrip = localStorage.getItem('vds_trip_val');
       if(savedTrip) document.getElementById('trip').value = savedTrip;
   } else {
-      // 如果是不同天 (或沒紀錄)，不恢復 -> 預設就是第1趟
-      // 清空舊紀錄比較乾淨 (選用)
       localStorage.removeItem('vds_trip_val');
       localStorage.removeItem('vds_trip_date');
   }
@@ -387,9 +425,8 @@ function processClick(action) {
     var taskSuffix = (type === "") ? "" : "(" + type + ")";
     var msg = "";
 
-    // ★★★ 訊息格式邏輯修改 ★★★
+    // ★★★ 訊息格式邏輯修改 (v9.7 邏輯) ★★★
     if (action === "作業結束") {
-      // 結束: 顯示車牌，但隱藏趟次 (例如: [KER-1677] 劉文生 結束時間 17:30)
       msg = plateStr + driver + " 結束時間" + timeStr;
     } else if (action === "出車") {
       if (!dest || dest.trim() === "") {
@@ -405,10 +442,8 @@ function processClick(action) {
       }
       if(destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest');
       
-      // 出車: 資訊最完整
       msg = plateStr + driver + " " + trip + " " + loc + "出發前往" + dest + taskSuffix + " " + timeStr;
     } else if (action === "抵達") {
-      // 抵達: 隱藏車牌/趟次
       if (loc === "公司") { msg = driver + " 回到公司 " + timeStr; } 
       else { msg = driver + " 抵達" + loc + " " + timeStr; }
     }
