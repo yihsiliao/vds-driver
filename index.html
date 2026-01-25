@@ -387,8 +387,10 @@ function processClick(action) {
     var taskSuffix = (type === "") ? "" : "(" + type + ")";
     var msg = "";
 
+    // ★★★ 訊息格式邏輯修改 ★★★
     if (action === "作業結束") {
-      msg = plateStr + driver + " " + trip + " 結束時間" + timeStr;
+      // 結束: 顯示車牌，但隱藏趟次 (例如: [KER-1677] 劉文生 結束時間 17:30)
+      msg = plateStr + driver + " 結束時間" + timeStr;
     } else if (action === "出車") {
       if (!dest || dest.trim() === "") {
           document.getElementById('loading-mask').style.display = 'none';
@@ -403,6 +405,7 @@ function processClick(action) {
       }
       if(destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest');
       
+      // 出車: 資訊最完整
       msg = plateStr + driver + " " + trip + " " + loc + "出發前往" + dest + taskSuffix + " " + timeStr;
     } else if (action === "抵達") {
       // 抵達: 隱藏車牌/趟次
