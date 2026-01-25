@@ -190,11 +190,10 @@
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-// ★★★ 第一步：填寫 ID 清單 ★★★
-// 用逗號分隔多個 ID，每個 ID 都要用引號包起來
-// 目前是空的 [""]，程式會顯示 ID 給您看，查到後請填入
-// 範例： var ALLOWED_GROUP_IDS = ["C12345xxxxx", "C98765yyyyy"];
-var ALLOWED_GROUP_IDS = [""]; 
+// ★★★ 第一步：填寫您的 ID ★★★
+// 目前先留空字串 ""，程式會自動顯示 ID 給您看
+// 查到 ID 後，請填入這裡，例如： var ALLOWED_GROUP_ID = "C12345xxxxx";
+var ALLOWED_GROUP_ID = ""; 
 
 var LIFF_ID = "2008961063-iwAJvIC3";
 
@@ -226,15 +225,8 @@ window.onload = function() {
   loadHistory('location', 'vds_history_loc');
   loadHistory('destination', 'vds_history_dest');
   
-  var savedDate = localStorage.getItem('vds_trip_date');
-  var today = new Date().toDateString();
-  if (savedDate === today) {
-      var savedTrip = localStorage.getItem('vds_trip_val');
-      if(savedTrip) document.getElementById('trip').value = savedTrip;
-  } else {
-      localStorage.removeItem('vds_trip_val');
-      localStorage.removeItem('vds_trip_date');
-  }
+  var savedTrip = localStorage.getItem('vds_trip');
+  if(savedTrip) document.getElementById('trip').value = savedTrip;
 
   liff.init({ liffId: LIFF_ID }).then(function() {
     if (!liff.isLoggedIn()) { liff.login(); return; }
@@ -242,38 +234,38 @@ window.onload = function() {
     var context = liff.getContext();
     var currentGroupId = (context && context.type === 'group') ? context.groupId : null;
 
-    // ★★★ 門禁檢查邏輯 (多群組版) ★★★
-    // 1. 如果清單是空的(第一次用)，顯示當前 ID
-    var isSetupMode = (ALLOWED_GROUP_IDS.length === 0) || (ALLOWED_GROUP_IDS.length === 1 && ALLOWED_GROUP_IDS[0] === "");
-
-    if (isSetupMode) {
+    // ★★★ 門禁檢查與 ID 顯示 ★★★
+    // 1. 如果 ALLOWED_GROUP_ID 是空的 (第一次使用)，就顯示 ID 讓您抄
+    // 2. 如果 ALLOWED_GROUP_ID 有填，但跟目前群組不一樣，就阻擋
+    
+    if (ALLOWED_GROUP_ID === "") {
+        // --- 查詢 ID 模式 ---
         if (currentGroupId) {
             document.body.innerHTML = `
                 <div style="text-align:center; padding:30px; background:#fff; height:100vh;">
                     <h2 style="color:#d63384;">⚠️ 系統設定中</h2>
-                    <p>您的群組 ID 如下，請複製並填入程式碼：</p>
+                    <p>請將下方 ID 複製，填入程式碼的 <strong>ALLOWED_GROUP_ID</strong> 欄位：</p>
                     <div style="background:#f8f9fa; padding:15px; border:2px dashed #333; margin:20px 0; font-weight:bold; font-size:18px; word-break:break-all; color:#0d6efd;">
                         ${currentGroupId}
                     </div>
-                    <p style="color:#666; font-size:13px;">(填入 ALLOWED_GROUP_IDS = ["${currentGroupId}"]; 後更新)</p>
+                    <p style="color:#666; font-size:13px;">(填入並更新後，此畫面就會消失，變成正常打卡畫面)</p>
                 </div>
             `;
             return;
+        } else {
+             // 如果不是在群組開 (例如私訊或瀏覽器)
+             // 這裡可以選擇不擋，或者提示要用群組開
         }
-    } else {
-        // 2. 正常模式：檢查當前 ID 是否在清單內
-        if (!currentGroupId || !ALLOWED_GROUP_IDS.includes(currentGroupId)) {
-            // 不在清單內，顯示無權限 (順便偷偷顯示 ID 方便管理員加新人)
-            document.body.innerHTML = `
-                <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#fff; text-align:center; padding:20px;">
-                    <div style="font-size:60px;">🚫</div>
-                    <h2 style="color:#dc3545; margin-top:20px;">無權限使用</h2>
-                    <p style="color:#666;">本系統僅限 VDS 指定群組使用。</p>
-                    <p style="color:#ccc; font-size:10px; margin-top:50px;">Debug: ${currentGroupId || 'Unknown'}</p>
-                </div>
-            `;
-            return;
-        }
+    } else if (currentGroupId !== ALLOWED_GROUP_ID) {
+        // --- 門禁阻擋模式 ---
+        document.body.innerHTML = `
+            <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background:#fff; text-align:center; padding:20px;">
+                <div style="font-size:60px;">🚫</div>
+                <h2 style="color:#dc3545; margin-top:20px;">無權限使用</h2>
+                <p style="color:#666;">此系統限定於 VDS 指定群組內使用。<br>請勿轉傳連結。</p>
+            </div>
+        `;
+        return; 
     }
     // ★★★ 檢查結束 ★★★
 
@@ -291,6 +283,8 @@ window.onload = function() {
     document.getElementById('loading-mask').style.display = 'none';
   });
 };
+
+// ... (以下為標準的 loadHistory, saveHistory, processClick 函式，完全保留 v9.5 的邏輯) ...
 
 function loadHistory(selectId, storageKey) {
     var history = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -402,9 +396,7 @@ function processClick(action) {
     if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate');
     if (plate) localStorage.setItem('vds_plate', plate);
     
-    var today = new Date().toDateString();
-    localStorage.setItem('vds_trip_date', today);
-    localStorage.setItem('vds_trip_val', trip);
+    localStorage.setItem('vds_trip', trip);
 
     if (action !== "作業結束") {
         if (!loc || loc.trim() === "") {
@@ -492,14 +484,3 @@ function showManualButton(msg) {
 </script>
 </body>
 </html>
-
-### 設定步驟 (小提醒)：
-1.  **第一步**：先上傳這份程式碼 (ID 保持空白)。
-2.  **第二步**：去群組點開連結，抄下畫面上顯示的 ID (例如 `C123...`)。
-3.  **第三步**：如果還有第二個群組，也去那個群組點開，抄下 ID。
-4.  **第四步**：回來修改程式碼第 307 行：
-    ```javascript
-    var ALLOWED_GROUP_IDS = ["C123...", "C456..."];
-    ```
-    (記得用引號包起來，中間用逗號隔開)
-5.  **最後更新**：上傳修改後的程式碼，完工！
