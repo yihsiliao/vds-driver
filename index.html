@@ -5,43 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>🥕VDS司機打卡🥕</title>
   <style>
-    /* === 全局設定 === */
+    /* === 全局設定 (v9.8 視覺優化版樣式) === */
     body { background-color: #f0f2f5; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; margin: 0; }
     
-    /* 卡片優化：更強的立體感 */
     .card { background: white; padding: 25px 20px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin: 0 auto; box-sizing: border-box; }
     
-    /* 標題優化 */
     h3 { color: #198754; text-align: center; margin: 0 0 25px 0; font-weight: 900; font-size: 26px; letter-spacing: 1px; }
     .sub-title { font-size: 14px; color: #6c757d; font-weight: normal; margin-top: 5px; display: block; letter-spacing: 0; }
 
-    /* 表單優化：字體加大，間距拉開 */
     label { display: block; font-weight: 700; margin-top: 18px; margin-bottom: 8px; font-size: 17px; color: #343a40; }
     
-    /* 輸入框優化：邊框加深(戶外可見)，字體加大 */
     select, input[type="text"] { 
-      width: 100%; height: 60px; /* 加高 */
-      font-size: 20px; /* 加大 */
-      font-weight: 500;
-      border: 2px solid #ced4da; /* 加深邊框 */
-      border-radius: 12px; 
-      background-color: #fff; 
-      padding-left: 15px; 
+      width: 100%; height: 60px; 
+      font-size: 20px; font-weight: 500;
+      border: 2px solid #ced4da; border-radius: 12px; 
+      background-color: #fff; padding-left: 15px; 
       appearance: none; outline: none; transition: all 0.2s; box-sizing: border-box; color: #212529;
     }
     select:focus, input[type="text"]:focus { border-color: #198754; box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15); }
     
-    /* 下拉選單箭頭優化 */
     select { background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 20px top 50%; background-size: 14px auto; }
 
-    /* 重點欄位凸顯 */
     #dest-label { color: #198754; font-size: 18px; } 
     #destination { border: 2px solid #198754; background-color: #f8fff9; }
 
     .custom-input { display: none; margin-top: 10px; border-color: #ffc107 !important; background-color: #fffdf5 !important; }
     #plate-custom { text-transform: uppercase; }
 
-    /* 選項按鈕優化 */
     .radio-group { display: flex; gap: 10px; margin-top: 10px; }
     .radio-option { flex: 1; position: relative; }
     .radio-option input { position: absolute; opacity: 0; cursor: pointer; }
@@ -50,14 +40,11 @@
     .radio-text-sub { font-size: 12px; margin-top: 2px; }
     .radio-option input:checked + .radio-content { background-color: #e6f4ea; border-color: #198754; color: #198754; box-shadow: 0 4px 10px rgba(25, 135, 84, 0.15); }
 
-    /* 分隔線 */
     .divider { height: 1px; background: #e9ecef; margin: 25px 0 10px 0; }
 
-    /* 按鈕優化 */
     .btn-row { display: flex; gap: 12px; margin-top: 30px; }
     button { 
-        flex: 1; height: 64px; /* 加高 */
-        border: none; border-radius: 16px; 
+        flex: 1; height: 64px; border: none; border-radius: 16px; 
         color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; 
         box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.1s, box-shadow 0.1s; 
         font-family: inherit; position: relative; overflow: hidden;
@@ -261,16 +248,36 @@ window.onload = function() {
   loadHistory('location', 'vds_history_loc');
   loadHistory('destination', 'vds_history_dest');
   
-  // ★ 智慧趟次記憶 (隔日重置)
+  // 1. 趟次記憶
   var savedDate = localStorage.getItem('vds_trip_date');
   var today = new Date().toDateString(); 
-  
   if (savedDate === today) {
       var savedTrip = localStorage.getItem('vds_trip_val');
       if(savedTrip) document.getElementById('trip').value = savedTrip;
   } else {
       localStorage.removeItem('vds_trip_val');
       localStorage.removeItem('vds_trip_date');
+  }
+
+  // ★ 2. 智慧地點接龍：讀取上次的目的地，設為這次的出發地
+  var lastDest = localStorage.getItem('vds_last_dest');
+  if (lastDest) {
+      var locSelect = document.getElementById('location');
+      var found = false;
+      // 嘗試在現有選項(含歷史紀錄)中尋找
+      for(var i=0; i<locSelect.options.length; i++) {
+          if(locSelect.options[i].value === lastDest) {
+              locSelect.selectedIndex = i;
+              found = true;
+              break;
+          }
+      }
+      // 如果選項裡沒有(可能是很久以前的自填)，則自動填入自定義
+      if(!found) {
+          locSelect.value = 'custom';
+          document.getElementById('location-custom').value = lastDest;
+          checkCustomInput('location');
+      }
   }
 
   liff.init({ liffId: LIFF_ID }).then(function() {
@@ -365,7 +372,7 @@ function updateDriverSelect(lineName) {
 
 function processClick(action) {
   try {
-    toggleButtons(true); // 鎖定防手抖
+    toggleButtons(true); 
 
     document.getElementById('loading-mask').style.display = 'flex';
     document.getElementById('manual-area').style.display = 'none';
@@ -401,10 +408,20 @@ function processClick(action) {
     if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate');
     if (plate) localStorage.setItem('vds_plate', plate);
     
-    // ★ 存入包含日期的趟次記憶
+    // 存入包含日期的趟次記憶
     var today = new Date().toDateString();
     localStorage.setItem('vds_trip_date', today);
     localStorage.setItem('vds_trip_val', trip);
+
+    // ★ 智慧接龍：儲存「下一次的出發點」
+    // 如果是「出車」，下一次的出發點就是這次的「目的地」
+    if (action === '出車') {
+        if(dest) localStorage.setItem('vds_last_dest', dest);
+    } 
+    // 如果是「抵達」或「結束」，下一次的出發點就是這次的「目前地點」
+    else if (action === '抵達' || action === '作業結束') {
+        if(loc) localStorage.setItem('vds_last_dest', loc);
+    }
 
     if (action !== "作業結束") {
         if (!loc || loc.trim() === "") {
@@ -425,7 +442,7 @@ function processClick(action) {
     var taskSuffix = (type === "") ? "" : "(" + type + ")";
     var msg = "";
 
-    // ★★★ 訊息格式邏輯修改 (v9.7 邏輯) ★★★
+    // 訊息格式邏輯
     if (action === "作業結束") {
       msg = plateStr + driver + " 結束時間" + timeStr;
     } else if (action === "出車") {
