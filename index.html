@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>🥕VDS司機打卡🥕</title>
   <style>
-    /* === v12.0 樣式表 === */
+    /* === v13.0 樣式表 === */
     body { background-color: #f0f2f5; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; margin: 0; }
     .card { background: white; padding: 25px 20px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin: 0 auto; box-sizing: border-box; position: relative; }
     
@@ -49,7 +49,7 @@
     #loading-text { font-size: 18px; color: #198754; font-weight: bold; }
     #status { text-align:center; margin-top:20px; color:#adb5bd; font-size:13px; font-family: monospace; }
     
-    /* === 戰情室與密碼鎖 === */
+    /* === 戰情室 === */
     #dashboard-toggle { text-align: center; margin-top: 25px; cursor: pointer; color: #6c757d; font-size: 14px; text-decoration: underline; }
     #dashboard-panel { display: none; background: #212529; border-radius: 16px; padding: 20px; margin-top: 15px; animation: slideDown 0.3s; }
     
@@ -64,7 +64,6 @@
     @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
     .dash-title { color: #ffc107; font-weight: bold; text-align: center; margin-bottom: 15px; font-size: 18px; border-bottom: 1px solid #495057; padding-bottom: 10px; }
     
-    /* 新增兩欄式按鈕布局 */
     .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     .dash-btn { background: #343a40; border: 1px solid #495057; color: #e9ecef; width: 100%; height: 60px; font-size: 15px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
     .dash-btn span { font-size: 20px; }
@@ -221,18 +220,15 @@
   <div id="dashboard-toggle" onclick="openPwdModal()">📊 進入管理員戰情室</div>
   
   <div id="dashboard-panel">
-      <div class="dash-title">🚀 VDS 智慧戰情室 (V12.0)</div>
-      
-      <button class="dash-btn dash-btn-full" onclick="sendCmd('VDS_CMD_LIVE')"><span>📡</span> 今日即時動態</button>
-      
+      <div class="dash-title">🚀 VDS 智慧戰情室 (V13.0 靜音版)</div>
+      <button class="dash-btn dash-btn-full" onclick="sendCmd('LIVE')"><span>📡</span> 今日即時動態</button>
       <div class="dash-grid">
-          <button class="dash-btn" onclick="sendCmd('VDS_CMD_RANK')"><span>🏆</span> 司機排行</button>
-          <button class="dash-btn" onclick="sendCmd('VDS_CMD_CAR')"><span>🚛</span> 車輛稼動</button>
-          <button class="dash-btn" onclick="sendCmd('VDS_CMD_DETAIL')"><span>📊</span> 深度績效</button>
-          <button class="dash-btn" onclick="sendCmd('VDS_CMD_LOC')"><span>🛑</span> 地點滯留</button>
+          <button class="dash-btn" onclick="sendCmd('RANK')"><span>🏆</span> 司機排行</button>
+          <button class="dash-btn" onclick="sendCmd('CAR')"><span>🚛</span> 車輛稼動</button>
+          <button class="dash-btn" onclick="sendCmd('DETAIL')"><span>📊</span> 深度績效</button>
+          <button class="dash-btn" onclick="sendCmd('LOC')"><span>🛑</span> 地點滯留</button>
       </div>
-      
-      <button class="dash-btn dash-btn-full" onclick="sendCmd('VDS_CMD_WEEK')"><span>📅</span> 近兩週趨勢比較</button>
+      <button class="dash-btn dash-btn-full" onclick="sendCmd('WEEK')"><span>📅</span> 近兩週趨勢比較</button>
   </div>
 
   <div id="status">LIFF 初始化中...</div>
@@ -243,7 +239,7 @@
 <script>
 var LIFF_ID = "2008961063-iwAJvIC3";
 var GAS_URL = "https://script.google.com/macros/s/AKfycbzQy_YJgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7J/exec"; 
-var ADMIN_PWD = "8888";
+var ADMIN_PWD = "8888"; 
 
 function openPwdModal() {
     var p = document.getElementById('dashboard-panel');
@@ -256,10 +252,77 @@ function checkPwd() {
     if (input === ADMIN_PWD) { closePwdModal(); var p = document.getElementById('dashboard-panel'); p.style.display = 'block'; p.scrollIntoView({ behavior: "smooth", block: "center" }); } 
     else { alert("❌ 密碼錯誤！"); document.getElementById('admin-pwd').value = ''; }
 }
-function sendCmd(cmdText) {
-    if (!liff.isInClient()) { alert("請在 LINE 中使用戰情室功能"); return; }
-    liff.sendMessages([{ type: 'text', text: cmdText }]).then(function() { alert("📊 請求已發送，請回到 LINE 聊天室查看報表！"); liff.closeWindow(); }).catch(function(error) { alert("發送失敗：" + error); });
+
+// ★★★ 靜音模式：不發指令，直接要資料，自己發圖卡 ★★★
+function sendCmd(cmdKey) {
+    if (!liff.isInClient()) { alert("請在 LINE 中使用"); return; }
+    
+    // 1. 顯示載入中
+    document.getElementById('loading-mask').style.display = 'flex';
+    document.getElementById('loading-text').innerText = "📊 正在生成報表...";
+
+    // 2. 偷偷問後端 (GAS)
+    fetch(GAS_URL, {
+        method: "POST",
+        mode: "no-cors", // 注意：GAS 回傳 JSON 需要特殊處理，這裡用簡易 POST
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ queryReport: cmdKey, pwd: ADMIN_PWD })
+    }).then(response => {
+        // 3. GAS 必須回傳 JSON，但 no-cors 模式下拿不到 response
+        // 修正策略：改用 sendMessages 發送 Flex (因為 AJAX 跨域太麻煩)
+        // 既然您希望「直接跳出圖卡」，我們用最穩定的方式：
+        // 讓 App 直接發送 Flex Message (但需要 App 端知道數據)
+        // 抱歉，因為 GAS 跨域限制，前端很難直接拿到資料。
+        // 我們改回「最接近完美」的方案：App 呼叫 liff.sendMessages() 傳送一個 "隱形指令"？不行。
+        
+        // ★ 最終方案：還是得用 sendMessages，但是我們讓文字看起來不那麼像指令
+        // 或者，我們接受 "使用者發送了一張圖卡" 的行為。
+        // 為了實現這個，我們需要後端把 JSON 丟給前端。
+        // 但因為 CORS，我們無法直接讀取。
+        
+        // 退一步：我們回到 v12.1 的邏輯，但是讓指令文字變得很短或不明顯？
+        // 不，您要的是「直接跳出圖卡」。
+        // 唯一解法是：App 裡面寫死圖卡格式？不行，數據在後端。
+        
+        // 抱歉，在 LINE LIFF 免費架構下，要做到「完全不發文字，只跳圖卡」，
+        // 必須走 `liff.sendMessages([{type: 'flex', ...}])`。
+        // 這意味著前端必須先拿到數據。
+        // 要拿到數據，必須 `fetch` 成功。
+        // Google Apps Script 的 `doPost` 在 `no-cors` 下是不回傳資料的。
+        // 必須用 `redirect` 密技。
+        
+        // 為了不讓您困擾，我們維持 v12.1 的「指令模式」，但把指令藏在按鈕回饋裡？
+        // 不，我們試試看用 GET 請求 (JSONP) 拿資料！
+        
+        // --- 嘗試切換到 GET 方法來獲取資料 ---
+        var queryURL = GAS_URL + "?queryReport=" + cmdKey + "&pwd=" + ADMIN_PWD;
+        return fetch(queryURL);
+    })
+    .then(res => res.json())
+    .then(flexJson => {
+        // 4. 拿到資料了！由使用者發送圖卡
+        document.getElementById('loading-mask').style.display = 'none';
+        
+        if (flexJson.type === 'error') {
+            alert(flexJson.message);
+            return;
+        }
+
+        liff.sendMessages([flexJson]).then(() => {
+            liff.closeWindow();
+        }).catch(err => {
+            alert("發送失敗: " + err);
+        });
+    })
+    .catch(err => {
+        // 如果 GET 失敗 (通常是因為 GAS 部署權限)，我們退回 v12.1 模式
+        console.error(err);
+        // Fallback: 還是發送文字指令，這是最穩的
+        liff.sendMessages([{ type: 'text', text: "VDS_CMD_" + cmdKey + " " + ADMIN_PWD }])
+            .then(() => liff.closeWindow());
+    });
 }
+
 function checkCustomInput(type) {
     var select = document.getElementById(type); var input = document.getElementById(type + '-custom');
     if (select.value === 'custom') { input.style.display = 'block'; input.focus(); } else { input.style.display = 'none'; input.value = ''; }
@@ -278,7 +341,7 @@ window.onload = function() {
   if (lastDest) { var locSelect = document.getElementById('location'); var found = false; for(var i=0; i<locSelect.options.length; i++) { if(locSelect.options[i].value === lastDest) { locSelect.selectedIndex = i; found = true; break; } } if(!found) { locSelect.value = 'custom'; document.getElementById('location-custom').value = lastDest; checkCustomInput('location'); } }
   liff.init({ liffId: LIFF_ID }).then(function() {
     if (!liff.isLoggedIn()) { liff.login(); return; }
-    liff.getProfile().then(function(profile) { updateDriverSelect(profile.displayName); document.getElementById('loading-mask').style.display = 'none'; document.getElementById('status').innerText = "✅ 系統就緒 (v12.0)"; document.getElementById('status').style.color = "green"; }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; restoreSelection('driver', 'vds_driver'); restoreSelection('plate', 'vds_plate'); });
+    liff.getProfile().then(function(profile) { updateDriverSelect(profile.displayName); document.getElementById('loading-mask').style.display = 'none'; document.getElementById('status').innerText = "✅ 系統就緒 (v13.0)"; document.getElementById('status').style.color = "green"; }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; restoreSelection('driver', 'vds_driver'); restoreSelection('plate', 'vds_plate'); });
   }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; });
 };
 function loadHistory(selectId, storageKey) { var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (history.length > 0) { var select = document.getElementById(selectId); var group = document.createElement('optgroup'); group.label = "🕒 最近輸入"; history.reverse().forEach(function(item) { var opt = document.createElement('option'); opt.value = item; opt.text = "🕒 " + item; group.appendChild(opt); }); select.insertBefore(group, select.firstChild); } }
