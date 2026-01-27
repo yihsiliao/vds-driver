@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>🥕VDS司機打卡🥕</title>
   <style>
-    /* === v11.1 樣式表 === */
+    /* === v12.0 樣式表 === */
     body { background-color: #f0f2f5; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; margin: 0; }
     .card { background: white; padding: 25px 20px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin: 0 auto; box-sizing: border-box; position: relative; }
     
@@ -53,7 +53,6 @@
     #dashboard-toggle { text-align: center; margin-top: 25px; cursor: pointer; color: #6c757d; font-size: 14px; text-decoration: underline; }
     #dashboard-panel { display: none; background: #212529; border-radius: 16px; padding: 20px; margin-top: 15px; animation: slideDown 0.3s; }
     
-    /* 密碼彈窗 */
     #password-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center; }
     .pwd-card { background: white; padding: 25px; border-radius: 16px; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
     .pwd-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #333; }
@@ -64,8 +63,14 @@
 
     @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
     .dash-title { color: #ffc107; font-weight: bold; text-align: center; margin-bottom: 15px; font-size: 18px; border-bottom: 1px solid #495057; padding-bottom: 10px; }
-    .dash-btn { background: #343a40; border: 1px solid #495057; color: #e9ecef; width: 100%; margin-bottom: 10px; height: 50px; font-size: 16px; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    
+    /* 新增兩欄式按鈕布局 */
+    .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .dash-btn { background: #343a40; border: 1px solid #495057; color: #e9ecef; width: 100%; height: 60px; font-size: 15px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+    .dash-btn span { font-size: 20px; }
     .dash-btn:active { background: #495057; transform: scale(0.98); }
+    .dash-btn-full { grid-column: span 2; background: linear-gradient(135deg, #0d6efd, #0b5ed7); border: none; font-weight: bold; }
+
     #manual-area { display: none; margin-top: 20px; padding: 15px; background: #fff8e1; border: 2px dashed #ffc107; border-radius: 16px; text-align: center; animation: fadeIn 0.5s; }
     #manual-btn { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 60px; background: linear-gradient(135deg, #198754, #146c43); color: white; text-decoration: none; border-radius: 12px; margin-top: 10px; box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3); }
   </style>
@@ -216,10 +221,18 @@
   <div id="dashboard-toggle" onclick="openPwdModal()">📊 進入管理員戰情室</div>
   
   <div id="dashboard-panel">
-      <div class="dash-title">🚀 VDS 智慧戰情室</div>
-      <button class="dash-btn" onclick="sendCmd('VDS_CMD_RANK')">🏆 司機排行榜 (本月)</button>
-      <button class="dash-btn" onclick="sendCmd('VDS_CMD_CAR')">🚛 車輛稼動率 (本月)</button>
-      <button class="dash-btn" onclick="sendCmd('VDS_CMD_LIVE')">📡 即時動態 (今日)</button>
+      <div class="dash-title">🚀 VDS 智慧戰情室 (V12.0)</div>
+      
+      <button class="dash-btn dash-btn-full" onclick="sendCmd('VDS_CMD_LIVE')"><span>📡</span> 今日即時動態</button>
+      
+      <div class="dash-grid">
+          <button class="dash-btn" onclick="sendCmd('VDS_CMD_RANK')"><span>🏆</span> 司機排行</button>
+          <button class="dash-btn" onclick="sendCmd('VDS_CMD_CAR')"><span>🚛</span> 車輛稼動</button>
+          <button class="dash-btn" onclick="sendCmd('VDS_CMD_DETAIL')"><span>📊</span> 深度績效</button>
+          <button class="dash-btn" onclick="sendCmd('VDS_CMD_LOC')"><span>🛑</span> 地點滯留</button>
+      </div>
+      
+      <button class="dash-btn dash-btn-full" onclick="sendCmd('VDS_CMD_WEEK')"><span>📅</span> 近兩週趨勢比較</button>
   </div>
 
   <div id="status">LIFF 初始化中...</div>
@@ -229,307 +242,73 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
 var LIFF_ID = "2008961063-iwAJvIC3";
-var GAS_URL = "https://script.google.com/macros/s/AKfycbzQy_YJgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7J/exec"; // ★★★ 請務必確認 GAS 網址正確 ★★★
-
-// ★★★ 戰情室密碼 (您可以修改這裡) ★★★
+var GAS_URL = "https://script.google.com/macros/s/AKfycbzQy_YJgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7J/exec"; 
 var ADMIN_PWD = "8888";
 
 function openPwdModal() {
     var p = document.getElementById('dashboard-panel');
-    if(p.style.display === 'block') {
-        p.style.display = 'none'; // 如果已打開，則關閉
-    } else {
-        document.getElementById('password-modal').style.display = 'flex';
-        document.getElementById('admin-pwd').value = '';
-        document.getElementById('admin-pwd').focus();
-    }
+    if(p.style.display === 'block') { p.style.display = 'none'; } 
+    else { document.getElementById('password-modal').style.display = 'flex'; document.getElementById('admin-pwd').value = ''; document.getElementById('admin-pwd').focus(); }
 }
-
-function closePwdModal() {
-    document.getElementById('password-modal').style.display = 'none';
-}
-
+function closePwdModal() { document.getElementById('password-modal').style.display = 'none'; }
 function checkPwd() {
     var input = document.getElementById('admin-pwd').value;
-    if (input === ADMIN_PWD) {
-        closePwdModal();
-        var p = document.getElementById('dashboard-panel');
-        p.style.display = 'block';
-        p.scrollIntoView({ behavior: "smooth", block: "center" });
-    } else {
-        alert("❌ 密碼錯誤！");
-        document.getElementById('admin-pwd').value = '';
-    }
+    if (input === ADMIN_PWD) { closePwdModal(); var p = document.getElementById('dashboard-panel'); p.style.display = 'block'; p.scrollIntoView({ behavior: "smooth", block: "center" }); } 
+    else { alert("❌ 密碼錯誤！"); document.getElementById('admin-pwd').value = ''; }
 }
-
 function sendCmd(cmdText) {
     if (!liff.isInClient()) { alert("請在 LINE 中使用戰情室功能"); return; }
-    liff.sendMessages([{ type: 'text', text: cmdText }]).then(function() {
-        alert("📊 請求已發送，請回到 LINE 聊天室查看報表！");
-        liff.closeWindow();
-    }).catch(function(error) {
-        alert("發送失敗：" + error);
-    });
+    liff.sendMessages([{ type: 'text', text: cmdText }]).then(function() { alert("📊 請求已發送，請回到 LINE 聊天室查看報表！"); liff.closeWindow(); }).catch(function(error) { alert("發送失敗：" + error); });
 }
-
 function checkCustomInput(type) {
-    var select = document.getElementById(type);
-    var input = document.getElementById(type + '-custom');
-    if (select.value === 'custom') { input.style.display = 'block'; input.focus(); } 
-    else { input.style.display = 'none'; input.value = ''; }
+    var select = document.getElementById(type); var input = document.getElementById(type + '-custom');
+    if (select.value === 'custom') { input.style.display = 'block'; input.focus(); } else { input.style.display = 'none'; input.value = ''; }
 }
 function toggleButtons(disabled) {
     var btns = document.querySelectorAll('button');
-    btns.forEach(function(btn) { 
-        if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm')) {
-            btn.disabled = disabled; 
-        }
-    });
+    btns.forEach(function(btn) { if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm')) { btn.disabled = disabled; } });
 }
-
 window.onload = function() {
-  setTimeout(function() { 
-      var mask = document.getElementById('loading-mask');
-      if(mask) mask.style.display = 'none'; 
-  }, 3000);
-  loadHistory('driver', 'vds_history_driver');
-  loadHistory('plate', 'vds_history_plate');
-  loadHistory('location', 'vds_history_loc');
-  loadHistory('destination', 'vds_history_dest');
-  
-  var savedDate = localStorage.getItem('vds_trip_date');
-  var today = new Date().toDateString(); 
-  if (savedDate === today) {
-      var savedTrip = localStorage.getItem('vds_trip_val');
-      if(savedTrip) document.getElementById('trip').value = savedTrip;
-  } else {
-      localStorage.removeItem('vds_trip_val');
-      localStorage.removeItem('vds_trip_date');
-  }
+  setTimeout(function() { var mask = document.getElementById('loading-mask'); if(mask) mask.style.display = 'none'; }, 3000);
+  loadHistory('driver', 'vds_history_driver'); loadHistory('plate', 'vds_history_plate'); loadHistory('location', 'vds_history_loc'); loadHistory('destination', 'vds_history_dest');
+  var savedDate = localStorage.getItem('vds_trip_date'); var today = new Date().toDateString(); 
+  if (savedDate === today) { var savedTrip = localStorage.getItem('vds_trip_val'); if(savedTrip) document.getElementById('trip').value = savedTrip; } 
+  else { localStorage.removeItem('vds_trip_val'); localStorage.removeItem('vds_trip_date'); }
   var lastDest = localStorage.getItem('vds_last_dest');
-  if (lastDest) {
-      var locSelect = document.getElementById('location');
-      var found = false;
-      for(var i=0; i<locSelect.options.length; i++) {
-          if(locSelect.options[i].value === lastDest) { locSelect.selectedIndex = i; found = true; break; }
-      }
-      if(!found) {
-          locSelect.value = 'custom';
-          document.getElementById('location-custom').value = lastDest;
-          checkCustomInput('location');
-      }
-  }
+  if (lastDest) { var locSelect = document.getElementById('location'); var found = false; for(var i=0; i<locSelect.options.length; i++) { if(locSelect.options[i].value === lastDest) { locSelect.selectedIndex = i; found = true; break; } } if(!found) { locSelect.value = 'custom'; document.getElementById('location-custom').value = lastDest; checkCustomInput('location'); } }
   liff.init({ liffId: LIFF_ID }).then(function() {
     if (!liff.isLoggedIn()) { liff.login(); return; }
-    liff.getProfile().then(function(profile) {
-        updateDriverSelect(profile.displayName);
-        document.getElementById('loading-mask').style.display = 'none';
-        document.getElementById('status').innerText = "✅ 系統就緒 (v11.1)";
-        document.getElementById('status').style.color = "green";
-    }).catch(function() {
-        document.getElementById('loading-mask').style.display = 'none';
-        restoreSelection('driver', 'vds_driver');
-        restoreSelection('plate', 'vds_plate');
-    });
-  }).catch(function() {
-    document.getElementById('loading-mask').style.display = 'none';
-  });
+    liff.getProfile().then(function(profile) { updateDriverSelect(profile.displayName); document.getElementById('loading-mask').style.display = 'none'; document.getElementById('status').innerText = "✅ 系統就緒 (v12.0)"; document.getElementById('status').style.color = "green"; }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; restoreSelection('driver', 'vds_driver'); restoreSelection('plate', 'vds_plate'); });
+  }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; });
 };
-
-function loadHistory(selectId, storageKey) {
-    var history = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    if (history.length > 0) {
-        var select = document.getElementById(selectId);
-        var group = document.createElement('optgroup');
-        group.label = "🕒 最近輸入";
-        history.reverse().forEach(function(item) {
-            var opt = document.createElement('option');
-            opt.value = item;
-            opt.text = "🕒 " + item;
-            group.appendChild(opt);
-        });
-        select.insertBefore(group, select.firstChild);
-    }
-}
-function saveHistory(val, storageKey) {
-    if(!val) return;
-    var history = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    var index = history.indexOf(val);
-    if (index > -1) { history.splice(index, 1); }
-    history.push(val);
-    if (history.length > 5) history.shift();
-    localStorage.setItem(storageKey, JSON.stringify(history));
-}
-function restoreSelection(elementId, storageKey) {
-    var saved = localStorage.getItem(storageKey);
-    if(saved) {
-        var select = document.getElementById(elementId);
-        for(var i=0; i<select.options.length; i++) {
-            if(select.options[i].value === saved) { select.selectedIndex = i; break; }
-        }
-    }
-}
-function updateDriverSelect(lineName) {
-    var driverSelect = document.getElementById('driver');
-    var savedDriver = localStorage.getItem('vds_driver'); 
-    if (savedDriver) {
-        for (var i = 0; i < driverSelect.options.length; i++) {
-            if (driverSelect.options[i].value === savedDriver) {
-                driverSelect.selectedIndex = i;
-                var statusDiv = document.getElementById('status');
-                if(statusDiv) statusDiv.innerHTML += " <span style='color:#198754'>(已記憶)</span>";
-                restoreSelection('plate', 'vds_plate');
-                return; 
-            }
-        }
-    }
-    var found = false;
-    for (var i = 0; i < driverSelect.options.length; i++) {
-        if (driverSelect.options[i].text.includes(lineName) || lineName.includes(driverSelect.options[i].value)) {
-            driverSelect.selectedIndex = i; found = true; break;
-        }
-    }
-    if (!found) {
-        var newOpt = document.createElement("option");
-        newOpt.text = lineName + " (LINE)"; newOpt.value = lineName;
-        if (driverSelect.length > 0) driverSelect.add(newOpt, driverSelect.options[1]);
-        else driverSelect.add(newOpt);
-        driverSelect.value = lineName;
-    }
-    restoreSelection('plate', 'vds_plate');
-}
-function sendToSheet(data) {
-    if (GAS_URL.indexOf("xxxx") > -1) { console.log("尚未設定 GAS URL"); return; }
-    fetch(GAS_URL, {
-        method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-    }).then(function() { console.log("已傳送至試算表"); }).catch(function(err) { console.error("傳送失敗", err); });
-}
+function loadHistory(selectId, storageKey) { var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (history.length > 0) { var select = document.getElementById(selectId); var group = document.createElement('optgroup'); group.label = "🕒 最近輸入"; history.reverse().forEach(function(item) { var opt = document.createElement('option'); opt.value = item; opt.text = "🕒 " + item; group.appendChild(opt); }); select.insertBefore(group, select.firstChild); } }
+function saveHistory(val, storageKey) { if(!val) return; var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); var index = history.indexOf(val); if (index > -1) { history.splice(index, 1); } history.push(val); if (history.length > 5) history.shift(); localStorage.setItem(storageKey, JSON.stringify(history)); }
+function restoreSelection(elementId, storageKey) { var saved = localStorage.getItem(storageKey); if(saved) { var select = document.getElementById(elementId); for(var i=0; i<select.options.length; i++) { if(select.options[i].value === saved) { select.selectedIndex = i; break; } } } }
+function updateDriverSelect(lineName) { var driverSelect = document.getElementById('driver'); var savedDriver = localStorage.getItem('vds_driver'); if (savedDriver) { for (var i = 0; i < driverSelect.options.length; i++) { if (driverSelect.options[i].value === savedDriver) { driverSelect.selectedIndex = i; var statusDiv = document.getElementById('status'); if(statusDiv) statusDiv.innerHTML += " <span style='color:#198754'>(已記憶)</span>"; restoreSelection('plate', 'vds_plate'); return; } } } var found = false; for (var i = 0; i < driverSelect.options.length; i++) { if (driverSelect.options[i].text.includes(lineName) || lineName.includes(driverSelect.options[i].value)) { driverSelect.selectedIndex = i; found = true; break; } } if (!found) { var newOpt = document.createElement("option"); newOpt.text = lineName + " (LINE)"; newOpt.value = lineName; if (driverSelect.length > 0) driverSelect.add(newOpt, driverSelect.options[1]); else driverSelect.add(newOpt); driverSelect.value = lineName; } restoreSelection('plate', 'vds_plate'); }
+function sendToSheet(data) { if (GAS_URL.indexOf("xxxx") > -1) { console.log("尚未設定 GAS URL"); return; } fetch(GAS_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }).then(function() { console.log("已傳送至試算表"); }).catch(function(err) { console.error("傳送失敗", err); }); }
 function processClick(action) {
   try {
-    toggleButtons(true); 
-    document.getElementById('loading-mask').style.display = 'flex';
-    document.getElementById('manual-area').style.display = 'none';
-    
-    var driverSelect = document.getElementById('driver');
-    var driver = driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value;
-    var plateSelect = document.getElementById('plate');
-    var plate = plateSelect.value === 'custom' ? document.getElementById('plate-custom').value.trim().toUpperCase() : plateSelect.value;
+    toggleButtons(true); document.getElementById('loading-mask').style.display = 'flex'; document.getElementById('manual-area').style.display = 'none';
+    var driverSelect = document.getElementById('driver'); var driver = driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value;
+    var plateSelect = document.getElementById('plate'); var plate = plateSelect.value === 'custom' ? document.getElementById('plate-custom').value.trim().toUpperCase() : plateSelect.value;
     var trip = document.getElementById('trip').value;
-    var locSelect = document.getElementById('location');
-    var loc = locSelect.value === 'custom' ? document.getElementById('location-custom').value : locSelect.value;
-    var destSelect = document.getElementById('destination');
-    var dest = destSelect.value === 'custom' ? document.getElementById('destination-custom').value : destSelect.value;
-    var type = "";
-    var radios = document.getElementsByName('taskType');
-    for (var i = 0; i < radios.length; i++) { if (radios[i].checked) { type = radios[i].value; break; } }
-
-    if (!driver || driver.trim() === "") {
-      document.getElementById('loading-mask').style.display = 'none';
-      alert("請選擇或輸入司機姓名！");
-      toggleButtons(false); 
-      if(driverSelect.value === 'custom') document.getElementById('driver-custom').focus();
-      return;
-    }
-    if(driverSelect.value === 'custom') saveHistory(driver, 'vds_history_driver');
-    localStorage.setItem('vds_driver', driver);
-    if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate');
-    if (plate) localStorage.setItem('vds_plate', plate);
-    
-    var today = new Date().toDateString();
-    localStorage.setItem('vds_trip_date', today);
-    localStorage.setItem('vds_trip_val', trip);
-
-    if (action === '出車') {
-        if(dest) localStorage.setItem('vds_last_dest', dest);
-    } else if (action === '抵達' || action === '作業結束') {
-        if(loc) localStorage.setItem('vds_last_dest', loc);
-    }
-
-    if (action !== "作業結束") {
-        if (!loc || loc.trim() === "") {
-            document.getElementById('loading-mask').style.display = 'none';
-            alert("請輸入「目前地點」！");
-            toggleButtons(false); 
-            if(locSelect.value === 'custom') document.getElementById('location-custom').focus();
-            return;
-        }
-        if(locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc');
-    }
-
-    var now = new Date();
-    var hh = now.getHours().toString().padStart(2, '0');
-    var mm = now.getMinutes().toString().padStart(2, '0');
-    var timeStr = hh + ":" + mm;
-    var plateStr = (plate) ? "[" + plate + "] " : "";
-    var taskSuffix = (type === "") ? "" : "(" + type + ")";
-    var msg = "";
-
-    if (action === "作業結束") {
-      msg = plateStr + driver + " 結束時間" + timeStr;
-    } else if (action === "出車") {
-      if (!dest || dest.trim() === "") {
-          document.getElementById('loading-mask').style.display = 'none';
-          alert("⚠️ 請選擇或輸入「預計前往」的目的地！");
-          toggleButtons(false); 
-          if(destSelect.value === 'custom') { document.getElementById('destination-custom').focus(); } 
-          else { document.getElementById('destination').focus(); }
-          return;
-      }
-      if(destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest');
-      msg = plateStr + driver + " " + trip + " " + loc + "出發前往" + dest + taskSuffix + " " + timeStr;
-    } else if (action === "抵達") {
-      if (loc === "公司") { msg = driver + " 回到公司 " + timeStr; } 
-      else { msg = driver + " 抵達" + loc + " " + timeStr; }
-    }
-
-    sendToSheet({
-        driver: driver,
-        plate: plate,
-        trip: trip,
-        location: loc,
-        destination: (action === '出車') ? dest : "",
-        taskType: type,
-        action: action
-    });
-
+    var locSelect = document.getElementById('location'); var loc = locSelect.value === 'custom' ? document.getElementById('location-custom').value : locSelect.value;
+    var destSelect = document.getElementById('destination'); var dest = destSelect.value === 'custom' ? document.getElementById('destination-custom').value : destSelect.value;
+    var type = ""; var radios = document.getElementsByName('taskType'); for (var i = 0; i < radios.length; i++) { if (radios[i].checked) { type = radios[i].value; break; } }
+    if (!driver || driver.trim() === "") { document.getElementById('loading-mask').style.display = 'none'; alert("請選擇或輸入司機姓名！"); toggleButtons(false); if(driverSelect.value === 'custom') document.getElementById('driver-custom').focus(); return; }
+    if(driverSelect.value === 'custom') saveHistory(driver, 'vds_history_driver'); localStorage.setItem('vds_driver', driver);
+    if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate'); if (plate) localStorage.setItem('vds_plate', plate);
+    var today = new Date().toDateString(); localStorage.setItem('vds_trip_date', today); localStorage.setItem('vds_trip_val', trip);
+    if (action === '出車') { if(dest) localStorage.setItem('vds_last_dest', dest); } else if (action === '抵達' || action === '作業結束') { if(loc) localStorage.setItem('vds_last_dest', loc); }
+    if (action !== "作業結束") { if (!loc || loc.trim() === "") { document.getElementById('loading-mask').style.display = 'none'; alert("請輸入「目前地點」！"); toggleButtons(false); if(locSelect.value === 'custom') document.getElementById('location-custom').focus(); return; } if(locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc'); }
+    var now = new Date(); var hh = now.getHours().toString().padStart(2, '0'); var mm = now.getMinutes().toString().padStart(2, '0'); var timeStr = hh + ":" + mm; var plateStr = (plate) ? "[" + plate + "] " : ""; var taskSuffix = (type === "") ? "" : "(" + type + ")"; var msg = "";
+    if (action === "作業結束") { msg = plateStr + driver + " 結束時間" + timeStr; } else if (action === "出車") { if (!dest || dest.trim() === "") { document.getElementById('loading-mask').style.display = 'none'; alert("⚠️ 請選擇或輸入「預計前往」的目的地！"); toggleButtons(false); if(destSelect.value === 'custom') { document.getElementById('destination-custom').focus(); } else { document.getElementById('destination').focus(); } return; } if(destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest'); msg = plateStr + driver + " " + trip + " " + loc + "出發前往" + dest + taskSuffix + " " + timeStr; } else if (action === "抵達") { if (loc === "公司") { msg = driver + " 回到公司 " + timeStr; } else { msg = driver + " 抵達" + loc + " " + timeStr; } }
+    sendToSheet({ driver: driver, plate: plate, trip: trip, location: loc, destination: (action === '出車') ? dest : "", taskType: type, action: action });
     tryAutoSend(msg);
-
-  } catch (e) {
-    alert("Error: " + e.message);
-    document.getElementById('loading-mask').style.display = 'none';
-    toggleButtons(false); 
-  }
+  } catch (e) { alert("Error: " + e.message); document.getElementById('loading-mask').style.display = 'none'; toggleButtons(false); }
 }
-function tryAutoSend(msg) {
-  if (!liff.isInClient()) { showManualButton(msg); return; }
-  liff.sendMessages([{ type: 'text', text: msg }])
-    .then(function() {
-      document.getElementById('loading-mask').style.display = 'none';
-      liff.closeWindow();
-    })
-    .catch(function(err) {
-      if (liff.isApiAvailable('shareTargetPicker')) {
-        liff.shareTargetPicker([{ type: "text", text: msg }])
-          .then(function(res) {
-            document.getElementById('loading-mask').style.display = 'none';
-            if (res) liff.closeWindow();
-            else toggleButtons(false); 
-          })
-          .catch(function() { showManualButton(msg); });
-      } else {
-         showManualButton(msg);
-      }
-    });
-}
-function showManualButton(msg) {
-  document.getElementById('loading-mask').style.display = 'none';
-  var area = document.getElementById('manual-area');
-  var btn = document.getElementById('manual-btn');
-  btn.href = "https://line.me/R/msg/text/?" + encodeURIComponent(msg);
-  area.style.display = 'block';
-  setTimeout(function() { area.scrollIntoView({ behavior: "smooth", block: "center" }); }, 100);
-}
+function tryAutoSend(msg) { if (!liff.isInClient()) { showManualButton(msg); return; } liff.sendMessages([{ type: 'text', text: msg }]).then(function() { document.getElementById('loading-mask').style.display = 'none'; liff.closeWindow(); }).catch(function(err) { if (liff.isApiAvailable('shareTargetPicker')) { liff.shareTargetPicker([{ type: "text", text: msg }]).then(function(res) { document.getElementById('loading-mask').style.display = 'none'; if (res) liff.closeWindow(); else toggleButtons(false); }).catch(function() { showManualButton(msg); }); } else { showManualButton(msg); } }); }
+function showManualButton(msg) { document.getElementById('loading-mask').style.display = 'none'; var area = document.getElementById('manual-area'); var btn = document.getElementById('manual-btn'); btn.href = "https://line.me/R/msg/text/?" + encodeURIComponent(msg); area.style.display = 'block'; setTimeout(function() { area.scrollIntoView({ behavior: "smooth", block: "center" }); }, 100); }
 </script>
 </body>
 </html>
