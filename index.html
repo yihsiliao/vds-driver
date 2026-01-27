@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>🥕VDS司機打卡🥕</title>
   <style>
-    /* === v14.0 樣式表 === */
+    /* === v16.0 樣式表 === */
     body { background-color: #f0f2f5; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; margin: 0; }
     .card { background: white; padding: 25px 20px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin: 0 auto; box-sizing: border-box; position: relative; }
     h3 { color: #198754; text-align: center; margin: 0 0 25px 0; font-weight: 900; font-size: 26px; letter-spacing: 1px; }
@@ -207,19 +207,16 @@
   <div id="dashboard-toggle" onclick="openPwdModal()">📊 進入管理員戰情室</div>
   
   <div id="dashboard-panel">
-      <div class="dash-title">🚀 VDS 智慧戰情室 (V14.0)</div>
-      
-      <button class="dash-btn dash-btn-ceo" onclick="sendCmd('CEO')"><span>🏭</span> 企業總裁儀表板</button>
-      
+      <div class="dash-title">🚀 VDS 智慧戰情室 (V16.0 穩定版)</div>
+      <button class="dash-btn dash-btn-ceo" onclick="sendCmd('總裁')"><span>🏭</span> 企業總裁儀表板</button>
       <div class="dash-grid">
-          <button class="dash-btn" onclick="sendCmd('RANK')"><span>🏆</span> 司機排行</button>
-          <button class="dash-btn" onclick="sendCmd('CAR')"><span>🚛</span> 車輛稼動</button>
-          <button class="dash-btn" onclick="sendCmd('DETAIL')"><span>📊</span> 深度績效</button>
-          <button class="dash-btn" onclick="sendCmd('LOC')"><span>🛑</span> 地點滯留</button>
+          <button class="dash-btn" onclick="sendCmd('排行')"><span>🏆</span> 司機排行</button>
+          <button class="dash-btn" onclick="sendCmd('車輛')"><span>🚛</span> 車輛稼動</button>
+          <button class="dash-btn" onclick="sendCmd('深度')"><span>📊</span> 深度績效</button>
+          <button class="dash-btn" onclick="sendCmd('地點')"><span>🛑</span> 地點滯留</button>
       </div>
-      
-      <button class="dash-btn dash-btn-full" onclick="sendCmd('LIVE')"><span>📡</span> 今日即時動態</button>
-      <button class="dash-btn dash-btn-full" onclick="sendCmd('WEEK')"><span>📅</span> 近兩週趨勢比較</button>
+      <button class="dash-btn dash-btn-full" onclick="sendCmd('動態')"><span>📡</span> 今日即時動態</button>
+      <button class="dash-btn dash-btn-full" onclick="sendCmd('趨勢')"><span>📅</span> 近兩週趨勢比較</button>
   </div>
 
   <div id="status">LIFF 初始化中...</div>
@@ -244,26 +241,18 @@ function checkPwd() {
     else { alert("❌ 密碼錯誤！"); document.getElementById('admin-pwd').value = ''; }
 }
 
-// ★★★ 真．靜音模式 ★★★
-function sendCmd(cmdKey) {
-    if (!liff.isInClient()) { alert("請在 LINE 中使用"); return; }
-    document.getElementById('loading-mask').style.display = 'flex';
-    document.getElementById('loading-text').innerText = "📊 正在生成報表...";
-
-    var queryURL = GAS_URL + "?queryReport=" + cmdKey + "&pwd=" + ADMIN_PWD;
-
-    fetch(queryURL)
-    .then(res => res.json())
-    .then(flexJson => {
-        document.getElementById('loading-mask').style.display = 'none';
-        if (flexJson.type === 'flex' && flexJson.altText === '錯誤') { alert("❌ 驗證失敗"); return; }
-        liff.sendMessages([flexJson]).then(() => liff.closeWindow()).catch(err => alert("發送失敗: " + err));
-    })
-    .catch(err => {
-        console.error(err);
-        document.getElementById('loading-mask').style.display = 'none';
-        alert("連線不穩定，切換至指令模式...");
-        liff.sendMessages([{ type: 'text', text: "VDS_CMD_" + cmdKey + " " + ADMIN_PWD }]).then(() => liff.closeWindow());
+// ★★★ 穩定模式 (v16.0)：使用中文指令發送文字 ★★★
+function sendCmd(cmdText) {
+    if (!liff.isInClient()) { alert("請在 LINE 中使用戰情室功能"); return; }
+    
+    // 組合指令：[戰情室] 8888 總裁
+    var fullCmd = "戰情室 " + ADMIN_PWD + " " + cmdText;
+    
+    liff.sendMessages([{ type: 'text', text: fullCmd }]).then(function() {
+        alert("📊 請求已發送，請回到 LINE 聊天室查看報表！");
+        liff.closeWindow();
+    }).catch(function(error) {
+        alert("發送失敗：" + error);
     });
 }
 
@@ -285,7 +274,7 @@ window.onload = function() {
   if (lastDest) { var locSelect = document.getElementById('location'); var found = false; for(var i=0; i<locSelect.options.length; i++) { if(locSelect.options[i].value === lastDest) { locSelect.selectedIndex = i; found = true; break; } } if(!found) { locSelect.value = 'custom'; document.getElementById('location-custom').value = lastDest; checkCustomInput('location'); } }
   liff.init({ liffId: LIFF_ID }).then(function() {
     if (!liff.isLoggedIn()) { liff.login(); return; }
-    liff.getProfile().then(function(profile) { updateDriverSelect(profile.displayName); document.getElementById('loading-mask').style.display = 'none'; document.getElementById('status').innerText = "✅ 系統就緒 (v14.0)"; document.getElementById('status').style.color = "green"; }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; restoreSelection('driver', 'vds_driver'); restoreSelection('plate', 'vds_plate'); });
+    liff.getProfile().then(function(profile) { updateDriverSelect(profile.displayName); document.getElementById('loading-mask').style.display = 'none'; document.getElementById('status').innerText = "✅ 系統就緒 (v16.0 穩定版)"; document.getElementById('status').style.color = "green"; }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; restoreSelection('driver', 'vds_driver'); restoreSelection('plate', 'vds_plate'); });
   }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; });
 };
 function loadHistory(selectId, storageKey) { var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (history.length > 0) { var select = document.getElementById(selectId); var group = document.createElement('optgroup'); group.label = "🕒 最近輸入"; history.reverse().forEach(function(item) { var opt = document.createElement('option'); opt.value = item; opt.text = "🕒 " + item; group.appendChild(opt); }); select.insertBefore(group, select.firstChild); } }
