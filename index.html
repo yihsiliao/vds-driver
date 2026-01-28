@@ -5,23 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>🥕VDS司機打卡🥕</title>
   <style>
-    /* === v16.1 樣式表 === */
+    /* === v18.1 樣式表 (含防呆機制) === */
     body { background-color: #f0f2f5; padding: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; margin: 0; }
     .card { background: white; padding: 25px 20px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin: 0 auto; box-sizing: border-box; position: relative; }
-    
     h3 { color: #198754; text-align: center; margin: 0 0 25px 0; font-weight: 900; font-size: 26px; letter-spacing: 1px; }
     .sub-title { font-size: 14px; color: #6c757d; font-weight: normal; margin-top: 5px; display: block; letter-spacing: 0; }
-
     label { display: block; font-weight: 700; margin-top: 18px; margin-bottom: 8px; font-size: 17px; color: #343a40; }
     select, input[type="text"], input[type="password"] { width: 100%; height: 60px; font-size: 20px; font-weight: 500; border: 2px solid #ced4da; border-radius: 12px; background-color: #fff; padding-left: 15px; appearance: none; outline: none; transition: all 0.2s; box-sizing: border-box; color: #212529; }
     select:focus, input[type="text"]:focus, input[type="password"]:focus { border-color: #198754; box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15); }
     select { background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 20px top 50%; background-size: 14px auto; }
-    
     #dest-label { color: #198754; font-size: 18px; } 
     #destination { border: 2px solid #198754; background-color: #f8fff9; }
     .custom-input { display: none; margin-top: 10px; border-color: #ffc107 !important; background-color: #fffdf5 !important; }
     #plate-custom { text-transform: uppercase; }
-
     .radio-group { display: flex; gap: 10px; margin-top: 10px; }
     .radio-option { flex: 1; position: relative; }
     .radio-option input { position: absolute; opacity: 0; cursor: pointer; }
@@ -29,30 +25,23 @@
     .radio-option input:checked + .radio-content { background-color: #e6f4ea; border-color: #198754; color: #198754; box-shadow: 0 4px 10px rgba(25, 135, 84, 0.15); }
     .radio-text-main { font-size: 18px; font-weight: bold; }
     .radio-text-sub { font-size: 12px; margin-top: 2px; }
-
     .divider { height: 1px; background: #e9ecef; margin: 25px 0 10px 0; }
-
     .btn-row { display: flex; gap: 12px; margin-top: 30px; }
     button { flex: 1; height: 64px; border: none; border-radius: 16px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.1s, box-shadow 0.1s; font-family: inherit; position: relative; overflow: hidden; }
     button:active { transform: scale(0.98); box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
     button:disabled { background: #ced4da !important; cursor: not-allowed; opacity: 0.8; }
-    
     .btn-go { background: linear-gradient(135deg, #198754, #157347); } 
     .btn-arrive { background: linear-gradient(135deg, #0d6efd, #0b5ed7); } 
     .btn-end { background: linear-gradient(135deg, #dc3545, #bb2d3b); width: 100%; margin-top: 15px; } 
     .btn-text-main { font-size: 19px; font-weight: 800; line-height: 1.2; letter-spacing: 0.5px; }
     .btn-text-sub { font-size: 12px; opacity: 0.9; margin-top: 2px; }
-
     #loading-mask { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s; }
     .spinner { width: 45px; height: 45px; border: 5px solid #f3f3f3; border-top: 5px solid #198754; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     #loading-text { font-size: 18px; color: #198754; font-weight: bold; }
     #status { text-align:center; margin-top:20px; color:#adb5bd; font-size:13px; font-family: monospace; }
-    
-    /* === 戰情室 === */
     #dashboard-toggle { text-align: center; margin-top: 25px; cursor: pointer; color: #6c757d; font-size: 14px; text-decoration: underline; }
     #dashboard-panel { display: none; background: #212529; border-radius: 16px; padding: 20px; margin-top: 15px; animation: slideDown 0.3s; }
-    
     #password-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center; }
     .pwd-card { background: white; padding: 25px; border-radius: 16px; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
     .pwd-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #333; }
@@ -60,17 +49,14 @@
     .pwd-btns { display: flex; gap: 10px; }
     .btn-cancel { background: #6c757d; font-size: 16px; height: 45px; }
     .btn-confirm { background: #198754; font-size: 16px; height: 45px; }
-
     @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
     .dash-title { color: #ffc107; font-weight: bold; text-align: center; margin-bottom: 15px; font-size: 18px; border-bottom: 1px solid #495057; padding-bottom: 10px; }
-    
     .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     .dash-btn { background: #343a40; border: 1px solid #495057; color: #e9ecef; width: 100%; height: 60px; font-size: 15px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
     .dash-btn span { font-size: 20px; }
     .dash-btn:active { background: #495057; transform: scale(0.98); }
     .dash-btn-full { grid-column: span 2; background: linear-gradient(135deg, #0d6efd, #0b5ed7); border: none; font-weight: bold; }
     .dash-btn-ceo { grid-column: span 2; background: linear-gradient(135deg, #1A237E, #303F9F); border: 2px solid #FFD700; color: #FFD700; font-weight: 900; }
-
     #manual-area { display: none; margin-top: 20px; padding: 15px; background: #fff8e1; border: 2px dashed #ffc107; border-radius: 16px; text-align: center; animation: fadeIn 0.5s; }
     #manual-btn { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 60px; background: linear-gradient(135deg, #198754, #146c43); color: white; text-decoration: none; border-radius: 12px; margin-top: 10px; box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3); }
   </style>
@@ -132,7 +118,6 @@
     <option value="第8趟">第8趟</option>
     <option value="第9趟">第9趟</option>
     <option value="第10趟">第10趟</option>
-    <option value="加班">加班 (Tăng ca)</option>
   </select>
 
   <div class="divider"></div>
@@ -222,7 +207,7 @@
   <div id="dashboard-toggle" onclick="openPwdModal()">📊 進入管理員戰情室</div>
   
   <div id="dashboard-panel">
-      <div class="dash-title">🚀 VDS 智慧戰情室 (V16.1 修復版)</div>
+      <div class="dash-title">🚀 VDS 智慧戰情室 (V17.0)</div>
       
       <button class="dash-btn dash-btn-ceo" onclick="sendCmd('總裁')"><span>🏭</span> 企業總裁儀表板</button>
       
@@ -259,11 +244,9 @@ function checkPwd() {
     else { alert("❌ 密碼錯誤！"); document.getElementById('admin-pwd').value = ''; }
 }
 
-// ★★★ 穩定模式 (v16.1)：使用中文指令發送文字 ★★★
 function sendCmd(cmdText) {
     if (!liff.isInClient()) { alert("請在 LINE 中使用戰情室功能"); return; }
     
-    // 組合指令：[戰情室] 8888 總裁
     var fullCmd = "戰情室 " + ADMIN_PWD + " " + cmdText;
     
     liff.sendMessages([{ type: 'text', text: fullCmd }]).then(function() {
@@ -292,7 +275,7 @@ window.onload = function() {
   if (lastDest) { var locSelect = document.getElementById('location'); var found = false; for(var i=0; i<locSelect.options.length; i++) { if(locSelect.options[i].value === lastDest) { locSelect.selectedIndex = i; found = true; break; } } if(!found) { locSelect.value = 'custom'; document.getElementById('location-custom').value = lastDest; checkCustomInput('location'); } }
   liff.init({ liffId: LIFF_ID }).then(function() {
     if (!liff.isLoggedIn()) { liff.login(); return; }
-    liff.getProfile().then(function(profile) { updateDriverSelect(profile.displayName); document.getElementById('loading-mask').style.display = 'none'; document.getElementById('status').innerText = "✅ 系統就緒 (v16.1 穩定版)"; document.getElementById('status').style.color = "green"; }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; restoreSelection('driver', 'vds_driver'); restoreSelection('plate', 'vds_plate'); });
+    liff.getProfile().then(function(profile) { updateDriverSelect(profile.displayName); document.getElementById('loading-mask').style.display = 'none'; document.getElementById('status').innerText = "✅ 系統就緒 (v18.1)"; document.getElementById('status').style.color = "green"; }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; restoreSelection('driver', 'vds_driver'); restoreSelection('plate', 'vds_plate'); });
   }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; });
 };
 function loadHistory(selectId, storageKey) { var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (history.length > 0) { var select = document.getElementById(selectId); var group = document.createElement('optgroup'); group.label = "🕒 最近輸入"; history.reverse().forEach(function(item) { var opt = document.createElement('option'); opt.value = item; opt.text = "🕒 " + item; group.appendChild(opt); }); select.insertBefore(group, select.firstChild); } }
@@ -315,6 +298,21 @@ function processClick(action) {
     var today = new Date().toDateString(); localStorage.setItem('vds_trip_date', today); localStorage.setItem('vds_trip_val', trip);
     if (action === '出車') { if(dest) localStorage.setItem('vds_last_dest', dest); } else if (action === '抵達' || action === '作業結束') { if(loc) localStorage.setItem('vds_last_dest', loc); }
     if (action !== "作業結束") { if (!loc || loc.trim() === "") { document.getElementById('loading-mask').style.display = 'none'; alert("請輸入「目前地點」！"); toggleButtons(false); if(locSelect.value === 'custom') document.getElementById('location-custom').focus(); return; } if(locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc'); }
+    
+    // ★★★ 防呆邏輯：檢查上一筆動作 ★★★
+    var lastAction = localStorage.getItem('vds_last_status_' + driver); // 根據司機名記憶
+    if (action === '出車' && lastAction === '出車') {
+        if (!confirm("⚠️ 警告：您上一筆也是「出發」！\n\n系統偵測到您可能忘記按「抵達」了。\n\n按「確定」強制出發\n按「取消」返回檢查")) {
+            document.getElementById('loading-mask').style.display = 'none';
+            toggleButtons(false);
+            return; // 中止傳送
+        }
+    }
+    // 更新狀態
+    if (action === '出車') localStorage.setItem('vds_last_status_' + driver, '出車');
+    else if (action === '抵達') localStorage.setItem('vds_last_status_' + driver, '抵達');
+    else if (action === '作業結束') localStorage.setItem('vds_last_status_' + driver, '結束');
+
     var now = new Date(); var hh = now.getHours().toString().padStart(2, '0'); var mm = now.getMinutes().toString().padStart(2, '0'); var timeStr = hh + ":" + mm; var plateStr = (plate) ? "[" + plate + "] " : ""; var taskSuffix = (type === "") ? "" : "(" + type + ")"; var msg = "";
     if (action === "作業結束") { msg = plateStr + driver + " 結束時間" + timeStr; } else if (action === "出車") { if (!dest || dest.trim() === "") { document.getElementById('loading-mask').style.display = 'none'; alert("⚠️ 請選擇或輸入「預計前往」的目的地！"); toggleButtons(false); if(destSelect.value === 'custom') { document.getElementById('destination-custom').focus(); } else { document.getElementById('destination').focus(); } return; } if(destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest'); msg = plateStr + driver + " " + trip + " " + loc + "出發前往" + dest + taskSuffix + " " + timeStr; } else if (action === "抵達") { if (loc === "公司") { msg = driver + " 回到公司 " + timeStr; } else { msg = driver + " 抵達" + loc + " " + timeStr; } }
     sendToSheet({ driver: driver, plate: plate, trip: trip, location: loc, destination: (action === '出車') ? dest : "", taskType: type, action: action });
