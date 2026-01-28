@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>🥕VDS 司機打卡 | Chấm công</title>
   <style>
-    /* v33.0 UI Perfect */
+    /* v42.0 Linkage UI */
     body { background-color: #f8f9fa; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; margin: 0; }
     .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; }
     
@@ -73,6 +73,10 @@
 
     #manual-area { display: none; margin-top: 15px; padding: 12px; background: #fff3cd; border: 1px dashed #ffc107; border-radius: 12px; text-align: center; }
     #manual-btn { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 50px; background: linear-gradient(135deg, #198754, #146c43); color: white; text-decoration: none; border-radius: 10px; margin-top: 8px; box-shadow: 0 3px 6px rgba(25, 135, 84, 0.2); }
+    
+    /* v42.0 New Feature: Dispatch Notice */
+    #dispatch-notice { display: none; background: #e0f2f1; color: #00695c; padding: 10px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #80cbc4; text-align: center; font-weight: bold; font-size: 14px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 150, 136, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(0, 150, 136, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 150, 136, 0); } }
   </style>
 </head>
 <body>
@@ -91,9 +95,11 @@
 </div>
 
 <div class="card" id="main-card">
-  <h3>🥕VDS 打卡系統 v33</h3>
+  <h3>🥕VDS 打卡系統 v42</h3>
   <span class="sub-title">Hệ thống chấm công tài xế</span>
   
+  <div id="dispatch-notice">🚀 系統已為您自動帶入派工任務</div>
+
   <label>👨🏼‍🌾 司機姓名 <span>(Tên tài xế)</span></label>
   <select id="driver" onchange="checkCustomInput('driver')">
     <option value="" disabled selected>載入中... (Đang tải...)</option>
@@ -133,6 +139,7 @@
     <option value="第8趟">第8趟 (Chuyến 8)</option>
     <option value="第9趟">第9趟 (Chuyến 9)</option>
     <option value="第10趟">第10趟 (Chuyến 10)</option>
+    <option value="加班">加班 (Tăng ca)</option>
   </select>
 
   <div class="divider"></div>
@@ -208,9 +215,9 @@
 
   <label>⚙️ 作業/趟次 <span>(Loại công việc)</span></label>
   <div class="radio-group">
-    <label class="radio-option"><input type="radio" name="taskType" value="" checked><div class="radio-content"><span class="radio-text-main">其他</span><span class="radio-text-sub">Khác</span></div></label>
-    <label class="radio-option"><input type="radio" name="taskType" value="機採"><div class="radio-content"><span class="radio-text-main">機採</span><span class="radio-text-sub">Máy thu</span></div></label>
-    <label class="radio-option"><input type="radio" name="taskType" value="人採"><div class="radio-content"><span class="radio-text-main">人採</span><span class="radio-text-sub">Người thu</span></div></label>
+    <label class="radio-option"><input type="radio" name="taskType" value="" checked id="task-none"><div class="radio-content"><span class="radio-text-main">其他</span><span class="radio-text-sub">Khác</span></div></label>
+    <label class="radio-option"><input type="radio" name="taskType" value="機採" id="task-machine"><div class="radio-content"><span class="radio-text-main">機採</span><span class="radio-text-sub">Máy thu</span></div></label>
+    <label class="radio-option"><input type="radio" name="taskType" value="人採" id="task-manual"><div class="radio-content"><span class="radio-text-main">人採</span><span class="radio-text-sub">Người thu</span></div></label>
   </div>
 
   <div class="btn-row">
@@ -234,15 +241,18 @@
       <button class="dash-btn dash-btn-full" onclick="sendCmd('趨勢')"><span>📅</span> 近兩週趨勢比較 (Trend)</button>
   </div>
 
-  <div id="status">系統就緒 v33.0</div>
+  <div id="status">系統就緒 v42.0</div>
   <div id="manual-area"><div style="color: #d63384; font-weight: bold; margin-bottom:5px;">⚠️ 請點擊下方按鈕發送</div><a id="manual-btn" href="#" target="_blank"><span style="font-size:18px; font-weight:bold;">🟢 點我發送 (Nhấn vào đây)</span></a></div>
 </div>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
 var LIFF_ID = "2008961063-iwAJvIC3";
-var GAS_URL = "https://script.google.com/macros/s/AKfycbzwiAwZFKTvr4UIrlMkgC6W_O8IGzY7uXEz22uOMwDjKy3GVVBUpE6b6IQ1sf-Syhdc/exec"; 
+var GAS_URL = "https://script.google.com/macros/s/AKfycbzQy_YJgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7J/exec"; 
 var ADMIN_PWD = "8888"; 
+
+// ★★★ 接收後端參數 (v42.0 Linkage) ★★★
+var serverParams = <? var p = params || "{}"; ?> <?= p ?>;
 
 function openPwdModal() {
     var p = document.getElementById('dashboard-panel');
@@ -258,9 +268,7 @@ function checkPwd() {
 
 function sendCmd(cmdText) {
     if (!liff.isInClient()) { alert("請在 LINE 中使用戰情室功能"); return; }
-    
     var fullCmd = "戰情室 " + ADMIN_PWD + " " + cmdText;
-    
     liff.sendMessages([{ type: 'text', text: fullCmd }]).then(function() {
         alert("📊 請求已發送，請回到 LINE 聊天室查看報表！\n(Đã gửi yêu cầu, vui lòng kiểm tra LINE!)");
         liff.closeWindow();
@@ -277,19 +285,64 @@ function toggleButtons(disabled) {
     var btns = document.querySelectorAll('button');
     btns.forEach(function(btn) { if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm')) { btn.disabled = disabled; } });
 }
+
 window.onload = function() {
   setTimeout(function() { var mask = document.getElementById('loading-mask'); if(mask) mask.style.display = 'none'; }, 2000);
-  loadHistory('driver', 'vds_history_driver'); loadHistory('plate', 'vds_history_plate'); loadHistory('location', 'vds_history_loc'); loadHistory('destination', 'vds_history_dest');
+  
+  // ★ 1. 優先處理網址參數帶入 (Auto Fill)
+  try {
+      if (serverParams && serverParams.driver) {
+          document.getElementById('dispatch-notice').style.display = 'block'; // 顯示派工提示
+          
+          // 帶入司機
+          var dSelect = document.getElementById('driver');
+          var foundD = false;
+          for(var i=0; i<dSelect.options.length; i++) { if(dSelect.options[i].value === serverParams.driver) { dSelect.selectedIndex = i; foundD = true; break; } }
+          if(!foundD) { dSelect.value = 'custom'; document.getElementById('driver-custom').value = serverParams.driver; checkCustomInput('driver'); }
+          
+          // 帶入目的地
+          if (serverParams.dest) {
+              var destSelect = document.getElementById('destination');
+              var foundDest = false;
+              for(var i=0; i<destSelect.options.length; i++) { if(destSelect.options[i].value === serverParams.dest) { destSelect.selectedIndex = i; foundDest = true; break; } }
+              if(!foundDest) { destSelect.value = 'custom'; document.getElementById('destination-custom').value = serverParams.dest; checkCustomInput('destination'); }
+          }
+
+          // 帶入作業類型
+          if (serverParams.type) {
+              if (serverParams.type.includes("機")) document.getElementById('task-machine').checked = true;
+              else if (serverParams.type.includes("人")) document.getElementById('task-manual').checked = true;
+          }
+      }
+  } catch(e) { console.log("Auto fill error: " + e); }
+
+  // 2. 載入歷史紀錄 (如果沒有派工帶入才載入)
+  if (!serverParams || !serverParams.driver) {
+      loadHistory('driver', 'vds_history_driver'); 
+      // 嘗試從 LocalStorage 恢復司機
+      var savedDriver = localStorage.getItem('vds_driver');
+      if(savedDriver) {
+          var dSelect = document.getElementById('driver');
+          for(var i=0; i<dSelect.options.length; i++) { if(dSelect.options[i].value === savedDriver) { dSelect.selectedIndex = i; break; } }
+      }
+  }
+  
+  loadHistory('plate', 'vds_history_plate'); loadHistory('location', 'vds_history_loc'); loadHistory('destination', 'vds_history_dest');
+  
   var savedDate = localStorage.getItem('vds_trip_date'); var today = new Date().toDateString(); 
   if (savedDate === today) { var savedTrip = localStorage.getItem('vds_trip_val'); if(savedTrip) document.getElementById('trip').value = savedTrip; } 
   else { localStorage.removeItem('vds_trip_val'); localStorage.removeItem('vds_trip_date'); }
+  
   var lastDest = localStorage.getItem('vds_last_dest');
   if (lastDest) { var locSelect = document.getElementById('location'); var found = false; for(var i=0; i<locSelect.options.length; i++) { if(locSelect.options[i].value === lastDest) { locSelect.selectedIndex = i; found = true; break; } } if(!found) { locSelect.value = 'custom'; document.getElementById('location-custom').value = lastDest; checkCustomInput('location'); } }
   
   liff.init({ liffId: LIFF_ID }).then(function() {
     if (!liff.isLoggedIn()) { liff.login(); return; }
     liff.getProfile().then(function(profile) { 
-        updateDriverSelect(profile.displayName); 
+        // 只有在沒有派工參數時，才自動更新司機 (避免覆蓋派工指令)
+        if (!serverParams || !serverParams.driver) {
+            updateDriverSelect(profile.displayName); 
+        }
         document.getElementById('loading-mask').style.display = 'none'; 
     }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; });
   }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; });
