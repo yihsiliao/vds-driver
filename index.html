@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>🥕VDS司機打卡🥕 | Chấm công</title>
   <style>
-    /* v37.1 UI - 戰情室按鈕優化版 */
+    /* v39.0 UI - 司機效率按鈕回歸版 */
     body { background-color: #f8f9fa; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; margin: 0; }
     .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; }
     
@@ -225,7 +225,7 @@
       <div class="dash-title">🚀 VDS 智慧戰情室</div>
       <button class="dash-btn dash-btn-ceo" onclick="sendCmd('總裁')"><span>🏭</span> 企業總裁儀表板<br>(今日營運概況)</button>
       <div class="dash-grid">
-          <button class="dash-btn" onclick="sendCmd('排行')"><span>🏆</span> 歷史司機排行</button>
+          <button class="dash-btn" onclick="sendCmd('效率')"><span>🏎️</span> 司機效率分析</button>
           <button class="dash-btn" onclick="sendCmd('車輛')"><span>🚛</span> 歷史車輛稼動</button>
           <button class="dash-btn" onclick="sendCmd('地點')"><span>🛑</span> 地點滯留<br>(分人採/機採)</button>
           <button class="dash-btn" onclick="sendCmd('路程')"><span>⏱️</span> 路程分析<br>(分二林/東勢)</button>
@@ -233,7 +233,7 @@
       <button class="dash-btn dash-btn-full" onclick="sendCmd('動態')"><span>📡</span> 今日即時動態 (Live)</button>
   </div>
 
-  <div id="status">系統就緒 v37.1</div>
+  <div id="status">系統就緒 v39.0</div>
   <div id="manual-area"><div style="color: #d63384; font-weight: bold; margin-bottom:5px;">⚠️ 請點擊下方按鈕發送</div><a id="manual-btn" href="#" target="_blank"><span style="font-size:18px; font-weight:bold;">🟢 點我發送 (Nhấn vào đây)</span></a></div>
 </div>
 
