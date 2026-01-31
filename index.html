@@ -275,7 +275,9 @@ function checkPwd() {
 
 function sendCmd(cmdText) {
     if (!liff.isInClient()) { alert("請在 LINE 中使用戰情室功能"); return; }
-    var fullCmd = "戰情室 "+ " " + cmdText;
+    // ★ 修正：直接送出指令，不加密碼
+    var fullCmd = "戰情室 " + cmdText;
+    
     liff.sendMessages([{ type: 'text', text: fullCmd }]).then(function() {
         showToast("📊 請求已發送，請回到 LINE 查看！");
         setTimeout(() => liff.closeWindow(), 1500);
