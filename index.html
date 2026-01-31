@@ -4,12 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>🥕VDS司機打卡🥕 | Chấm công</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    /* v39.0 UI - 司機效率按鈕回歸版 */
-    body { background-color: #f8f9fa; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; margin: 0; }
+    /* v48.3 Lite - 台越雙語完全版 */
+    body { background-color: #f8f9fa; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; margin: 0; }
     .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; }
     
-    h3 { color: #198754; text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 24px; letter-spacing: 0.5px; }
+    h3 { color: #198754; text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 24px; }
     .sub-title { font-size: 14px; color: #6c757d; font-weight: 400; text-align: center; display: block; margin-bottom: 20px; }
 
     label { display: block; font-weight: 700; margin-top: 15px; margin-bottom: 6px; font-size: 16px; color: #343a40; }
@@ -44,15 +45,24 @@
     .btn-text-main { font-size: 18px; font-weight: 700; line-height: 1.1; }
     .btn-text-sub { font-size: 12px; opacity: 0.9; margin-top: 2px; font-weight: 400; }
 
-    #loading-mask { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+    /* Loading Mask */
+    #loading-mask { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s; }
     .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #198754; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     #loading-text { font-size: 16px; color: #198754; font-weight: bold; }
+    
     #status { text-align:center; margin-top:15px; color:#adb5bd; font-size:12px; }
-    
     #dashboard-toggle { text-align: center; margin-top: 20px; cursor: pointer; color: #6c757d; font-size: 13px; text-decoration: underline; padding: 10px; }
-    #dashboard-panel { display: none; background: #2c3e50; border-radius: 16px; padding: 15px; margin-top: 15px; animation: slideDown 0.3s; color: white; }
     
+    #dashboard-panel { display: none; background: #2c3e50; border-radius: 16px; padding: 15px; margin-top: 15px; color: white; }
+    .dash-title { color: #ffc107; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 16px; border-bottom: 1px solid #495057; padding-bottom: 8px; }
+    .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .dash-btn { background: #343a40; border: 1px solid #495057; color: #e9ecef; width: 100%; height: 60px; font-size: 13px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+    .dash-btn span { font-size: 18px; }
+    .dash-btn:active { background: #495057; transform: scale(0.98); }
+    .dash-btn-full { grid-column: span 2; background: linear-gradient(135deg, #0d6efd, #0b5ed7); border: none; font-weight: bold; }
+    .dash-btn-ceo { grid-column: span 2; background: linear-gradient(135deg, #1A237E, #303F9F); border: 1px solid #FFD700; color: #FFD700; font-weight: 900; }
+
     #password-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
     .pwd-card { background: white; padding: 20px; border-radius: 12px; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     .pwd-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #333; }
@@ -61,15 +71,8 @@
     .btn-cancel { background: #6c757d; font-size: 15px; height: 45px; }
     .btn-confirm { background: #198754; font-size: 15px; height: 45px; }
 
-    @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
-    .dash-title { color: #ffc107; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 16px; border-bottom: 1px solid #495057; padding-bottom: 8px; }
-    
-    .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-    .dash-btn { background: #343a40; border: 1px solid #495057; color: #e9ecef; width: 100%; height: 60px; font-size: 13px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
-    .dash-btn span { font-size: 18px; }
-    .dash-btn:active { background: #495057; transform: scale(0.98); }
-    .dash-btn-full { grid-column: span 2; background: linear-gradient(135deg, #0d6efd, #0b5ed7); border: none; font-weight: bold; }
-    .dash-btn-ceo { grid-column: span 2; background: linear-gradient(135deg, #1A237E, #303F9F); border: 1px solid #FFD700; color: #FFD700; font-weight: 900; }
+    #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 10000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 15px; opacity: 0; transition: opacity 0.3s, bottom 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
 
     #manual-area { display: none; margin-top: 15px; padding: 12px; background: #fff3cd; border: 1px dashed #ffc107; border-radius: 12px; text-align: center; }
     #manual-btn { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 50px; background: linear-gradient(135deg, #198754, #146c43); color: white; text-decoration: none; border-radius: 10px; margin-top: 8px; box-shadow: 0 3px 6px rgba(25, 135, 84, 0.2); }
@@ -78,6 +81,7 @@
 <body>
 
 <div id="loading-mask"><div class="spinner"></div><div id="loading-text">Loading...</div></div>
+<div id="toast"></div>
 
 <div id="password-modal">
     <div class="pwd-card">
@@ -102,6 +106,9 @@
     <option value="郭文統">郭文統 (Văn Thống)</option>
     <option value="林冠宇">林冠宇 (Quán Vũ)</option>
     <option value="陳衍介">陳衍介 (A Giới)</option>
+    <option value="黃庭霖">黃庭霖 (Đình Lâm)</option>
+    <option value="張滎海">張滎海 (Huỳnh Hải)</option>
+    <option value="VDS配送">VDS配送 (Giao Hàng)</option>
     <option value="測試">測試 (Test)</option>
     <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
   </select>
@@ -143,29 +150,33 @@
       <option value="公司">🏢 公司 (Công ty)</option>
       <option value="田間">🌾 田間 (Ngoài đồng)</option>
     </optgroup>
-    <optgroup label="地點列表 (Danh sách)">
-      <option value="農場晃晃">🌾 農場晃晃</option>
-      <option value="馬光">🥕 馬光</option>
-      <option value="佳美">🏭 佳美</option>
-      <option value="光泉">🏭 光泉</option>
-      <option value="久津">🏭 久津</option>
-      <option value="達群">🏭 達群</option>
-      <option value="淑貞">🏙️ 淑貞</option>
-      <option value="陳俐霖">🏙️ 陳俐霖</option>
-      <option value="吳淑玲">🏙️ 吳淑玲</option>      
-      <option value="楊鴻隆">🏙️ 楊鴻隆</option>
-      <option value="西螺">🏙️ 西螺</option>
-      <option value="北斗">🏙️ 北斗</option>
-      <option value="台中">🏙️ 台中</option>
-      <option value="斗六">🏙️ 斗六</option>
-      <option value="嘉義">🏙️ 嘉義</option>
-      <option value="元長">🏙️ 元長</option>
-      <option value="台南">🏙️ 台南</option>
-      <option value="斗南保養廠">🔧 斗南保養廠</option>
-      <option value="花壇保養廠">🔧 花壇保養廠</option>
-      <option value="台中港">🚢 台中港</option>
-      <option value="高雄港">🚢 高雄港</option>
-      <option value="新社種苗場">🌱 新社種苗場</option>
+    <optgroup label="列表 (Danh sách cũ)">
+      <option value="農場晃晃">🌾 農場晃晃 (Nông trường Huang Huang)</option>
+      <option value="馬光">🥕 馬光 (Ma Guang)</option>
+      <option value="佳美">🏭 佳美 (Jia Mei)</option>
+      <option value="光泉">🏭 光泉 (Kuang Chuan)</option>
+      <option value="久津">🏭 久津 (Jiu Jin)</option>
+      <option value="達群">🏭 達群 (Da Qun)</option>
+      <option value="淑貞">🏙️ 淑貞 (Shu Zhen)</option>
+      <option value="陳俐霖">🏙️ 陳俐霖 (Li Lin)</option>
+      <option value="吳淑玲">🏙️ 吳淑玲 (Shu Ling)</option>      
+      <option value="楊鴻隆">🏙️ 楊鴻隆 (Hong Long)</option>
+      <option value="三條崙龍達">❄️ 三條崙龍達 (Longda Santiaolun)</option>
+      <option value="西螺龍達">❄️ 西螺龍達 (Longda Xiluo)</option>
+      <option value="好收">❄️ 好收 (Hao Shou)</option>
+      <option value="鹿場">❄️ 鹿場 (Lu Chang)</option>
+      <option value="隆記">❄️ 隆記 (Long Ji)</option>
+      <option value="新豐">❄️ 新豐 (Xin Feng)</option>
+      <option value="玉豐">❄️ 玉豐 (Yu Feng)</option>
+      <option value="清新">❄️ 清新 (Qing Xin)</option>
+      <option value="張武雄">❄️ 張武雄 (Zhang Wu Xiong)</option>
+      <option value="大埤倉庫">🏭 大埤倉庫 (Kho Dapi)</option>
+      <option value="斗六倉庫">🏭 斗六倉庫 (Kho Douliu)</option>
+      <option value="斗南保養廠">🔧 斗南保養廠 (Xưởng Dounan)</option>
+      <option value="花壇保養廠">🔧 花壇保養廠 (Xưởng Huatan)</option>
+      <option value="台中港">🚢 台中港 (Cảng Taichung)</option>
+      <option value="高雄港">🚢 高雄港 (Cảng Kaohsiung)</option>
+      <option value="新社種苗場">🌱 新社種苗場 (Trại giống Xinshe)</option>
     </optgroup>
     <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
   </select>
@@ -178,29 +189,33 @@
       <option value="公司">🏢 公司 (Công ty)</option>
       <option value="田間">🌾 田間 (Ngoài đồng)</option>
     </optgroup>
-    <optgroup label="地點列表 (Danh sách)">
-      <option value="農場晃晃">🌾 農場晃晃</option>
-      <option value="馬光">🥕 馬光</option>
-      <option value="佳美">🏭 佳美</option>
-      <option value="光泉">🏭 光泉</option>
-      <option value="久津">🏭 久津</option>
-      <option value="達群">🏭 達群</option>
-      <option value="淑貞">🏙️ 淑貞</option>
-      <option value="陳俐霖">🏙️ 陳俐霖</option>
-      <option value="吳淑玲">🏙️ 吳淑玲</option>      
-      <option value="楊鴻隆">🏙️ 楊鴻隆</option>
-      <option value="西螺">🏙️ 西螺</option>
-      <option value="北斗">🏙️ 北斗</option>
-      <option value="台中">🏙️ 台中</option>
-      <option value="斗六">🏙️ 斗六</option>
-      <option value="嘉義">🏙️ 嘉義</option>
-      <option value="元長">🏙️ 元長</option>
-      <option value="台南">🏙️ 台南</option>
-      <option value="斗南保養廠">🔧 斗南保養廠</option>
-      <option value="花壇保養廠">🔧 花壇保養廠</option>
-      <option value="台中港">🚢 台中港</option>
-      <option value="高雄港">🚢 高雄港</option>
-      <option value="新社種苗場">🌱 新社種苗場</option>
+    <optgroup label="列表 (Danh sách cũ)">
+      <option value="農場晃晃">🌾 農場晃晃 (Nông trường Huang Huang)</option>
+      <option value="馬光">🥕 馬光 (Ma Guang)</option>
+      <option value="佳美">🏭 佳美 (Jia Mei)</option>
+      <option value="光泉">🏭 光泉 (Kuang Chuan)</option>
+      <option value="久津">🏭 久津 (Jiu Jin)</option>
+      <option value="達群">🏭 達群 (Da Qun)</option>
+      <option value="淑貞">🏙️ 淑貞 (Shu Zhen)</option>
+      <option value="陳俐霖">🏙️ 陳俐霖 (Li Lin)</option>
+      <option value="吳淑玲">🏙️ 吳淑玲 (Shu Ling)</option>      
+      <option value="楊鴻隆">🏙️ 楊鴻隆 (Hong Long)</option>
+      <option value="三條崙龍達">❄️ 三條崙龍達 (Longda Santiaolun)</option>
+      <option value="西螺龍達">❄️ 西螺龍達 (Longda Xiluo)</option>
+      <option value="好收">❄️ 好收 (Hao Shou)</option>
+      <option value="鹿場">❄️ 鹿場 (Lu Chang)</option>
+      <option value="隆記">❄️ 隆記 (Long Ji)</option>
+      <option value="新豐">❄️ 新豐 (Xin Feng)</option>
+      <option value="玉豐">❄️ 玉豐 (Yu Feng)</option>
+      <option value="清新">❄️ 清新 (Qing Xin)</option>
+      <option value="張武雄">❄️ 張武雄 (Zhang Wu Xiong)</option>
+      <option value="大埤倉庫">🏭 大埤倉庫 (Kho Dapi)</option>
+      <option value="斗六倉庫">🏭 斗六倉庫 (Kho Douliu)</option>
+      <option value="斗南保養廠">🔧 斗南保養廠 (Xưởng Dounan)</option>
+      <option value="花壇保養廠">🔧 花壇保養廠 (Xưởng Huatan)</option>
+      <option value="台中港">🚢 台中港 (Cảng Taichung)</option>
+      <option value="高雄港">🚢 高雄港 (Cảng Kaohsiung)</option>
+      <option value="新社種苗場">🌱 新社種苗場 (Trại giống Xinshe)</option>
     </optgroup>
     <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
   </select>
@@ -233,16 +248,20 @@
       <button class="dash-btn dash-btn-full" onclick="sendCmd('動態')"><span>📡</span> 今日即時動態 (Live)</button>
   </div>
 
-  <div id="status">系統就緒 v39.0</div>
+  <div id="status">系統就緒 v48.3 Lite</div>
   <div id="manual-area"><div style="color: #d63384; font-weight: bold; margin-bottom:5px;">⚠️ 請點擊下方按鈕發送</div><a id="manual-btn" href="#" target="_blank"><span style="font-size:18px; font-weight:bold;">🟢 點我發送 (Nhấn vào đây)</span></a></div>
 </div>
 
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-var LIFF_ID = "2008961063-iwAJvIC3";
-var GAS_URL = "https://script.google.com/macros/s/AKfycbzQy_YJgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7J/exec"; 
-var ADMIN_PWD = "8888"; 
+// ★ 請確認您的設定 ★
+const LIFF_ID = "2008961063-iwAJvIC3";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzQy_YJgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7J/exec"; 
+const ADMIN_PWD = "8888"; 
 
+// 預設清單 (確保包含新增地點)
+const DEFAULT_LOCS = ["大埤倉庫","斗六倉庫","三條崙龍達","西螺龍達","好收","鹿場","隆記","新豐","玉豐","清新","張武雄","農場晃晃","馬光","佳美","光泉","久津","達群","淑貞","陳俐霖","吳淑玲","楊鴻隆","西螺","北斗","台中","斗六","嘉義","元長","台南","斗南保養廠","花壇保養廠","台中港","高雄港","新社種苗場"];
+
+// --- 介面控制 ---
 function openPwdModal() {
     var p = document.getElementById('dashboard-panel');
     if(p.style.display === 'block') { p.style.display = 'none'; } 
@@ -257,12 +276,10 @@ function checkPwd() {
 
 function sendCmd(cmdText) {
     if (!liff.isInClient()) { alert("請在 LINE 中使用戰情室功能"); return; }
-    
     var fullCmd = "戰情室 " + ADMIN_PWD + " " + cmdText;
-    
     liff.sendMessages([{ type: 'text', text: fullCmd }]).then(function() {
-        alert("📊 請求已發送，請回到 LINE 聊天室查看報表！\n(Đã gửi yêu cầu, vui lòng kiểm tra LINE!)");
-        liff.closeWindow();
+        showToast("📊 請求已發送，請回到 LINE 查看！");
+        setTimeout(() => liff.closeWindow(), 1500);
     }).catch(function(error) {
         alert("發送失敗：" + error);
     });
@@ -272,18 +289,33 @@ function checkCustomInput(type) {
     var select = document.getElementById(type); var input = document.getElementById(type + '-custom');
     if (select.value === 'custom') { input.style.display = 'block'; input.focus(); } else { input.style.display = 'none'; input.value = ''; }
 }
+
 function toggleButtons(disabled) {
     var btns = document.querySelectorAll('button');
     btns.forEach(function(btn) { if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm')) { btn.disabled = disabled; } });
 }
+
+// --- 初始化 ---
 window.onload = function() {
   setTimeout(function() { var mask = document.getElementById('loading-mask'); if(mask) mask.style.display = 'none'; }, 2000);
-  loadHistory('driver', 'vds_history_driver'); loadHistory('plate', 'vds_history_plate'); loadHistory('location', 'vds_history_loc'); loadHistory('destination', 'vds_history_dest');
+  
+  loadHistory('driver', 'vds_history_driver'); 
+  loadHistory('plate', 'vds_history_plate'); 
+  loadHistory('location', 'vds_history_loc'); 
+  loadHistory('destination', 'vds_history_dest');
+  
   var savedDate = localStorage.getItem('vds_trip_date'); var today = new Date().toDateString(); 
   if (savedDate === today) { var savedTrip = localStorage.getItem('vds_trip_val'); if(savedTrip) document.getElementById('trip').value = savedTrip; } 
   else { localStorage.removeItem('vds_trip_val'); localStorage.removeItem('vds_trip_date'); }
+  
   var lastDest = localStorage.getItem('vds_last_dest');
-  if (lastDest) { var locSelect = document.getElementById('location'); var found = false; for(var i=0; i<locSelect.options.length; i++) { if(locSelect.options[i].value === lastDest) { locSelect.selectedIndex = i; found = true; break; } } if(!found) { locSelect.value = 'custom'; document.getElementById('location-custom').value = lastDest; checkCustomInput('location'); } }
+  if (lastDest) { 
+      var locSelect = document.getElementById('location'); 
+      var found = false; 
+      var opts = locSelect.options;
+      for(var i=0; i<opts.length; i++) { if(opts[i].value === lastDest) { locSelect.selectedIndex = i; found = true; break; } }
+      if(!found) { locSelect.value = 'custom'; document.getElementById('location-custom').value = lastDest; checkCustomInput('location'); } 
+  }
   
   liff.init({ liffId: LIFF_ID }).then(function() {
     if (!liff.isLoggedIn()) { liff.login(); return; }
@@ -294,28 +326,90 @@ window.onload = function() {
   }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; });
 };
 
-function loadHistory(selectId, storageKey) { var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (history.length > 0) { var select = document.getElementById(selectId); var group = document.createElement('optgroup'); group.label = "🕒 最近輸入 (Gần đây)"; history.reverse().forEach(function(item) { var opt = document.createElement('option'); opt.value = item; opt.text = "🕒 " + item; group.appendChild(opt); }); select.insertBefore(group, select.firstChild); } }
-function saveHistory(val, storageKey) { if(!val) return; var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); var index = history.indexOf(val); if (index > -1) { history.splice(index, 1); } history.push(val); if (history.length > 5) history.shift(); localStorage.setItem(storageKey, JSON.stringify(history)); }
-function restoreSelection(elementId, storageKey) { var saved = localStorage.getItem(storageKey); if(saved) { var select = document.getElementById(elementId); for(var i=0; i<select.options.length; i++) { if(select.options[i].value === saved) { select.selectedIndex = i; break; } } } }
-function updateDriverSelect(lineName) { var driverSelect = document.getElementById('driver'); var savedDriver = localStorage.getItem('vds_driver'); if (savedDriver) { for (var i = 0; i < driverSelect.options.length; i++) { if (driverSelect.options[i].value === savedDriver) { driverSelect.selectedIndex = i; var statusDiv = document.getElementById('status'); if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver; restoreSelection('plate', 'vds_plate'); return; } } } }
-function sendToSheet(data) { if (GAS_URL.indexOf("xxxx") > -1) { return; } fetch(GAS_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }); }
+// --- 歷史紀錄邏輯 ---
+function loadHistory(selectId, storageKey) { 
+    var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); 
+    if (history.length > 0) { 
+        var select = document.getElementById(selectId); 
+        var group = document.createElement('optgroup'); 
+        group.label = "🕒 最近輸入 (Gần đây)"; 
+        history.reverse().forEach(function(item) { 
+            var opt = document.createElement('option'); 
+            opt.value = item; opt.text = "🕒 " + item; group.appendChild(opt); 
+        }); 
+        select.insertBefore(group, select.firstChild); 
+    } 
+}
+function saveHistory(val, storageKey) { 
+    if(!val) return; 
+    var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); 
+    var index = history.indexOf(val); 
+    if (index > -1) { history.splice(index, 1); } 
+    history.push(val); 
+    if (history.length > 5) history.shift(); 
+    localStorage.setItem(storageKey, JSON.stringify(history)); 
+}
+function restoreSelection(elementId, storageKey) { 
+    var saved = localStorage.getItem(storageKey); 
+    if(saved) { 
+        var select = document.getElementById(elementId); 
+        for(var i=0; i<select.options.length; i++) { if(select.options[i].value === saved) { select.selectedIndex = i; break; } } 
+    } 
+}
+function updateDriverSelect(lineName) { 
+    var driverSelect = document.getElementById('driver'); 
+    var savedDriver = localStorage.getItem('vds_driver'); 
+    if (savedDriver) { 
+        for (var i = 0; i < driverSelect.options.length; i++) { 
+            if (driverSelect.options[i].value === savedDriver) { 
+                driverSelect.selectedIndex = i; 
+                var statusDiv = document.getElementById('status'); 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v48.3 Lite)"; 
+                restoreSelection('plate', 'vds_plate'); 
+                return; 
+            } 
+        } 
+    } 
+}
+
+// --- 核心送出邏輯 ---
+function sendToSheet(data) { 
+    if (GAS_URL.indexOf("xxxx") > -1) return; 
+    fetch(GAS_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }); 
+}
 
 function processClick(action) {
   try {
-    toggleButtons(true); document.getElementById('loading-mask').style.display = 'flex'; document.getElementById('manual-area').style.display = 'none';
+    toggleButtons(true); 
+    document.getElementById('loading-mask').style.display = 'flex'; 
+    document.getElementById('manual-area').style.display = 'none';
+    
     var driverSelect = document.getElementById('driver'); var driver = driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value;
     var plateSelect = document.getElementById('plate'); var plate = plateSelect.value === 'custom' ? document.getElementById('plate-custom').value.trim().toUpperCase() : plateSelect.value;
     var trip = document.getElementById('trip').value;
     var locSelect = document.getElementById('location'); var loc = locSelect.value === 'custom' ? document.getElementById('location-custom').value : locSelect.value;
     var destSelect = document.getElementById('destination'); var dest = destSelect.value === 'custom' ? document.getElementById('destination-custom').value : destSelect.value;
+    
     var type = ""; var radios = document.getElementsByName('taskType'); for (var i = 0; i < radios.length; i++) { if (radios[i].checked) { type = radios[i].value; break; } }
     
     if (!driver || driver.trim() === "") { document.getElementById('loading-mask').style.display = 'none'; alert("請選擇或輸入司機姓名！\n(Vui lòng chọn tên tài xế!)"); toggleButtons(false); if(driverSelect.value === 'custom') document.getElementById('driver-custom').focus(); return; }
-    if(driverSelect.value === 'custom') saveHistory(driver, 'vds_history_driver'); localStorage.setItem('vds_driver', driver);
-    if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate'); if (plate) localStorage.setItem('vds_plate', plate);
-    var today = new Date().toDateString(); localStorage.setItem('vds_trip_date', today); localStorage.setItem('vds_trip_val', trip);
-    if (action === '出車') { if(dest) localStorage.setItem('vds_last_dest', dest); } else if (action === '抵達' || action === '作業結束') { if(loc) localStorage.setItem('vds_last_dest', loc); }
-    if (action !== "作業結束") { if (!loc || loc.trim() === "") { document.getElementById('loading-mask').style.display = 'none'; alert("請輸入「目前地點」！\n(Vui lòng nhập vị trí hiện tại!)"); toggleButtons(false); if(locSelect.value === 'custom') document.getElementById('location-custom').focus(); return; } if(locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc'); }
+    
+    if(driverSelect.value === 'custom') saveHistory(driver, 'vds_history_driver'); 
+    localStorage.setItem('vds_driver', driver);
+    if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate'); 
+    if (plate) localStorage.setItem('vds_plate', plate);
+    
+    var today = new Date().toDateString(); 
+    localStorage.setItem('vds_trip_date', today); 
+    localStorage.setItem('vds_trip_val', trip);
+    
+    if (action === '出車') { if(dest) localStorage.setItem('vds_last_dest', dest); } 
+    else if (action === '抵達' || action === '作業結束') { if(loc) localStorage.setItem('vds_last_dest', loc); }
+    
+    if (action !== "作業結束") { 
+        if (!loc || loc.trim() === "") { document.getElementById('loading-mask').style.display = 'none'; alert("請輸入「目前地點」！\n(Vui lòng nhập vị trí hiện tại!)"); toggleButtons(false); if(locSelect.value === 'custom') document.getElementById('location-custom').focus(); return; } 
+        if(locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc'); 
+    }
     
     var lastAction = localStorage.getItem('vds_last_status_' + driver); 
     if (action === '出車' && lastAction === '出車') {
@@ -325,11 +419,13 @@ function processClick(action) {
             return; 
         }
     }
+    
     if (action === '出車') localStorage.setItem('vds_last_status_' + driver, '出車');
     else if (action === '抵達') localStorage.setItem('vds_last_status_' + driver, '抵達');
     else if (action === '作業結束') localStorage.setItem('vds_last_status_' + driver, '結束');
 
-    var now = new Date(); var hh = now.getHours().toString().padStart(2, '0'); var mm = now.getMinutes().toString().padStart(2, '0'); var timeStr = hh + ":" + mm; var plateStr = (plate) ? "[" + plate + "] " : ""; var taskSuffix = (type === "") ? "" : "(" + type + ")"; var msg = "";
+    var now = new Date(); var hh = now.getHours().toString().padStart(2, '0'); var mm = now.getMinutes().toString().padStart(2, '0'); var timeStr = hh + ":" + mm; 
+    var plateStr = (plate) ? "[" + plate + "] " : ""; var taskSuffix = (type === "") ? "" : "(" + type + ")"; var msg = "";
     
     if (action === "作業結束") { msg = plateStr + driver + " 結束時間" + timeStr; } 
     else if (action === "出車") { 
@@ -350,12 +446,13 @@ function processClick(action) {
 function tryAutoSend(msg) { 
     if (!liff.isInClient()) { showManualButton(msg); return; } 
     liff.sendMessages([{ type: 'text', text: msg }]).then(function() { 
-        document.getElementById('loading-mask').style.display = 'none'; liff.closeWindow(); 
+        showToast("✅ 打卡成功！");
+        setTimeout(function(){ liff.closeWindow(); }, 1500); 
     }).catch(function(err) { 
         if (liff.isApiAvailable('shareTargetPicker')) { 
             liff.shareTargetPicker([{ type: "text", text: msg }]).then(function(res) { 
-                document.getElementById('loading-mask').style.display = 'none'; 
-                if (res) liff.closeWindow(); else toggleButtons(false); 
+                if (res) { showToast("✅ 打卡成功！"); setTimeout(function(){ liff.closeWindow(); }, 1500); } 
+                else { document.getElementById('loading-mask').style.display = 'none'; toggleButtons(false); } 
             }).catch(function() { showManualButton(msg); }); 
         } else { showManualButton(msg); } 
     }); 
@@ -368,6 +465,13 @@ function showManualButton(msg) {
     btn.href = "https://line.me/R/msg/text/?" + encodeURIComponent(msg); 
     area.style.display = 'block'; 
     setTimeout(function() { area.scrollIntoView({ behavior: "smooth", block: "center" }); }, 100); 
+}
+
+function showToast(text) {
+    var x = document.getElementById("toast");
+    x.innerHTML = text;
+    x.className = "show";
+    setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
 }
 </script>
 </body>
