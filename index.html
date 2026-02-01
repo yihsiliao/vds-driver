@@ -405,7 +405,7 @@ function updateDriverSelect(lineName) {
     } 
 }
 
-// --- 核心送出邏輯 (v50.0 除錯專用版) ---
+// --- 核心送出邏輯 (v50.1 同步發送版) ---
 function sendToSheet(data, msg) { 
     if (GAS_URL.indexOf("xxxx") > -1) {
         alert("⚠️ 請記得更新 GAS_URL 網址！");
@@ -414,7 +414,6 @@ function sendToSheet(data, msg) {
     
     // 顯示 Loading
     document.getElementById('loading-mask').style.display = 'flex';
-    document.getElementById('loading-text').innerText = "連線中...";
 
     // 使用 fetch 發送
     fetch(GAS_URL, { 
@@ -423,44 +422,39 @@ function sendToSheet(data, msg) {
         redirect: "follow",
         body: JSON.stringify(data) 
     })
-    .then(response => response.text()) // 先讀成純文字，不要直接轉 JSON
+    .then(response => response.text()) 
     .then(text => {
-        console.log("Server raw response:", text);
-        
         try {
-            // 嘗試解析 JSON
             var json = JSON.parse(text);
             
-            // ★ 成功解析，檢查是否有 summary
+            // ★ 如果有回傳小結 (作業結束)
             if (json.summary) {
+                // 1. 顯示報表視窗
                 document.getElementById('summary-content').innerText = json.summary;
                 document.getElementById('summary-modal').style.display = 'flex';
                 document.getElementById('loading-mask').style.display = 'none';
                 toggleButtons(false);
+
+                // 2. ★★★ 關鍵修正：在背景同步發送 LINE 訊息，但不關閉視窗 ★★★
+                if (liff.isInClient()) {
+                    liff.sendMessages([{ type: 'text', text: msg }])
+                        .then(() => { console.log("訊息已同步發送"); })
+                        .catch(err => { console.error("訊息發送失敗", err); });
+                }
             } else {
-                // 沒有 summary，正常流程
+                // 一般出發/抵達，走原本流程 (發送 + 關閉)
                 tryAutoSend(msg);
             }
         } catch (e) {
-            // ★ 解析失敗，代表後端報錯了 (回傳了 HTML 而不是 JSON)
+            // 解析失敗處理
+            console.warn("Non-JSON response:", text);
             document.getElementById('loading-mask').style.display = 'none';
-            
-            // 🚨 這是最關鍵的一步：把後端的錯誤秀出來
-            if (text.includes("ScriptError") || text.includes("ReferenceError")) {
-                alert("🔴 後端程式碼錯誤 (請重新部署)：\n" + text.substring(0, 100));
-            } else if (text.includes("DOCTYPE html")) {
-                alert("🔴 部署未更新！\n系統讀到了舊版程式碼。\n請去 GAS 按「部署」->「建立新部署」。");
-            } else {
-                // 其他未知錯誤
-                alert("⚠️ 未知回應：\n" + text);
-                tryAutoSend(msg);
-            }
+            tryAutoSend(msg); 
         }
     })
     .catch(err => {
         console.error("Fetch error:", err);
         document.getElementById('loading-mask').style.display = 'none';
-        alert("🔴 網路連線失敗：" + err);
         tryAutoSend(msg); 
     });
 }
