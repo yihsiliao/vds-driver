@@ -305,16 +305,17 @@ function checkCustomInput(type) {
     if (select.value === 'custom') { input.style.display = 'block'; input.focus(); } else { input.style.display = 'none'; input.value = ''; }
 }
 
-  // ▼▼▼ 請將這段 JavaScript 複製並貼在 <script> 標籤內 ▼▼▼
+  // ▼▼▼ 請將這段 JavaScript 複製並覆蓋原本的 querySummary 函式 ▼▼▼
 
 function querySummary(btnElement) {
     // 1. 取得目前選單上的司機姓名
-    // 請確認您的司機下拉選單 ID 是否為 "driver-name"
-    var driverSelect = document.getElementById('driver-name');
-    var driver = driverSelect ? driverSelect.value : "";
+    // ★★★ 修正點：ID 改為 'driver' (原本是 'driver-name') ★★★
+    var driverSelect = document.getElementById('driver'); 
+    var driver = driverSelect ? (driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value) : "";
     
-    if (!driver) {
-        alert("❌ 請先選擇司機姓名！");
+    if (!driver || driver.trim() === "") {
+        alert("❌ 請先選擇或輸入司機姓名！");
+        if(driverSelect.value === 'custom') document.getElementById('driver-custom').focus();
         return;
     }
 
@@ -327,13 +328,14 @@ function querySummary(btnElement) {
     // 3. 準備傳送資料
     var payload = {
         driver: driver,
-        action: "查詢小結"  // 這個動作對應後端的 else if (data.action === "查詢小結")
+        action: "查詢小結"  
     };
 
     // 4. 發送請求到 Google Apps Script
-    // 注意：SCRIPT_URL 必須是您部署後的網址 (exec 結尾)
-    fetch(SCRIPT_URL, {
+    fetch(GAS_URL, { // ★★★ 注意：這裡改用您原本定義的 GAS_URL 變數
         method: 'POST',
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, // 加上 header 比較保險
+        redirect: "follow",
         body: JSON.stringify(payload)
     })
     .then(function(response) {
@@ -342,8 +344,9 @@ function querySummary(btnElement) {
     .then(function(json) {
         // 5. 顯示結果
         if (json.summary) {
-            // 用彈跳視窗顯示小結
-            alert(json.summary);
+            // 使用原本寫好的 summary-modal 來顯示，比較漂亮
+            document.getElementById('summary-content').innerText = json.summary;
+            document.getElementById('summary-modal').style.display = 'flex';
         } else {
             alert("⚠️ 查無資料或系統無回應。");
         }
@@ -361,7 +364,6 @@ function querySummary(btnElement) {
 }
 
 // ▲▲▲ 結束複製 ▲▲▲
-
 function toggleButtons(disabled) {
     var btns = document.querySelectorAll('button');
     btns.forEach(function(btn) { if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm') && !btn.classList.contains('btn-close-summary')) { btn.disabled = disabled; } });
