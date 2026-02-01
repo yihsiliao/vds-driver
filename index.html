@@ -405,34 +405,53 @@ function updateDriverSelect(lineName) {
     } 
 }
 
-// --- 核心送出邏輯 (v49.3 修復版) ---
+// --- 核心送出邏輯 (v50.0 無敵版) ---
 function sendToSheet(data, msg) { 
-    if (GAS_URL.indexOf("xxxx") > -1) return; 
+    if (GAS_URL.indexOf("xxxx") > -1) {
+        alert("⚠️ 請記得更新 GAS_URL 網址！");
+        return;
+    }
     
-    // 使用 fetch 接收後端回傳的 summary，並顯示 Modal
+    // 顯示 Loading
+    document.getElementById('loading-mask').style.display = 'flex';
+
+    // 使用 fetch 發送
     fetch(GAS_URL, { 
         method: "POST", 
-        // ★ 修復重點：正確的 Content-Type 與 redirect
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
         redirect: "follow",
         body: JSON.stringify(data) 
     })
-    .then(response => response.json())
+    .then(response => {
+        // 先轉成文字，再試著解成 JSON，這樣比較保險
+        return response.text().then(text => {
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.warn("Server returned non-JSON:", text);
+                return { result: "success", summary: null }; // 假裝成功，但沒報表
+            }
+        });
+    })
     .then(json => {
+        console.log("Server response:", json);
+        
+        // ★ 如果後端有回傳小結 (summary)
         if (json.summary) {
             document.getElementById('summary-content').innerText = json.summary;
             document.getElementById('summary-modal').style.display = 'flex';
             document.getElementById('loading-mask').style.display = 'none';
-            toggleButtons(false);
+            toggleButtons(false); // 鎖定按鈕，強迫看報表
         } else {
-            // 一般出發/抵達，發送 LINE 訊息並關閉
+            // 沒有報表 (例如只是出發)，就正常關閉
             tryAutoSend(msg);
         }
     })
     .catch(err => {
         console.error("Fetch error:", err);
+        // 萬一網路真的不通，至少把 Loading 關掉，嘗試用 LIFF 發送
         document.getElementById('loading-mask').style.display = 'none';
-        tryAutoSend(msg); // 失敗時至少讓訊息送出
+        tryAutoSend(msg); 
     });
 }
 
