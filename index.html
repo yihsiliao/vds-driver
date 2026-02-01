@@ -405,7 +405,7 @@ function updateDriverSelect(lineName) {
     } 
 }
 
-// --- 核心送出邏輯 (v50.0 無敵版) ---
+// --- 核心送出邏輯 (v50.0 除錯專用版) ---
 function sendToSheet(data, msg) { 
     if (GAS_URL.indexOf("xxxx") > -1) {
         alert("⚠️ 請記得更新 GAS_URL 網址！");
@@ -414,6 +414,7 @@ function sendToSheet(data, msg) {
     
     // 顯示 Loading
     document.getElementById('loading-mask').style.display = 'flex';
+    document.getElementById('loading-text').innerText = "連線中...";
 
     // 使用 fetch 發送
     fetch(GAS_URL, { 
@@ -422,35 +423,44 @@ function sendToSheet(data, msg) {
         redirect: "follow",
         body: JSON.stringify(data) 
     })
-    .then(response => {
-        // 先轉成文字，再試著解成 JSON，這樣比較保險
-        return response.text().then(text => {
-            try {
-                return JSON.parse(text);
-            } catch (e) {
-                console.warn("Server returned non-JSON:", text);
-                return { result: "success", summary: null }; // 假裝成功，但沒報表
-            }
-        });
-    })
-    .then(json => {
-        console.log("Server response:", json);
+    .then(response => response.text()) // 先讀成純文字，不要直接轉 JSON
+    .then(text => {
+        console.log("Server raw response:", text);
         
-        // ★ 如果後端有回傳小結 (summary)
-        if (json.summary) {
-            document.getElementById('summary-content').innerText = json.summary;
-            document.getElementById('summary-modal').style.display = 'flex';
+        try {
+            // 嘗試解析 JSON
+            var json = JSON.parse(text);
+            
+            // ★ 成功解析，檢查是否有 summary
+            if (json.summary) {
+                document.getElementById('summary-content').innerText = json.summary;
+                document.getElementById('summary-modal').style.display = 'flex';
+                document.getElementById('loading-mask').style.display = 'none';
+                toggleButtons(false);
+            } else {
+                // 沒有 summary，正常流程
+                tryAutoSend(msg);
+            }
+        } catch (e) {
+            // ★ 解析失敗，代表後端報錯了 (回傳了 HTML 而不是 JSON)
             document.getElementById('loading-mask').style.display = 'none';
-            toggleButtons(false); // 鎖定按鈕，強迫看報表
-        } else {
-            // 沒有報表 (例如只是出發)，就正常關閉
-            tryAutoSend(msg);
+            
+            // 🚨 這是最關鍵的一步：把後端的錯誤秀出來
+            if (text.includes("ScriptError") || text.includes("ReferenceError")) {
+                alert("🔴 後端程式碼錯誤 (請重新部署)：\n" + text.substring(0, 100));
+            } else if (text.includes("DOCTYPE html")) {
+                alert("🔴 部署未更新！\n系統讀到了舊版程式碼。\n請去 GAS 按「部署」->「建立新部署」。");
+            } else {
+                // 其他未知錯誤
+                alert("⚠️ 未知回應：\n" + text);
+                tryAutoSend(msg);
+            }
         }
     })
     .catch(err => {
         console.error("Fetch error:", err);
-        // 萬一網路真的不通，至少把 Loading 關掉，嘗試用 LIFF 發送
         document.getElementById('loading-mask').style.display = 'none';
+        alert("🔴 網路連線失敗：" + err);
         tryAutoSend(msg); 
     });
 }
