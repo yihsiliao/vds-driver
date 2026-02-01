@@ -83,6 +83,31 @@
 <div id="loading-mask"><div class="spinner"></div><div id="loading-text">Loading...</div></div>
 <div id="toast"></div>
 
+  /* ★ v49.0 新增：小結視窗樣式 */
+    #summary-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center; }
+    .summary-card { background: white; width: 85%; max-width: 350px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out; }
+    .summary-header { background: linear-gradient(135deg, #1A237E, #303F9F); color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; }
+    .summary-body { padding: 20px; font-size: 15px; color: #333; line-height: 1.6; white-space: pre-wrap; font-family: monospace; background-color: #f8f9fa; }
+    .summary-footer { padding: 15px; background: white; text-align: center; border-top: 1px solid #eee; }
+    .btn-close-summary { width: 100%; height: 45px; background: #343a40; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  </style>
+</head>
+<body>
+
+<div id="loading-mask"><div class="spinner"></div><div id="loading-text">Loading...</div></div>
+<div id="toast"></div>
+
+<div id="summary-modal">
+    <div class="summary-card">
+        <div class="summary-header">📊 今日作業小結</div>
+        <div id="summary-content" class="summary-body">載入中...</div>
+        <div class="summary-footer">
+            <button class="btn-close-summary" onclick="liff.closeWindow()">👌 確認並關閉</button>
+        </div>
+    </div>
+</div>
+
 <div id="password-modal">
     <div class="pwd-card">
         <div class="pwd-title">🔐 Admin Password</div>
@@ -373,10 +398,50 @@ function updateDriverSelect(lineName) {
     } 
 }
 
-// --- 核心送出邏輯 ---
+// --- 核心送出邏輯 (v49.0 - 支援小結回傳) ---
 function sendToSheet(data) { 
     if (GAS_URL.indexOf("xxxx") > -1) return; 
-    fetch(GAS_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }); 
+    
+    // ★ 關鍵修改：使用 fetch 接收後端回傳的 summary，並顯示 Modal
+    fetch(GAS_URL, { 
+        method: "POST", 
+        // mode: "no-cors", // ★ 移除 no-cors 才能讀取回傳值
+        headers: { "Content-Type": "text/plain" }, // GAS 簡單請求通常用 text/plain 避開 CORS 選項請求
+        body: JSON.stringify(data) 
+    })
+    .then(response => response.json())
+    .then(json => {
+        // 如果後端回傳了 summary (通常是作業結束時)
+        if (json.summary) {
+            document.getElementById('summary-content').innerText = json.summary;
+            document.getElementById('summary-modal').style.display = 'flex';
+            document.getElementById('loading-mask').style.display = 'none';
+            toggleButtons(false);
+        } else {
+            // 其他情況 (出發/抵達)，正常關閉
+            // 嘗試用 LIFF 發送訊息 (Log)
+            if (liff.isInClient()) {
+                var msg = createLogMessage(data);
+                liff.sendMessages([{ type: 'text', text: msg }]).then(() => {
+                    liff.closeWindow();
+                }).catch(() => { liff.closeWindow(); });
+            } else {
+               showToast("✅ 完成！");
+               setTimeout(() => liff.closeWindow(), 1000);
+            }
+        }
+    })
+    .catch(err => {
+        // 如果 fetch 失敗 (例如跨域問題)，退回到保守模式 (假設成功)
+        console.error("Fetch error:", err);
+        document.getElementById('loading-mask').style.display = 'none';
+        if (data.action === "作業結束") {
+             alert("✅ 打卡成功！\n(請到 LINE 群組查看報表)");
+             liff.closeWindow();
+        } else {
+             liff.closeWindow();
+        }
+    });
 }
 
 function processClick(action) {
