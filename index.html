@@ -6,7 +6,7 @@
   <title>🥕VDS司機打卡🥕 | Chấm công</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    /* v49.2 Lite - 除錯修復版 */
+    /* v48.3 Lite - 台越雙語完全版 */
     body { background-color: #f8f9fa; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; margin: 0; }
     .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; }
     
@@ -63,7 +63,6 @@
     .dash-btn-full { grid-column: span 2; background: linear-gradient(135deg, #0d6efd, #0b5ed7); border: none; font-weight: bold; }
     .dash-btn-ceo { grid-column: span 2; background: linear-gradient(135deg, #1A237E, #303F9F); border: 1px solid #FFD700; color: #FFD700; font-weight: 900; }
 
-    /* Password Modal */
     #password-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
     .pwd-card { background: white; padding: 20px; border-radius: 12px; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     .pwd-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #333; }
@@ -77,31 +76,12 @@
 
     #manual-area { display: none; margin-top: 15px; padding: 12px; background: #fff3cd; border: 1px dashed #ffc107; border-radius: 12px; text-align: center; }
     #manual-btn { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 50px; background: linear-gradient(135deg, #198754, #146c43); color: white; text-decoration: none; border-radius: 10px; margin-top: 8px; box-shadow: 0 3px 6px rgba(25, 135, 84, 0.2); }
-
-    /* ★ 報表視窗樣式 */
-    #summary-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center; }
-    .summary-card { background: white; width: 85%; max-width: 350px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out; }
-    .summary-header { background: linear-gradient(135deg, #1A237E, #303F9F); color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; }
-    .summary-body { padding: 20px; font-size: 15px; color: #333; line-height: 1.6; white-space: pre-wrap; font-family: monospace; background-color: #f8f9fa; }
-    .summary-footer { padding: 15px; background: white; text-align: center; border-top: 1px solid #eee; }
-    .btn-close-summary { width: 100%; height: 45px; background: #343a40; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
 <body>
 
 <div id="loading-mask"><div class="spinner"></div><div id="loading-text">Loading...</div></div>
 <div id="toast"></div>
-
-<div id="summary-modal">
-    <div class="summary-card">
-        <div class="summary-header">📊 今日作業小結</div>
-        <div id="summary-content" class="summary-body">載入中...</div>
-        <div class="summary-footer">
-            <button class="btn-close-summary" onclick="liff.closeWindow()">👌 確認並關閉</button>
-        </div>
-    </div>
-</div>
 
 <div id="password-modal">
     <div class="pwd-card">
@@ -253,7 +233,7 @@
   </div>
   <button class="btn-end" onclick="processClick('作業結束')"><span class="btn-text-main">🛑 結束今日作業</span><span class="btn-text-sub">Kết thúc công việc</span></button>
 
-  <div id="dashboard-toggle" onclick="toggleDashboard()">📊 管理員戰情室 (Admin Dashboard)</div>
+  <div id="dashboard-toggle" onclick="openPwdModal()">📊 管理員戰情室 (Admin Dashboard)</div>
   
   <div id="dashboard-panel">
       <div class="dash-title">🚀 VDS 智慧戰情室</div>
@@ -267,7 +247,7 @@
       <button class="dash-btn dash-btn-full" onclick="sendCmd('動態')"><span>📡</span> 今日即時動態 (Live)</button>
   </div>
 
-  <div id="status">系統就緒 v49.2 Lite</div>
+  <div id="status">系統就緒 v48.3 Lite</div>
   <div id="manual-area"><div style="color: #d63384; font-weight: bold; margin-bottom:5px;">⚠️ 請點擊下方按鈕發送</div><a id="manual-btn" href="#" target="_blank"><span style="font-size:18px; font-weight:bold;">🟢 點我發送 (Nhấn vào đây)</span></a></div>
 </div>
 
@@ -277,31 +257,25 @@ const LIFF_ID = "2008961063-iwAJvIC3";
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzQy_YJgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7JgZ7sXj6Y7J/exec"; 
 const ADMIN_PWD = "8888"; 
 
-// --- 強制解鎖機制 (3秒後自動關閉遮罩) ---
-setTimeout(function() {
-    var mask = document.getElementById('loading-mask');
-    if (mask && mask.style.display !== 'none') {
-        console.warn("Forcing mask close");
-        mask.style.display = 'none';
-    }
-}, 3000);
+// 預設清單 (確保包含新增地點)
+const DEFAULT_LOCS = ["大埤倉庫","斗六倉庫","三條崙龍達","西螺龍達","好收","鹿場","隆記","新豐","玉豐","清新","張武雄","農場晃晃","馬光","佳美","光泉","久津","達群","淑貞","陳俐霖","吳淑玲","楊鴻隆","西螺","北斗","台中","斗六","嘉義","元長","台南","斗南保養廠","花壇保養廠","台中港","高雄港","新社種苗場"];
 
 // --- 介面控制 ---
-function toggleDashboard() {
+function openPwdModal() {
     var p = document.getElementById('dashboard-panel');
     if(p.style.display === 'block') { p.style.display = 'none'; } 
-    else { 
-        p.style.display = 'block'; 
-        p.scrollIntoView({ behavior: "smooth", block: "center" }); 
-    }
+    else { document.getElementById('password-modal').style.display = 'flex'; document.getElementById('admin-pwd').value = ''; document.getElementById('admin-pwd').focus(); }
 }
-
-function openPwdModal() { var p = document.getElementById('dashboard-panel'); if(p.style.display === 'block') { p.style.display = 'none'; } else { document.getElementById('password-modal').style.display = 'flex'; document.getElementById('admin-pwd').value = ''; document.getElementById('admin-pwd').focus(); } }
 function closePwdModal() { document.getElementById('password-modal').style.display = 'none'; }
-function checkPwd() { var input = document.getElementById('admin-pwd').value; if (input === ADMIN_PWD) { closePwdModal(); var p = document.getElementById('dashboard-panel'); p.style.display = 'block'; p.scrollIntoView({ behavior: "smooth", block: "center" }); } else { alert("❌ 密碼錯誤！(Sai mật khẩu)"); document.getElementById('admin-pwd').value = ''; } }
+function checkPwd() {
+    var input = document.getElementById('admin-pwd').value;
+    if (input === ADMIN_PWD) { closePwdModal(); var p = document.getElementById('dashboard-panel'); p.style.display = 'block'; p.scrollIntoView({ behavior: "smooth", block: "center" }); } 
+    else { alert("❌ 密碼錯誤！(Sai mật khẩu)"); document.getElementById('admin-pwd').value = ''; }
+}
 
 function sendCmd(cmdText) {
     if (!liff.isInClient()) { alert("請在 LINE 中使用戰情室功能"); return; }
+    // ★ 修正：直接送出指令，不加密碼
     var fullCmd = "戰情室 " + cmdText;
     
     liff.sendMessages([{ type: 'text', text: fullCmd }]).then(function() {
@@ -319,33 +293,31 @@ function checkCustomInput(type) {
 
 function toggleButtons(disabled) {
     var btns = document.querySelectorAll('button');
-    btns.forEach(function(btn) { if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm') && !btn.classList.contains('btn-close-summary')) { btn.disabled = disabled; } });
+    btns.forEach(function(btn) { if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm')) { btn.disabled = disabled; } });
 }
 
 // --- 初始化 ---
 window.onload = function() {
-  // 嘗試讀取歷史
-  try {
-      loadHistory('driver', 'vds_history_driver'); 
-      loadHistory('plate', 'vds_history_plate'); 
-      loadHistory('location', 'vds_history_loc'); 
-      loadHistory('destination', 'vds_history_dest');
-      
-      var savedDate = localStorage.getItem('vds_trip_date'); var today = new Date().toDateString(); 
-      if (savedDate === today) { var savedTrip = localStorage.getItem('vds_trip_val'); if(savedTrip) document.getElementById('trip').value = savedTrip; } 
-      else { localStorage.removeItem('vds_trip_val'); localStorage.removeItem('vds_trip_date'); }
-      
-      var lastDest = localStorage.getItem('vds_last_dest');
-      if (lastDest) { 
-          var locSelect = document.getElementById('location'); 
-          var found = false; 
-          var opts = locSelect.options;
-          for(var i=0; i<opts.length; i++) { if(opts[i].value === lastDest) { locSelect.selectedIndex = i; found = true; break; } }
-          if(!found) { locSelect.value = 'custom'; document.getElementById('location-custom').value = lastDest; checkCustomInput('location'); } 
-      }
-  } catch(e) { console.warn("Init history error:", e); }
+  setTimeout(function() { var mask = document.getElementById('loading-mask'); if(mask) mask.style.display = 'none'; }, 2000);
   
-  // 初始化 LIFF
+  loadHistory('driver', 'vds_history_driver'); 
+  loadHistory('plate', 'vds_history_plate'); 
+  loadHistory('location', 'vds_history_loc'); 
+  loadHistory('destination', 'vds_history_dest');
+  
+  var savedDate = localStorage.getItem('vds_trip_date'); var today = new Date().toDateString(); 
+  if (savedDate === today) { var savedTrip = localStorage.getItem('vds_trip_val'); if(savedTrip) document.getElementById('trip').value = savedTrip; } 
+  else { localStorage.removeItem('vds_trip_val'); localStorage.removeItem('vds_trip_date'); }
+  
+  var lastDest = localStorage.getItem('vds_last_dest');
+  if (lastDest) { 
+      var locSelect = document.getElementById('location'); 
+      var found = false; 
+      var opts = locSelect.options;
+      for(var i=0; i<opts.length; i++) { if(opts[i].value === lastDest) { locSelect.selectedIndex = i; found = true; break; } }
+      if(!found) { locSelect.value = 'custom'; document.getElementById('location-custom').value = lastDest; checkCustomInput('location'); } 
+  }
+  
   liff.init({ liffId: LIFF_ID }).then(function() {
     if (!liff.isLoggedIn()) { liff.login(); return; }
     liff.getProfile().then(function(profile) { 
@@ -357,30 +329,26 @@ window.onload = function() {
 
 // --- 歷史紀錄邏輯 ---
 function loadHistory(selectId, storageKey) { 
-    try {
-        var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); 
-        if (history.length > 0) { 
-            var select = document.getElementById(selectId); 
-            var group = document.createElement('optgroup'); 
-            group.label = "🕒 最近輸入 (Gần đây)"; 
-            history.reverse().forEach(function(item) { 
-                var opt = document.createElement('option'); 
-                opt.value = item; opt.text = "🕒 " + item; group.appendChild(opt); 
-            }); 
-            select.insertBefore(group, select.firstChild); 
-        } 
-    } catch(e) { console.error("History parse error"); localStorage.removeItem(storageKey); }
+    var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); 
+    if (history.length > 0) { 
+        var select = document.getElementById(selectId); 
+        var group = document.createElement('optgroup'); 
+        group.label = "🕒 最近輸入 (Gần đây)"; 
+        history.reverse().forEach(function(item) { 
+            var opt = document.createElement('option'); 
+            opt.value = item; opt.text = "🕒 " + item; group.appendChild(opt); 
+        }); 
+        select.insertBefore(group, select.firstChild); 
+    } 
 }
 function saveHistory(val, storageKey) { 
     if(!val) return; 
-    try {
-        var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); 
-        var index = history.indexOf(val); 
-        if (index > -1) { history.splice(index, 1); } 
-        history.push(val); 
-        if (history.length > 5) history.shift(); 
-        localStorage.setItem(storageKey, JSON.stringify(history)); 
-    } catch(e) {}
+    var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); 
+    var index = history.indexOf(val); 
+    if (index > -1) { history.splice(index, 1); } 
+    history.push(val); 
+    if (history.length > 5) history.shift(); 
+    localStorage.setItem(storageKey, JSON.stringify(history)); 
 }
 function restoreSelection(elementId, storageKey) { 
     var saved = localStorage.getItem(storageKey); 
@@ -397,7 +365,7 @@ function updateDriverSelect(lineName) {
             if (driverSelect.options[i].value === savedDriver) { 
                 driverSelect.selectedIndex = i; 
                 var statusDiv = document.getElementById('status'); 
-                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v49.2 Lite)"; 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v48.3 Lite)"; 
                 restoreSelection('plate', 'vds_plate'); 
                 return; 
             } 
@@ -405,51 +373,16 @@ function updateDriverSelect(lineName) {
     } 
 }
 
-// --- 核心送出邏輯 (修復版 v49.3) ---
-function sendToSheet(data, msg) { 
+// --- 核心送出邏輯 ---
+function sendToSheet(data) { 
     if (GAS_URL.indexOf("xxxx") > -1) return; 
-    
-    // 顯示 Loading
-    document.getElementById('loading-mask').style.display = 'flex';
-
-    fetch(GAS_URL, { 
-        method: "POST", 
-        // ★ 關鍵修正：使用 text/plain 並設定 redirect
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        redirect: "follow", 
-        body: JSON.stringify(data) 
-    })
-    .then(response => response.json()) // 嘗試解析 JSON
-    .then(json => {
-        // 成功收到後端回應
-        console.log("Server response:", json);
-        
-        // 如果有 summary (作業結束)，顯示視窗
-        if (json.summary) {
-            document.getElementById('summary-content').innerText = json.summary;
-            document.getElementById('summary-modal').style.display = 'flex';
-            document.getElementById('loading-mask').style.display = 'none';
-            toggleButtons(false);
-        } else {
-            // 一般出發/抵達，發送 LINE 訊息並關閉
-            tryAutoSend(msg);
-        }
-    })
-    .catch(err => {
-        // 如果解析失敗 (例如 GAS 回傳了 HTML 錯誤頁面)
-        console.warn("Fetch error or JSON parse error:", err);
-        document.getElementById('loading-mask').style.display = 'none';
-        
-        // 退回機制：直接發送訊息 (至少讓打卡能完成)
-        tryAutoSend(msg); 
-    });
+    fetch(GAS_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }); 
 }
 
 function processClick(action) {
   try {
     toggleButtons(true); 
     document.getElementById('loading-mask').style.display = 'flex'; 
-    document.getElementById('loading-text').innerText = "處理中...";
     document.getElementById('manual-area').style.display = 'none';
     
     var driverSelect = document.getElementById('driver'); var driver = driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value;
@@ -492,21 +425,22 @@ function processClick(action) {
     else if (action === '抵達') localStorage.setItem('vds_last_status_' + driver, '抵達');
     else if (action === '作業結束') localStorage.setItem('vds_last_status_' + driver, '結束');
 
-    // ★ 直接發送邏輯 (無 GPS) ★
-    if (action === "出車" && (!dest || dest.trim() === "")) { 
-        document.getElementById('loading-mask').style.display = 'none'; alert("⚠️ 請選擇或輸入「預計前往」的目的地！"); toggleButtons(false); if(document.getElementById('destination').value === 'custom') { document.getElementById('destination-custom').focus(); } else { document.getElementById('destination').focus(); } return; 
-    }
-    if(destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest'); 
-
-    var payload = { 
-        driver: driver, plate: plate, trip: trip, 
-        location: loc, destination: (action === '出車') ? dest : "", 
-        taskType: type, action: action
-    };
-    var msg = createLogMessage(payload);
+    var now = new Date(); var hh = now.getHours().toString().padStart(2, '0'); var mm = now.getMinutes().toString().padStart(2, '0'); var timeStr = hh + ":" + mm; 
+    var plateStr = (plate) ? "[" + plate + "] " : ""; var taskSuffix = (type === "") ? "" : "(" + type + ")"; var msg = "";
     
-    sendToSheet(payload, msg);
-
+    if (action === "作業結束") { msg = plateStr + driver + " 結束時間" + timeStr; } 
+    else if (action === "出車") { 
+        if (!dest || dest.trim() === "") { document.getElementById('loading-mask').style.display = 'none'; alert("⚠️ 請選擇或輸入「預計前往」的目的地！\n(Vui lòng chọn nơi đến!)"); toggleButtons(false); if(destSelect.value === 'custom') { document.getElementById('destination-custom').focus(); } else { document.getElementById('destination').focus(); } return; } 
+        if(destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest'); 
+        msg = plateStr + driver + " " + trip + " " + loc + "出發前往" + dest + taskSuffix + " " + timeStr; 
+    } 
+    else if (action === "抵達") { 
+        if (loc === "公司") { msg = driver + " 回到公司 " + timeStr; } 
+        else { msg = driver + " 抵達" + loc + " " + timeStr; } 
+    }
+    
+    sendToSheet({ driver: driver, plate: plate, trip: trip, location: loc, destination: (action === '出車') ? dest : "", taskType: type, action: action });
+    tryAutoSend(msg);
   } catch (e) { alert("Error: " + e.message); document.getElementById('loading-mask').style.display = 'none'; toggleButtons(false); }
 }
 
