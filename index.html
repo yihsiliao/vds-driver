@@ -405,7 +405,7 @@ function updateDriverSelect(lineName) {
     } 
 }
 
-// --- 核心送出邏輯 (修復版 v49.3) ---
+// --- 核心送出邏輯 (v49.3 加強版) ---
 function sendToSheet(data, msg) { 
     if (GAS_URL.indexOf("xxxx") > -1) return; 
     
@@ -414,17 +414,14 @@ function sendToSheet(data, msg) {
 
     fetch(GAS_URL, { 
         method: "POST", 
-        // ★ 關鍵修正：使用 text/plain 並設定 redirect
+        // ★ 關鍵修正：確保 header 正確，並允許轉址
         headers: { "Content-Type": "text/plain;charset=utf-8" }, 
         redirect: "follow", 
         body: JSON.stringify(data) 
     })
-    .then(response => response.json()) // 嘗試解析 JSON
+    .then(response => response.json()) 
     .then(json => {
         // 成功收到後端回應
-        console.log("Server response:", json);
-        
-        // 如果有 summary (作業結束)，顯示視窗
         if (json.summary) {
             document.getElementById('summary-content').innerText = json.summary;
             document.getElementById('summary-modal').style.display = 'flex';
@@ -436,11 +433,9 @@ function sendToSheet(data, msg) {
         }
     })
     .catch(err => {
-        // 如果解析失敗 (例如 GAS 回傳了 HTML 錯誤頁面)
-        console.warn("Fetch error or JSON parse error:", err);
+        // 如果還是失敗，至少讓流程走完
+        console.warn("Fetch error:", err);
         document.getElementById('loading-mask').style.display = 'none';
-        
-        // 退回機制：直接發送訊息 (至少讓打卡能完成)
         tryAutoSend(msg); 
     });
 }
