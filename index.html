@@ -6,7 +6,7 @@
   <title>🥕VDS司機打卡🥕 | Chấm công</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    /* v51.0 Lite - 分流發送版 */
+    /* v51.5 Lite - 分流發送版 */
     body { background-color: #f8f9fa; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; margin: 0; }
     .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; }
     h3 { color: #198754; text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 24px; }
@@ -236,9 +236,12 @@
   </div>
   <button class="btn-end" onclick="processClick('作業結束')"><span class="btn-text-main">🛑 結束今日作業</span><span class="btn-text-sub">Kết thúc công việc</span></button>
 <div style="margin-top: 15px;">
-    <button type="button" onclick="querySummary(this)" style="background-color: #17a2b8; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
-        📊 查詢今日小結
+    <button type="button" onclick="querySummary(this)" style="background-color: #17a2b8; color: white; width: 100%; height: 60px; border: none; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <span style="font-size: 18px; font-weight: 700; line-height: 1.1;">📊 查詢今日小結</span>
+        <span style="font-size: 12px; opacity: 0.9; margin-top: 2px; font-weight: 400;">Xem tổng kết ngày</span>
     </button>
+</div>
+
 </div>
   
   <div id="dashboard-toggle" onclick="toggleDashboard()">📊 管理員戰情室 (Admin Dashboard)</div>
@@ -442,7 +445,7 @@ function updateDriverSelect(lineName) {
             if (driverSelect.options[i].value === savedDriver) { 
                 driverSelect.selectedIndex = i; 
                 var statusDiv = document.getElementById('status'); 
-                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v51.0)"; 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v51.5)"; 
                 restoreSelection('plate', 'vds_plate'); 
                 return; 
             } 
