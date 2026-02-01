@@ -235,8 +235,14 @@
     <button class="btn-arrive" onclick="processClick('抵達')"><span class="btn-text-main">🏁 抵達/回到</span><span class="btn-text-sub">Đến nơi</span></button>
   </div>
   <button class="btn-end" onclick="processClick('作業結束')"><span class="btn-text-main">🛑 結束今日作業</span><span class="btn-text-sub">Kết thúc công việc</span></button>
-
+<div style="margin-top: 15px;">
+    <button type="button" onclick="querySummary(this)" style="background-color: #17a2b8; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
+        📊 查詢今日小結
+    </button>
+</div>
+  
   <div id="dashboard-toggle" onclick="toggleDashboard()">📊 管理員戰情室 (Admin Dashboard)</div>
+
   
   <div id="dashboard-panel">
       <div class="dash-title">🚀 VDS 智慧戰情室</div>
@@ -298,6 +304,63 @@ function checkCustomInput(type) {
     var select = document.getElementById(type); var input = document.getElementById(type + '-custom');
     if (select.value === 'custom') { input.style.display = 'block'; input.focus(); } else { input.style.display = 'none'; input.value = ''; }
 }
+
+  // ▼▼▼ 請將這段 JavaScript 複製並貼在 <script> 標籤內 ▼▼▼
+
+function querySummary(btnElement) {
+    // 1. 取得目前選單上的司機姓名
+    // 請確認您的司機下拉選單 ID 是否為 "driver-name"
+    var driverSelect = document.getElementById('driver-name');
+    var driver = driverSelect ? driverSelect.value : "";
+    
+    if (!driver) {
+        alert("❌ 請先選擇司機姓名！");
+        return;
+    }
+
+    // 2. 按鈕變更狀態 (避免重複點擊)
+    var originalText = btnElement.innerText;
+    btnElement.innerText = "⏳ 查詢中...";
+    btnElement.disabled = true;
+    btnElement.style.opacity = "0.7";
+
+    // 3. 準備傳送資料
+    var payload = {
+        driver: driver,
+        action: "查詢小結"  // 這個動作對應後端的 else if (data.action === "查詢小結")
+    };
+
+    // 4. 發送請求到 Google Apps Script
+    // 注意：SCRIPT_URL 必須是您部署後的網址 (exec 結尾)
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(json) {
+        // 5. 顯示結果
+        if (json.summary) {
+            // 用彈跳視窗顯示小結
+            alert(json.summary);
+        } else {
+            alert("⚠️ 查無資料或系統無回應。");
+        }
+    })
+    .catch(function(error) {
+        console.error("Error:", error);
+        alert("❌ 連線失敗，請檢查網路或稍後再試。");
+    })
+    .finally(function() {
+        // 6. 恢復按鈕狀態
+        btnElement.innerText = originalText;
+        btnElement.disabled = false;
+        btnElement.style.opacity = "1";
+    });
+}
+
+// ▲▲▲ 結束複製 ▲▲▲
 
 function toggleButtons(disabled) {
     var btns = document.querySelectorAll('button');
