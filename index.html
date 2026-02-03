@@ -320,11 +320,7 @@ function checkCustomInput(type) {
     if (select.value === 'custom') { input.style.display = 'block'; input.focus(); } else { input.style.display = 'none'; input.value = ''; }
 }
 
-  // ▼▼▼ 請將這段 JavaScript 複製並覆蓋原本的 querySummary 函式 ▼▼▼
-
 function querySummary(btnElement) {
-    // 1. 取得目前選單上的司機姓名
-    // ★★★ 修正點：ID 改為 'driver' (原本是 'driver-name') ★★★
     var driverSelect = document.getElementById('driver'); 
     var driver = driverSelect ? (driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value) : "";
     
@@ -334,32 +330,22 @@ function querySummary(btnElement) {
         return;
     }
 
-    // 2. 按鈕變更狀態 (避免重複點擊)
     var originalText = btnElement.innerText;
     btnElement.innerText = "⏳ 查詢中...";
     btnElement.disabled = true;
     btnElement.style.opacity = "0.7";
 
-    // 3. 準備傳送資料
-    var payload = {
-        driver: driver,
-        action: "查詢小結"  
-    };
+    var payload = { driver: driver, action: "查詢小結" };
 
-    // 4. 發送請求到 Google Apps Script
-    fetch(GAS_URL, { // ★★★ 注意：這裡改用您原本定義的 GAS_URL 變數
+    fetch(GAS_URL, {
         method: 'POST',
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, // 加上 header 比較保險
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         redirect: "follow",
         body: JSON.stringify(payload)
     })
-    .then(function(response) {
-        return response.json();
-    })
+    .then(function(response) { return response.json(); })
     .then(function(json) {
-        // 5. 顯示結果
         if (json.summary) {
-            // 使用原本寫好的 summary-modal 來顯示，比較漂亮
             document.getElementById('summary-content').innerText = json.summary;
             document.getElementById('summary-modal').style.display = 'flex';
         } else {
@@ -371,14 +357,12 @@ function querySummary(btnElement) {
         alert("❌ 連線失敗，請檢查網路或稍後再試。");
     })
     .finally(function() {
-        // 6. 恢復按鈕狀態
         btnElement.innerText = originalText;
         btnElement.disabled = false;
         btnElement.style.opacity = "1";
     });
 }
 
-// ▲▲▲ 結束複製 ▲▲▲
 function toggleButtons(disabled) {
     var btns = document.querySelectorAll('button');
     btns.forEach(function(btn) { if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm') && !btn.classList.contains('btn-close-summary')) { btn.disabled = disabled; } });
@@ -415,7 +399,7 @@ window.onload = function() {
   }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; });
 };
 
-// --- 歷史紀錄邏輯 ---
+// --- 歷史紀錄邏輯 (保持不變) ---
 function loadHistory(selectId, storageKey) { 
     try {
         var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); 
@@ -465,49 +449,165 @@ function updateDriverSelect(lineName) {
     } 
 }
 
-// --- 核心送出邏輯 (v51.0 Lite 分流版) ---
-function sendToSheet(data, msg) { 
-    // ★ 情況 A：作業結束 (需要報表) -> 呼叫後端 -> 顯示視窗 -> 同步傳訊
-    if (data.action === "作業結束") {
-        document.getElementById('loading-mask').style.display = 'flex';
-        
-        fetch(GAS_URL, { 
-            method: "POST", 
-            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-            redirect: "follow", 
-            body: JSON.stringify(data) 
-        })
-        .then(response => response.json())
-        .then(json => {
-            if (json.summary) {
-                // 顯示小結視窗
-                document.getElementById('summary-content').innerText = json.summary;
-                document.getElementById('summary-modal').style.display = 'flex';
-                document.getElementById('loading-mask').style.display = 'none';
-                toggleButtons(false);
-                
-                // ★ 同步發送 LINE 訊息
-                if (liff.isInClient()) {
-                    liff.sendMessages([{ type: 'text', text: msg }])
-                        .then(() => console.log("Msg sent"))
-                        .catch(err => console.error(err));
-                }
-            } else {
-                // 萬一沒報表，就走普通流程
-                tryAutoSend(msg);
-            }
-        })
-        .catch(err => {
-            console.error("Fetch error:", err);
-            // 失敗時，至少確保訊息發送出去
-            document.getElementById('loading-mask').style.display = 'none';
-            tryAutoSend(msg);
-        });
-    } 
-    // ★ 情況 B：出車/抵達 (不需要報表) -> 直接傳訊 (秒開)
-    else {
-        tryAutoSend(msg);
+// ==========================================
+// ★ 核心送出邏輯 (v60.0 GPS 版) - 已替換
+// ==========================================
+function processClick(actionType) {
+  try {
+    // 1. 取得資料與防呆
+    var driverSelect = document.getElementById('driver'); 
+    var driver = driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value;
+    var plateSelect = document.getElementById('plate'); 
+    var plate = plateSelect.value === 'custom' ? document.getElementById('plate-custom').value.trim().toUpperCase() : plateSelect.value;
+    var trip = document.getElementById('trip').value;
+    var locSelect = document.getElementById('location'); 
+    var loc = locSelect.value === 'custom' ? document.getElementById('location-custom').value : locSelect.value;
+    var destSelect = document.getElementById('destination'); 
+    var dest = destSelect.value === 'custom' ? document.getElementById('destination-custom').value : destSelect.value;
+    
+    // 取得 taskType (作業型態)
+    var type = ""; 
+    var radios = document.getElementsByName('taskType'); 
+    for (var i = 0; i < radios.length; i++) { 
+        if (radios[i].checked) { type = radios[i].value; break; } 
     }
+    
+    if (!driver || driver.trim() === "") { 
+        alert("請選擇或輸入司機姓名！\n(Vui lòng chọn tên tài xế!)"); 
+        if(driverSelect.value === 'custom') document.getElementById('driver-custom').focus(); 
+        return; 
+    }
+    
+    if (actionType !== "作業結束") { 
+        if (!loc || loc.trim() === "") { 
+            alert("請輸入「目前地點」！\n(Vui lòng nhập vị trí hiện tại!)"); 
+            if(locSelect.value === 'custom') document.getElementById('location-custom').focus(); 
+            return; 
+        } 
+    }
+
+    if (actionType === "出車" && (!dest || dest.trim() === "")) { 
+        alert("⚠️ 請選擇或輸入「預計前往」的目的地！"); 
+        if(destSelect.value === 'custom') { document.getElementById('destination-custom').focus(); } 
+        else { document.getElementById('destination').focus(); } 
+        return; 
+    }
+
+    // 2. 儲存歷史紀錄
+    if(driverSelect.value === 'custom') saveHistory(driver, 'vds_history_driver'); 
+    localStorage.setItem('vds_driver', driver);
+    if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate'); 
+    if (plate) localStorage.setItem('vds_plate', plate);
+    
+    var today = new Date().toDateString(); 
+    localStorage.setItem('vds_trip_date', today); 
+    localStorage.setItem('vds_trip_val', trip);
+    
+    if (actionType === '出車') { if(dest) localStorage.setItem('vds_last_dest', dest); } 
+    else if (actionType === '抵達' || actionType === '作業結束') { if(loc) localStorage.setItem('vds_last_dest', loc); }
+    
+    if (actionType !== "作業結束" && locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc'); 
+    if (destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest');
+
+    // 3. 介面鎖定
+    toggleButtons(true); 
+    document.getElementById('loading-mask').style.display = 'flex'; 
+    document.getElementById('loading-text').innerText = "🛰️ 正在抓取 GPS...";
+    document.getElementById('manual-area').style.display = 'none';
+
+    // 4. 啟動 GPS 並傳送
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          var lat = position.coords.latitude;
+          var lng = position.coords.longitude;
+          document.getElementById('loading-text').innerText = "資料傳送中...";
+          sendDataToGAS(actionType, driver, plate, trip, loc, dest, type, lat, lng);
+        },
+        function(error) {
+          console.warn("GPS 失敗:", error);
+          // alert("⚠️ 無法取得 GPS，將只傳送文字地點。"); // 可以選擇不跳窗干擾
+          document.getElementById('loading-text').innerText = "資料傳送中...";
+          sendDataToGAS(actionType, driver, plate, trip, loc, dest, type, "", "");
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    } else {
+      document.getElementById('loading-text').innerText = "資料傳送中...";
+      sendDataToGAS(actionType, driver, plate, trip, loc, dest, type, "", "");
+    }
+
+  } catch (e) { 
+      alert("Error: " + e.message); 
+      document.getElementById('loading-mask').style.display = 'none'; 
+      toggleButtons(false); 
+  }
+}
+
+// 實際傳送資料給 GAS 的函式
+function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType, lat, lng) {
+    var payload = {
+        driver: driver,
+        plate: plate,
+        trip: trip,
+        location: loc,
+        location_custom: document.getElementById('location-custom').value, // 為了後端 custom 邏輯保留
+        destination: (actionType === '出車') ? dest : "",
+        destination_custom: document.getElementById('destination-custom').value,
+        status: (actionType === '出車' ? '出發' : actionType), // 對應後端判斷
+        status_custom: "", 
+        taskType: taskType,
+        action: actionType, // 為了前端判斷 (出車/抵達/作業結束)
+        lat: lat,
+        lng: lng
+    };
+
+    fetch(GAS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        redirect: "follow",
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.result === "success") {
+            // A. 打卡成功
+            var msg = createLogMessage(payload);
+            
+            // 如果是作業結束，顯示小結視窗
+            if (data.summary) {
+                document.getElementById('summary-content').innerText = data.summary;
+                document.getElementById('summary-modal').style.display = 'flex';
+            } else {
+                showToast("✅ 打卡成功！" + (lat ? "(含GPS)" : ""));
+            }
+            
+            // 同步發送 LINE 訊息 (讓群組看到)
+            if (liff.isInClient()) {
+                liff.sendMessages([{ type: 'text', text: msg }]).catch(err => console.error(err));
+            }
+            
+            if (!data.summary) {
+                 setTimeout(() => liff.closeWindow(), 1500);
+            }
+        } else {
+            alert("❌ 錯誤: " + data.msg);
+        }
+        
+        // 解除鎖定 (如果是作業結束且有小結，會停在小結畫面，不需要解鎖按鈕)
+        if (!data.summary) {
+            document.getElementById('loading-mask').style.display = 'none';
+            toggleButtons(false);
+        } else {
+            document.getElementById('loading-mask').style.display = 'none';
+        }
+    })
+    .catch(err => {
+        alert("⚠️ 連線錯誤，請檢查網路");
+        console.error(err);
+        document.getElementById('loading-mask').style.display = 'none';
+        toggleButtons(false);
+    });
 }
 
 function createLogMessage(data) {
@@ -518,7 +618,6 @@ function createLogMessage(data) {
     var plateStr = (data.plate) ? "[" + data.plate + "] " : ""; 
     var taskSuffix = (data.taskType) ? "(" + data.taskType + ")" : "";
     
-    // ★ 標記 (App發送的) 已經移除，因為現在由機器人全權負責寫入
     if (data.action === "作業結束") return plateStr + data.driver + " 結束時間" + timeStr; 
     if (data.action === "出車") return plateStr + data.driver + " " + data.trip + " " + data.location + "出發前往" + data.destination + taskSuffix + " " + timeStr; 
     if (data.action === "抵達") {
@@ -526,85 +625,6 @@ function createLogMessage(data) {
         return data.driver + " 抵達" + data.location + " " + timeStr; 
     }
     return "";
-}
-
-function processClick(action) {
-  try {
-    toggleButtons(true); 
-    document.getElementById('loading-mask').style.display = 'flex'; 
-    document.getElementById('loading-text').innerText = "處理中...";
-    document.getElementById('manual-area').style.display = 'none';
-    
-    var driverSelect = document.getElementById('driver'); var driver = driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value;
-    var plateSelect = document.getElementById('plate'); var plate = plateSelect.value === 'custom' ? document.getElementById('plate-custom').value.trim().toUpperCase() : plateSelect.value;
-    var trip = document.getElementById('trip').value;
-    var locSelect = document.getElementById('location'); var loc = locSelect.value === 'custom' ? document.getElementById('location-custom').value : locSelect.value;
-    var destSelect = document.getElementById('destination'); var dest = destSelect.value === 'custom' ? document.getElementById('destination-custom').value : destSelect.value;
-    var type = ""; var radios = document.getElementsByName('taskType'); for (var i = 0; i < radios.length; i++) { if (radios[i].checked) { type = radios[i].value; break; } }
-    
-    if (!driver || driver.trim() === "") { document.getElementById('loading-mask').style.display = 'none'; alert("請選擇或輸入司機姓名！\n(Vui lòng chọn tên tài xế!)"); toggleButtons(false); if(driverSelect.value === 'custom') document.getElementById('driver-custom').focus(); return; }
-    
-    if(driverSelect.value === 'custom') saveHistory(driver, 'vds_history_driver'); 
-    localStorage.setItem('vds_driver', driver);
-    if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate'); 
-    if (plate) localStorage.setItem('vds_plate', plate);
-    
-    var today = new Date().toDateString(); 
-    localStorage.setItem('vds_trip_date', today); 
-    localStorage.setItem('vds_trip_val', trip);
-    
-    if (action === '出車') { if(dest) localStorage.setItem('vds_last_dest', dest); } 
-    else if (action === '抵達' || action === '作業結束') { if(loc) localStorage.setItem('vds_last_dest', loc); }
-    
-    if (action !== "作業結束") { 
-        if (!loc || loc.trim() === "") { document.getElementById('loading-mask').style.display = 'none'; alert("請輸入「目前地點」！\n(Vui lòng nhập vị trí hiện tại!)"); toggleButtons(false); if(locSelect.value === 'custom') document.getElementById('location-custom').focus(); return; } 
-        if(locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc'); 
-    }
-    
-    var lastAction = localStorage.getItem('vds_last_status_' + driver); 
-    if (action === '出車' && lastAction === '出車') {
-        if (!confirm("⚠️ 警告：您上一筆也是「出發」！\n(Cảnh báo: Lần trước bạn đã bấm 'Xuất phát'!)\n\n系統偵測到您可能忘記按「抵達」了。\n\n按「確定」強制出發 (Tiếp tục)\n按「取消」返回檢查 (Hủy)")) {
-            document.getElementById('loading-mask').style.display = 'none';
-            toggleButtons(false);
-            return; 
-        }
-    }
-    
-    if (action === '出車') localStorage.setItem('vds_last_status_' + driver, '出車');
-    else if (action === '抵達') localStorage.setItem('vds_last_status_' + driver, '抵達');
-    else if (action === '作業結束') localStorage.setItem('vds_last_status_' + driver, '結束');
-
-    // ★ 直接發送邏輯 (無 GPS) ★
-    if (action === "出車" && (!dest || dest.trim() === "")) { 
-        document.getElementById('loading-mask').style.display = 'none'; alert("⚠️ 請選擇或輸入「預計前往」的目的地！"); toggleButtons(false); if(document.getElementById('destination').value === 'custom') { document.getElementById('destination-custom').focus(); } else { document.getElementById('destination').focus(); } return; 
-    }
-    if(destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest'); 
-
-    var payload = { 
-        driver: driver, plate: plate, trip: trip, 
-        location: loc, destination: (action === '出車') ? dest : "", 
-        taskType: type, action: action
-    };
-    var msg = createLogMessage(payload);
-    
-    sendToSheet(payload, msg);
-
-  } catch (e) { alert("Error: " + e.message); document.getElementById('loading-mask').style.display = 'none'; toggleButtons(false); }
-}
-
-function tryAutoSend(msg) { 
-    if (!liff.isInClient()) { showManualButton(msg); return; } 
-    liff.sendMessages([{ type: 'text', text: msg }]).then(function() { 
-        showToast("✅ 打卡成功！");
-        setTimeout(function(){ liff.closeWindow(); }, 1500); 
-    }).catch(function(err) { 
-        if (liff.isApiAvailable('shareTargetPicker')) { 
-            liff.shareTargetPicker([{ type: "text", text: msg }]).then(function(res) { 
-                if (res) { showToast("✅ 打卡成功！"); setTimeout(function(){ liff.closeWindow(); }, 1500); } 
-                else { document.getElementById('loading-mask').style.display = 'none'; toggleButtons(false); } 
-            }).catch(function() { showManualButton(msg); }); 
-        } else { showManualButton(msg); } 
-    }); 
 }
 
 function showManualButton(msg) { 
