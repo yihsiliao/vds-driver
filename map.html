@@ -1,200 +1,237 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
-  <title>司機即時分布地圖</title>
+  <meta charset="UTF-8">
+  <title>🥕 VDS 司機戰情地圖</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
-    body { padding: 0; margin: 0; }
-    html, body, #map { height: 100%; width: 100vw; }
+    body { padding: 0; margin: 0; font-family: "Microsoft JhengHei", sans-serif; }
+    html, body, #map { height: 100%; width: 100vw; background: #e0e0e0; }
     
-    /* 司機名字標籤 */
+    /* 司機標籤樣式 */
     .driver-label { 
       background: rgba(255, 255, 255, 0.95); 
-      border: 1px solid #333; 
+      border: 1px solid #666; 
       padding: 2px 6px; 
       border-radius: 4px; 
       white-space: nowrap; 
       font-weight: bold; 
       font-size: 13px;
-      box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      color: #333;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
     }
-
-    /* 載入畫面 */
+    
+    /* 載入中遮罩 */
     #loading {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255,255,255,0.9); z-index: 9999;
+      background: rgba(255,255,255,0.95); z-index: 9999;
       display: flex; flex-direction: column; justify-content: center; align-items: center;
-      font-size: 18px; font-weight: bold; color: #444;
+      transition: opacity 0.5s;
     }
+    .spinner {
+      border: 5px solid #f3f3f3; border-top: 5px solid #2E7D32;
+      border-radius: 50%; width: 40px; height: 40px;
+      animation: spin 1s linear infinite; margin-bottom: 10px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  
+
   <div id="loading">
-    <div>🚀 正在連線戰情室資料庫...</div>
-    <div style="font-size:12px; font-weight:normal; margin-top:8px; color:#666;">讀取田地與司機位置</div>
+    <div class="spinner"></div>
+    <div style="font-size:18px; font-weight:bold; color:#333;">正在連線戰情室...</div>
+    <div style="font-size:12px; color:#666; margin-top:5px;">讀取田地資料庫 & 司機位置</div>
   </div>
 
   <div id="map"></div>
 
   <script>
-    // 1. 初始化地圖
-    var map = L.map('map'); 
+    // =========================================================
+    // ★★★ 設定區：請務必修改這裡 ★★★
+    // =========================================================
+    // 請填入您剛剛部署 GAS 後取得的網址 (結尾是 /exec)
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbybtZU09KAsnuTPVLz2qTFDfIWs64pNMo3ljSdeSfRAdz_sefe-H2jRlJIR1Xze0xBu/exec";
+    // =========================================================
+
+    // 1. 初始化地圖 (預設中心：雲林/彰化一帶)
+    var map = L.map('map', { zoomControl: false }).setView([23.85, 120.45], 12);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // 使用 OpenStreetMap 圖層
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
+      attribution: '© OpenStreetMap | VDS Logistics',
+      maxZoom: 19
     }).addTo(map);
 
-    var globalLocations = []; 
+    // 全域變數
+    var globalLocations = []; // 存地點 (田+公司)
+    var driverMarkers = [];   // 存司機標記
 
-    // ==================================================
-    // ★★★ 設定區：請填入您的 Google Apps Script 網址 ★★★
-    // ==================================================
-    // 網址結尾應該是 /exec
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbybtZU09KAsnuTPVLz2qTFDfIWs64pNMo3ljSdeSfRAdz_sefe-H2jRlJIR1Xze0xBu/exec";
+    // 2. 啟動流程：先抓地圖資料 -> 再抓司機
+    fetchFields();
 
-    // ==================================================
-    // 流程 A：透過 API 抓田地資料
-    // ==================================================
-    
-    // 使用 fetch 取代 google.script.run
-    fetch(GAS_API_URL + "?op=fields")
-        .then(response => response.json()) // 解析 JSON
-        .then(data => initLocations(data)) // 執行後續動作
-        .catch(error => console.error('Error fetching fields:', error));
-
-    function initLocations(data) {
-       var featureGroup = L.featureGroup(); // 用來調整視角
-
-       data.forEach(function(item) {
-           var pairs = item.coords.split(';'); // 檢查有幾組座標
-           var latlngs = [];
-
-           pairs.forEach(function(pair) {
-               var xy = pair.split(',');
-               if (xy.length === 2) {
-                   latlngs.push([parseFloat(xy[0]), parseFloat(xy[1])]);
-               }
-           });
-
-           if (latlngs.length === 0) return;
-
-           // --- 判斷是單點還是多邊形 ---
-           if (latlngs.length === 1) {
-               // 【單點】公司、工廠 -> 畫藍色圓點
-               var center = latlngs[0];
-               var circle = L.circleMarker(center, {
-                   color: '#1976D2', radius: 5, weight: 1, fillOpacity: 0.8, fillColor: '#1976D2'
-               }).bindPopup("<b>📍 " + item.info + "</b>");
-               
-               featureGroup.addLayer(circle);
-               
-               globalLocations.push({ name: item.info, type: 'point', center: center });
-
-           } else {
-               // 【多邊形】田地 -> 畫橘色區塊
-               var displayInfo = item.info.replace(/\//g, '<br>'); // 換行顯示
-               var poly = L.polygon(latlngs, {
-                   color: '#FF9800', weight: 1, fillColor: '#FF9800', fillOpacity: 0.2
-               }).bindPopup("<div style='text-align:center; font-weight:bold;'>" + displayInfo + "</div>");
-               
-               featureGroup.addLayer(poly);
-               
-               globalLocations.push({ name: item.info, type: 'polygon', bounds: poly.getBounds() });
-           }
-       });
-
-       featureGroup.addTo(map);
-       
-       // 自動調整地圖視角，涵蓋所有地點
-       if (globalLocations.length > 0) {
-           map.fitBounds(featureGroup.getBounds());
-       } else {
-           map.setView([23.80, 120.35], 13); // 預設視角
-       }
-
-       // 隱藏載入畫面
-       document.getElementById('loading').style.display = 'none';
-
-       // ============================================
-       // 流程 B：地點畫好後，開始抓司機位置
-       // ============================================
-       google.script.run.withSuccessHandler(drawMarkers).getLatestDriverStatus();
+    function fetchFields() {
+        // 呼叫 API: ?op=fields
+        fetch(GAS_API_URL + "?op=fields")
+        .then(response => response.json())
+        .then(data => {
+            renderLocations(data);
+            fetchDrivers(); // 地點畫完後，接著抓司機
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('loading').innerHTML = "<div style='color:red'>連線失敗<br>請確認 API 網址權限</div>";
+        });
     }
 
-    function drawMarkers(drivers) {
-      drivers.forEach(function(d) {
-        var latlng = [0, 0];
-        var matched = false;
+    function renderLocations(data) {
+        var featureGroup = L.featureGroup();
 
-        // --- 智慧搜尋演算法 ---
-        // 1. 先找名字有對上的 (例如司機在 "A001"，資料庫有 "A001")
-        var candidates = globalLocations.filter(function(loc) {
-            return d.loc.indexOf(loc.name) !== -1 || loc.name.indexOf(d.loc) !== -1;
+        data.forEach(item => {
+            if(!item.coords) return;
+            
+            // 判斷座標格式 (分號代表多邊形)
+            var pairs = item.coords.split(';');
+            var latlngs = [];
+            
+            pairs.forEach(p => {
+                var xy = p.split(',');
+                if(xy.length === 2) latlngs.push([parseFloat(xy[0]), parseFloat(xy[1])]);
+            });
+
+            if (latlngs.length === 0) return;
+
+            // A. 單點 (公司/工廠)
+            if (latlngs.length === 1) {
+                var center = latlngs[0];
+                L.circleMarker(center, {
+                    color: '#1565C0', radius: 6, weight: 1, fillOpacity: 0.6, fillColor: '#1565C0'
+                }).bindPopup(`<b>🏢 ${item.info}</b>`).addTo(featureGroup);
+
+                globalLocations.push({ name: item.info, type: 'point', center: center });
+            } 
+            // B. 多邊形 (田地)
+            else {
+                var poly = L.polygon(latlngs, {
+                    color: '#FF9800', weight: 1, fillColor: '#FF9800', fillOpacity: 0.15
+                }).bindPopup(`<b>🌾 ${item.info}</b>`);
+                
+                featureGroup.addLayer(poly);
+                globalLocations.push({ name: item.info, type: 'polygon', bounds: poly.getBounds() });
+            }
         });
 
-        // 2. 如果找不到，但地點包含 "田"，就隨機找一塊田放 (視覺模擬)
-        if (candidates.length === 0 && d.loc.includes("田")) {
-             candidates = globalLocations.filter(function(loc) { return loc.type === 'polygon'; });
+        featureGroup.addTo(map);
+        
+        // 自動調整視角以涵蓋所有地點
+        if(globalLocations.length > 0) {
+            map.fitBounds(featureGroup.getBounds(), { padding: [20, 20] });
+        }
+    }
+
+    function fetchDrivers() {
+        // 呼叫 API: ?op=drivers
+        fetch(GAS_API_URL + "?op=drivers")
+        .then(response => response.json())
+        .then(drivers => {
+            updateDriverMarkers(drivers);
+            document.getElementById('loading').style.opacity = 0;
+            setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 500);
+        })
+        .catch(err => console.error("無法讀取司機:", err));
+    }
+
+    function updateDriverMarkers(drivers) {
+        // 清除舊標記 (如果要做自動刷新功能的話)
+        // driverMarkers.forEach(m => map.removeLayer(m));
+        
+        drivers.forEach(d => {
+            var latlng = getSmartPosition(d.loc);
+            
+            // 決定顏色：出發=綠，抵達=紅
+            var color = d.status.includes("出發") ? "#2E7D32" : "#D32F2F"; 
+            var statusIcon = d.status.includes("出發") ? "🚚" : "🛑";
+
+            // 製作漂亮的圓點圖標
+            var iconHtml = `<div style="
+                background-color: ${color};
+                width: 16px; height: 16px;
+                border-radius: 50%;
+                border: 2px solid white;
+                box-shadow: 0 0 8px ${color};">
+            </div>`;
+
+            var customIcon = L.divIcon({
+                className: 'custom-pin',
+                html: iconHtml,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            var marker = L.marker(latlng, { icon: customIcon }).addTo(map);
+            
+            // 氣泡內容
+            var popupContent = `
+                <div style="text-align:center; min-width:120px;">
+                    <b style="font-size:16px;">${d.driver}</b><br>
+                    <span style="color:#555; font-size:12px;">📍 ${d.loc}</span><br>
+                    <hr style="margin:5px 0; border:0; border-top:1px solid #eee;">
+                    <span style="color:${color}; font-weight:bold;">${statusIcon} ${d.status}</span><br>
+                    <small style="color:#888;">🕒 ${d.time}</small>
+                </div>
+            `;
+
+            marker.bindPopup(popupContent);
+            marker.bindTooltip(d.driver, { permanent: true, direction: "top", className: "driver-label", offset: [0, -10] }).openTooltip();
+            
+            driverMarkers.push(marker);
+        });
+    }
+
+    // ★★★ 核心演算法：決定司機在地圖上的位置 ★★★
+    function getSmartPosition(locName) {
+        // 1. 先找有沒有完全符合名稱的地點 (例如 "公司")
+        var exactMatch = globalLocations.find(l => locName.includes(l.name));
+        
+        // 2. 如果是「田間」，從所有田地中隨機挑一塊 (模擬分佈)
+        // 未來如果資料庫有分 A區/B區，這裡可以加強篩選邏輯
+        if (!exactMatch && locName.includes("田")) {
+            var fields = globalLocations.filter(l => l.type === 'polygon');
+            if (fields.length > 0) {
+                exactMatch = fields[Math.floor(Math.random() * fields.length)];
+            }
         }
 
-        // 3. 決定最終座標
-        if (candidates.length > 0) {
-            // 隨機選一個符合的 (避免多人重疊)
-            var target = candidates[Math.floor(Math.random() * candidates.length)];
-            
-            if (target.type === 'polygon') {
-                // 如果是田：在田的範圍內隨機顯示
-                var bounds = target.bounds;
+        // 3. 計算座標
+        if (exactMatch) {
+            if (exactMatch.type === 'polygon') {
+                // 如果是田，隨機取範圍內的一點
+                var bounds = exactMatch.bounds;
                 var lat = bounds.getSouth() + Math.random() * (bounds.getNorth() - bounds.getSouth());
                 var lng = bounds.getWest() + Math.random() * (bounds.getEast() - bounds.getWest());
-                latlng = [lat, lng];
+                return [lat, lng];
             } else {
-                // 如果是單點 (公司)：在中心點附近微調 (避免重疊)
-                latlng = target.center.slice();
-                latlng[0] += (Math.random() - 0.5) * 0.0005; 
-                latlng[1] += (Math.random() - 0.5) * 0.0005;
+                // 如果是單點 (公司)，加一點隨機偏移以免重疊
+                return [
+                    exactMatch.center[0] + (Math.random() - 0.5) * 0.0005,
+                    exactMatch.center[1] + (Math.random() - 0.5) * 0.0005
+                ];
             }
-            matched = true;
-        } 
-        
-        // 4. 完全找不到 (例如: 加油站)，就放在地圖中心附近當作 "未知"
-        if (!matched) {
-            var center = map.getCenter();
-            latlng = [center.lat + (Math.random()-0.5)*0.01, center.lng + (Math.random()-0.5)*0.01];
         }
 
-        // --- 繪製司機圖標 ---
-        var color = d.status.includes("出發") ? "#2E7D32" : "#D32F2F"; // 綠(出發) / 紅(抵達)
-        
-        // 帶有光暈的圓點
-        var iconHtml = `<div style="
-            background-color:${color}; 
-            width:14px; height:14px; 
-            border-radius:50%; 
-            border:2px solid white; 
-            box-shadow: 0 0 8px ${color};">
-        </div>`;
-        
-        var customIcon = L.divIcon({ className: 'custom-pin', html: iconHtml, iconSize: [18, 18], iconAnchor: [9, 9] });
-
-        var marker = L.marker(latlng, {icon: customIcon}).addTo(map);
-        
-        // 彈出視窗內容
-        var popupContent = `
-            <div style="text-align:center;">
-                <b style="font-size:15px;">${d.driver}</b><br>
-                <span style="color:#555; font-size:12px;">📍 ${d.loc}</span><br>
-                <span style="color:${color}; font-weight:bold;">${d.status}</span><br>
-                <small style="color:#888;">🕒 ${d.time}</small>
-            </div>`;
-        
-        marker.bindPopup(popupContent);
-        // 永遠顯示司機名字
-        marker.bindTooltip(d.driver, {permanent: true, direction: "top", className: "driver-label"}).openTooltip();
-      });
+        // 4. 真的找不到，回傳地圖中心 (未知)
+        var center = map.getCenter();
+        return [center.lat, center.lng];
     }
+
+    // 每 60 秒自動刷新一次位置
+    setInterval(fetchDrivers, 60000);
+
   </script>
 </body>
 </html>
