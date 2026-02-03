@@ -450,11 +450,11 @@ function updateDriverSelect(lineName) {
 }
 
 // ==========================================
-// ★ 核心送出邏輯 (v60.0 GPS 版) - 已替換
+// ★ 核心送出邏輯 (無 GPS 版) ★
 // ==========================================
 function processClick(actionType) {
   try {
-    // 1. 取得資料與防呆
+    // 1. 取得資料
     var driverSelect = document.getElementById('driver'); 
     var driver = driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value;
     var plateSelect = document.getElementById('plate'); 
@@ -465,13 +465,13 @@ function processClick(actionType) {
     var destSelect = document.getElementById('destination'); 
     var dest = destSelect.value === 'custom' ? document.getElementById('destination-custom').value : destSelect.value;
     
-    // 取得 taskType (作業型態)
     var type = ""; 
     var radios = document.getElementsByName('taskType'); 
     for (var i = 0; i < radios.length; i++) { 
         if (radios[i].checked) { type = radios[i].value; break; } 
     }
     
+    // 防呆檢查
     if (!driver || driver.trim() === "") { 
         alert("請選擇或輸入司機姓名！\n(Vui lòng chọn tên tài xế!)"); 
         if(driverSelect.value === 'custom') document.getElementById('driver-custom').focus(); 
@@ -493,7 +493,7 @@ function processClick(actionType) {
         return; 
     }
 
-    // 2. 儲存歷史紀錄
+    // 儲存歷史紀錄
     if(driverSelect.value === 'custom') saveHistory(driver, 'vds_history_driver'); 
     localStorage.setItem('vds_driver', driver);
     if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate'); 
@@ -509,33 +509,14 @@ function processClick(actionType) {
     if (actionType !== "作業結束" && locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc'); 
     if (destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest');
 
-    // 3. 介面鎖定
+    // 2. 介面鎖定並直接傳送
     toggleButtons(true); 
     document.getElementById('loading-mask').style.display = 'flex'; 
-    document.getElementById('loading-text').innerText = "🛰️ 正在抓取 GPS...";
+    document.getElementById('loading-text').innerText = "資料傳送中..."; // 不用再顯示抓取GPS
     document.getElementById('manual-area').style.display = 'none';
 
-    // 4. 啟動 GPS 並傳送
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        function(position) {
-          var lat = position.coords.latitude;
-          var lng = position.coords.longitude;
-          document.getElementById('loading-text').innerText = "資料傳送中...";
-          sendDataToGAS(actionType, driver, plate, trip, loc, dest, type, lat, lng);
-        },
-        function(error) {
-          console.warn("GPS 失敗:", error);
-          // alert("⚠️ 無法取得 GPS，將只傳送文字地點。"); // 可以選擇不跳窗干擾
-          document.getElementById('loading-text').innerText = "資料傳送中...";
-          sendDataToGAS(actionType, driver, plate, trip, loc, dest, type, "", "");
-        },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-      );
-    } else {
-      document.getElementById('loading-text').innerText = "資料傳送中...";
-      sendDataToGAS(actionType, driver, plate, trip, loc, dest, type, "", "");
-    }
+    // 3. 直接呼叫送出 (不使用 GPS)
+    sendDataToGAS(actionType, driver, plate, trip, loc, dest, type);
 
   } catch (e) { 
       alert("Error: " + e.message); 
@@ -544,22 +525,21 @@ function processClick(actionType) {
   }
 }
 
-// 實際傳送資料給 GAS 的函式
-function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType, lat, lng) {
+// 實際傳送資料給 GAS 的函式 (移除 lat, lng 參數)
+function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
     var payload = {
         driver: driver,
         plate: plate,
         trip: trip,
         location: loc,
-        location_custom: document.getElementById('location-custom').value, // 為了後端 custom 邏輯保留
+        location_custom: document.getElementById('location-custom').value,
         destination: (actionType === '出車') ? dest : "",
         destination_custom: document.getElementById('destination-custom').value,
-        status: (actionType === '出車' ? '出發' : actionType), // 對應後端判斷
+        status: (actionType === '出車' ? '出發' : actionType),
         status_custom: "", 
         taskType: taskType,
-        action: actionType, // 為了前端判斷 (出車/抵達/作業結束)
-        lat: lat,
-        lng: lng
+        action: actionType
+        // lat, lng 已移除
     };
 
     fetch(GAS_URL, {
@@ -571,18 +551,15 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType, lat
     .then(response => response.json())
     .then(data => {
         if(data.result === "success") {
-            // A. 打卡成功
             var msg = createLogMessage(payload);
             
-            // 如果是作業結束，顯示小結視窗
             if (data.summary) {
                 document.getElementById('summary-content').innerText = data.summary;
                 document.getElementById('summary-modal').style.display = 'flex';
             } else {
-                showToast("✅ 打卡成功！" + (lat ? "(含GPS)" : ""));
+                showToast("✅ 打卡成功！");
             }
             
-            // 同步發送 LINE 訊息 (讓群組看到)
             if (liff.isInClient()) {
                 liff.sendMessages([{ type: 'text', text: msg }]).catch(err => console.error(err));
             }
@@ -594,7 +571,6 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType, lat
             alert("❌ 錯誤: " + data.msg);
         }
         
-        // 解除鎖定 (如果是作業結束且有小結，會停在小結畫面，不需要解鎖按鈕)
         if (!data.summary) {
             document.getElementById('loading-mask').style.display = 'none';
             toggleButtons(false);
