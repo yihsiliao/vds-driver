@@ -448,10 +448,11 @@ function updateDriverSelect(lineName) {
 }
 
 // ==========================================
-// ★ 核心送出邏輯 (GPS 快速版) ★
+// ★ 核心送出邏輯 (GPS 5秒快速版) ★
 // ==========================================
 function processClick(actionType) {
   try {
+    // 1. 取得資料
     var driverSelect = document.getElementById('driver'); 
     var driver = driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value;
     var plateSelect = document.getElementById('plate'); 
@@ -466,10 +467,12 @@ function processClick(actionType) {
     var radios = document.getElementsByName('taskType'); 
     for (var i = 0; i < radios.length; i++) { if (radios[i].checked) { type = radios[i].value; break; } }
     
+    // 防呆
     if (!driver || driver.trim() === "") { alert("請選擇司機！"); return; }
     if (actionType !== "作業結束" && (!loc || loc.trim() === "")) { alert("請輸入地點！"); return; }
     if (actionType === "出車" && (!dest || dest.trim() === "")) { alert("請輸入目的地！"); return; }
 
+    // 儲存紀錄
     if(driverSelect.value === 'custom') saveHistory(driver, 'vds_history_driver'); 
     localStorage.setItem('vds_driver', driver);
     if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate'); 
@@ -485,34 +488,37 @@ function processClick(actionType) {
     if (actionType !== "作業結束" && locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc'); 
     if (destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest');
 
-    // 介面鎖定
+    // 2. 介面鎖定
     toggleButtons(true); 
     document.getElementById('loading-mask').style.display = 'flex'; 
     var loadingText = document.getElementById('loading-text');
-    loadingText.innerText = "🛰️ 定位中 (最多等3秒)...";
+    loadingText.innerText = "🛰️ 定位中 (最多5秒)...";
     
     // 定義傳送函式
     var hasSent = false;
     function doSend(lat, lng) {
-        if (hasSent) return; // 避免重複送出
+        if (hasSent) return; // 避免重複
         hasSent = true;
         loadingText.innerText = "資料傳送中...";
         sendDataToGAS(actionType, driver, plate, trip, loc, dest, type, lat, lng);
     }
 
-    // 啟動 GPS (設定 3 秒逾時)
+    // 3. 啟動 GPS (設定 5 秒逾時)
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         function(position) {
+          // 成功抓到
           doSend(position.coords.latitude, position.coords.longitude);
         },
         function(error) {
+          // 失敗 (可能是拒絕權限，或室內收不到)
           console.warn("GPS 失敗:", error);
-          doSend("", ""); // 失敗就傳空值
+          doSend("", ""); // 傳空值，照樣打卡
         },
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } // 只等 3 秒，抓不到就放棄
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } 
       );
     } else {
+      // 瀏覽器不支援
       doSend("", "");
     }
 
@@ -523,7 +529,7 @@ function processClick(actionType) {
   }
 }
 
-// 實際傳送資料給 GAS 的函式
+// 實際傳送資料給 GAS 的函式 (包含 lat, lng)
 function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType, lat, lng) {
     var payload = {
         driver: driver,
@@ -537,8 +543,8 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType, lat
         status_custom: "", 
         taskType: taskType,
         action: actionType,
-        lat: lat, // ★ 加回來
-        lng: lng  // ★ 加回來
+        lat: lat, // ★ 傳送座標
+        lng: lng  // ★ 傳送座標
     };
     
     fetch(GAS_URL, {
@@ -552,9 +558,9 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType, lat
         if(data.result === "success") {
             var msg = createLogMessage(payload);
             
-            // 如果後端有傳回 gpsNote (例如: "GPS校正")，就顯示在 Toast 裡
+            // 判斷是否有精準定位
             var extraInfo = "";
-            if (data.msg && data.msg.includes("GPS")) extraInfo = "\n(已精準定位)";
+            if (data.msg && data.msg.includes("GPS")) extraInfo = "\n(已定位到田區)";
 
             if (data.summary) {
                 document.getElementById('summary-content').innerText = data.summary;
