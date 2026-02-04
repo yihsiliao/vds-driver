@@ -510,7 +510,7 @@ function processClick(actionType) {
           console.warn("GPS 失敗:", error);
           doSend("", ""); // 失敗就傳空值
         },
-        { enableHighAccuracy: true, timeout: 3000, maximumAge: 0 } // 只等 3 秒，抓不到就放棄
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } // 只等 3 秒，抓不到就放棄
       );
     } else {
       doSend("", "");
