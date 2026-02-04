@@ -448,11 +448,11 @@ function updateDriverSelect(lineName) {
 }
 
 // ==========================================
-// ★ 核心送出邏輯 (GPS 強制測試版) ★
+// ★ 核心送出邏輯 (GPS 5秒快速版) ★
 // ==========================================
 function processClick(actionType) {
   try {
-    // 1. 取得基本資料
+    // 1. 取得資料
     var driverSelect = document.getElementById('driver'); 
     var driver = driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value;
     var plateSelect = document.getElementById('plate'); 
@@ -467,12 +467,12 @@ function processClick(actionType) {
     var radios = document.getElementsByName('taskType'); 
     for (var i = 0; i < radios.length; i++) { if (radios[i].checked) { type = radios[i].value; break; } }
     
-    // 防呆檢查
+    // 防呆
     if (!driver || driver.trim() === "") { alert("請選擇司機！"); return; }
     if (actionType !== "作業結束" && (!loc || loc.trim() === "")) { alert("請輸入地點！"); return; }
     if (actionType === "出車" && (!dest || dest.trim() === "")) { alert("請輸入目的地！"); return; }
 
-    // 儲存歷史紀錄
+    // 儲存紀錄
     if(driverSelect.value === 'custom') saveHistory(driver, 'vds_history_driver'); 
     localStorage.setItem('vds_driver', driver);
     if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate'); 
@@ -488,60 +488,37 @@ function processClick(actionType) {
     if (actionType !== "作業結束" && locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc'); 
     if (destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest');
 
-    // 2. 鎖定畫面
+    // 2. 介面鎖定
     toggleButtons(true); 
     document.getElementById('loading-mask').style.display = 'flex'; 
     var loadingText = document.getElementById('loading-text');
-    loadingText.innerText = "🛰️ 正在請求 GPS...";
+    loadingText.innerText = "🛰️ 定位中 (最多5秒)...";
     
-    // 3. 定義傳送函式 (收到座標後才執行)
+    // 定義傳送函式
     var hasSent = false;
     function doSend(lat, lng) {
-        if (hasSent) return; 
+        if (hasSent) return; // 避免重複
         hasSent = true;
-        
-        // ★★★ 測試重點：這裡會告訴你抓到什麼 ★★★
-        if (!lat) {
-            var confirmNoGPS = confirm("⚠️ 警告：手機無法提供座標！\n可能是權限未開或室內收訊差。\n\n要強制傳送無座標版本嗎？");
-            if (!confirmNoGPS) {
-                // 如果按取消，就恢復畫面，不傳送
-                document.getElementById('loading-mask').style.display = 'none';
-                toggleButtons(false);
-                return;
-            }
-        } else {
-            // 有抓到，顯示一下讓您放心 (測試完後可移除這行 alert)
-            // alert("✅ 抓到座標了：\n" + lat + ", " + lng);
-        }
-
-        loadingText.innerText = "資料上傳中...";
+        loadingText.innerText = "資料傳送中...";
         sendDataToGAS(actionType, driver, plate, trip, loc, dest, type, lat, lng);
     }
 
-    // 4. 啟動 GPS
+    // 3. 啟動 GPS (設定 5 秒逾時)
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         function(position) {
-          // 成功！
+          // 成功抓到
           doSend(position.coords.latitude, position.coords.longitude);
         },
         function(error) {
-          // 失敗！
-          var errorMsg = "";
-          switch(error.code) {
-            case error.PERMISSION_DENIED: errorMsg = "您拒絕了定位權限"; break;
-            case error.POSITION_UNAVAILABLE: errorMsg = "位置資訊無法取得"; break;
-            case error.TIMEOUT: errorMsg = "定位逾時 (超過10秒)"; break;
-            default: errorMsg = error.message;
-          }
-          alert("❌ GPS 失敗：" + errorMsg);
-          doSend("", ""); // 失敗還是傳送 (空值)
+          // 失敗 (可能是拒絕權限，或室內收不到)
+          console.warn("GPS 失敗:", error);
+          doSend("", ""); // 傳空值，照樣打卡
         },
-        // 設定：高精準度，逾時放寬到 10 秒
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } 
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 } 
       );
     } else {
-      alert("❌ 您的瀏覽器不支援 GPS");
+      // 瀏覽器不支援
       doSend("", "");
     }
 
@@ -552,25 +529,64 @@ function processClick(actionType) {
   }
 }
 
-function createLogMessage(data) {
-    var now = new Date(); 
-    var hh = now.getHours().toString().padStart(2, '0'); 
-    var mm = now.getMinutes().toString().padStart(2, '0'); 
-    var timeStr = hh + ":" + mm; 
-    var plateStr = (data.plate) ? "[" + data.plate + "] " : ""; 
-    var taskSuffix = (data.taskType) ? "(" + data.taskType + ")" : "";
+// 實際傳送資料給 GAS 的函式 (包含 lat, lng)
+function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType, lat, lng) {
+    var payload = {
+        driver: driver,
+        plate: plate,
+        trip: trip,
+        location: loc,
+        location_custom: document.getElementById('location-custom').value,
+        destination: (actionType === '出車') ? dest : "",
+        destination_custom: document.getElementById('destination-custom').value,
+        status: (actionType === '出車' ? '出發' : actionType),
+        status_custom: "", 
+        taskType: taskType,
+        action: actionType,
+        lat: lat, // ★ 傳送座標
+        lng: lng  // ★ 傳送座標
+    };
     
-    var silentTag = "\u200B";
+    fetch(GAS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        redirect: "follow",
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.result === "success") {
+            var msg = createLogMessage(payload);
+            
+            // 判斷是否有精準定位
+            var extraInfo = "";
+            if (data.msg && data.msg.includes("GPS")) extraInfo = "\n(已定位到田區)";
 
-    if (data.action === "作業結束") return plateStr + data.driver + " 結束時間" + timeStr + silentTag; 
-    if (data.action === "出車") return plateStr + data.driver + " " + data.trip + " " + data.location + "出發前往" + data.destination + taskSuffix + " " + timeStr + silentTag; 
-    if (data.action === "抵達") {
-        if (data.location === "公司") return data.driver + " 回到公司 " + timeStr + silentTag; 
-        return data.driver + " 抵達" + data.location + " " + timeStr + silentTag; 
-    }
-    return "";
+            if (data.summary) {
+                document.getElementById('summary-content').innerText = data.summary;
+                document.getElementById('summary-modal').style.display = 'flex';
+            } else {
+                showToast("✅ 打卡成功！" + extraInfo);
+            }
+            
+            if (liff.isInClient()) {
+                liff.sendMessages([{ type: 'text', text: msg }]).catch(err => console.error(err));
+            }
+            if (!data.summary) setTimeout(() => liff.closeWindow(), 1500);
+        } else {
+            alert("❌ 錯誤: " + data.msg);
+        }
+        if (!data.summary) {
+            document.getElementById('loading-mask').style.display = 'none';
+            toggleButtons(false);
+        }
+    })
+    .catch(err => {
+        alert("連線錯誤");
+        document.getElementById('loading-mask').style.display = 'none';
+        toggleButtons(false);
+    });
 }
-
 function showManualButton(msg) { 
     document.getElementById('loading-mask').style.display = 'none'; 
     var area = document.getElementById('manual-area'); 
