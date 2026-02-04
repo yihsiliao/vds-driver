@@ -6,7 +6,7 @@
   <title>🥕VDS司機打卡🥕 | Chấm công</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    /* v51.5 Lite - 分流發送版 */
+    /* v61.0 GPS Fast - 極速定位版 */
     body { background-color: #f8f9fa; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; margin: 0; }
     .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; }
     h3 { color: #198754; text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 24px; }
@@ -237,12 +237,13 @@
     <button class="btn-arrive" onclick="processClick('抵達')"><span class="btn-text-main">🏁 抵達/回到</span><span class="btn-text-sub">Đến nơi</span></button>
   </div>
   <button class="btn-end" onclick="processClick('作業結束')"><span class="btn-text-main">🛑 結束今日作業</span><span class="btn-text-sub">Kết thúc công việc</span></button>
-<div style="margin-top: 15px;">
+  
+  <div style="margin-top: 15px;">
     <button type="button" onclick="querySummary(this)" style="background-color: #17a2b8; color: white; width: 100%; height: 60px; border: none; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
         <span style="font-size: 18px; font-weight: 700; line-height: 1.1;">📊 查詢今日小結</span>
         <span style="font-size: 12px; opacity: 0.9; margin-top: 2px; font-weight: 400;">Xem tổng kết ngày</span>
     </button>
-</div>
+  </div>
 
   <div style="margin-top: 15px;">
     <a href="https://script.google.com/macros/s/AKfycbyD0PoIElZYUiD8Es8Jzo9cft4gKYWIWtM-ejjED3UQJcv8YwyF7SbhaPRajqyC0WsQ/exec" target="_blank" style="text-decoration: none;">
@@ -251,27 +252,24 @@
             <span style="font-size: 12px; opacity: 0.9; margin-top: 2px; font-weight: 400;">Bản đồ vị trí tài xế</span>
         </button>
     </a>
-</div>
-  
-
-</div>
+  </div>
   
   <div id="dashboard-toggle" onclick="toggleDashboard()">📊 管理員戰情室 (Admin Dashboard)</div>
 
-  
   <div id="dashboard-panel">
       <div class="dash-title">🚀 VDS 智慧戰情室</div>
       <button class="dash-btn dash-btn-ceo" onclick="sendCmd('總裁')"><span>🏭</span> 企業總裁儀表板<br>(今日營運概況)</button>
       <div class="dash-grid">
-          <button class="dash-btn" onclick="sendCmd('效率')"><span>🏎️</span> 司機效率分析</button>
+          <button class="dash-btn" onclick="sendCmd('日報')"><span>📝</span> 每日趟次日報表</button>
+          <button class="dash-btn" onclick="sendCmd('點數')"><span>💰</span> 績效點數/薪資</button>
           <button class="dash-btn" onclick="sendCmd('車輛')"><span>🚛</span> 歷史車輛稼動</button>
-          <button class="dash-btn" onclick="sendCmd('地點')"><span>🛑</span> 地點滯留<br>(分人採/機採)</button>
-          <button class="dash-btn" onclick="sendCmd('路程')"><span>⏱️</span> 路程分析<br>(分二林/東勢)</button>
+          <button class="dash-btn" onclick="sendCmd('地點')"><span>🛑</span> 地點滯留分析</button>
+          <button class="dash-btn" onclick="sendCmd('路程')"><span>⏱️</span> 路程耗時分析</button>
       </div>
       <button class="dash-btn dash-btn-full" onclick="sendCmd('動態')"><span>📡</span> 今日即時動態 (Live)</button>
   </div>
 
-  <div id="status">系統就緒 v51.0 Lite</div>
+  <div id="status">系統就緒 v61.0 GPS Fast</div>
   <div id="manual-area"><div style="color: #d63384; font-weight: bold; margin-bottom:5px;">⚠️ 請點擊下方按鈕發送</div><a id="manual-btn" href="#" target="_blank"><span style="font-size:18px; font-weight:bold;">🟢 點我發送 (Nhấn vào đây)</span></a></div>
 </div>
 
@@ -399,7 +397,7 @@ window.onload = function() {
   }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; });
 };
 
-// --- 歷史紀錄邏輯 (保持不變) ---
+// --- 歷史紀錄邏輯 ---
 function loadHistory(selectId, storageKey) { 
     try {
         var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); 
@@ -441,7 +439,7 @@ function updateDriverSelect(lineName) {
             if (driverSelect.options[i].value === savedDriver) { 
                 driverSelect.selectedIndex = i; 
                 var statusDiv = document.getElementById('status'); 
-                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v51.5)"; 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v61.0)"; 
                 restoreSelection('plate', 'vds_plate'); 
                 return; 
             } 
@@ -450,11 +448,10 @@ function updateDriverSelect(lineName) {
 }
 
 // ==========================================
-// ★ 核心送出邏輯 (無 GPS 版) ★
+// ★ 核心送出邏輯 (GPS 快速版) ★
 // ==========================================
 function processClick(actionType) {
   try {
-    // 1. 取得資料
     var driverSelect = document.getElementById('driver'); 
     var driver = driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value;
     var plateSelect = document.getElementById('plate'); 
@@ -467,33 +464,12 @@ function processClick(actionType) {
     
     var type = ""; 
     var radios = document.getElementsByName('taskType'); 
-    for (var i = 0; i < radios.length; i++) { 
-        if (radios[i].checked) { type = radios[i].value; break; } 
-    }
+    for (var i = 0; i < radios.length; i++) { if (radios[i].checked) { type = radios[i].value; break; } }
     
-    // 防呆檢查
-    if (!driver || driver.trim() === "") { 
-        alert("請選擇或輸入司機姓名！\n(Vui lòng chọn tên tài xế!)"); 
-        if(driverSelect.value === 'custom') document.getElementById('driver-custom').focus(); 
-        return; 
-    }
-    
-    if (actionType !== "作業結束") { 
-        if (!loc || loc.trim() === "") { 
-            alert("請輸入「目前地點」！\n(Vui lòng nhập vị trí hiện tại!)"); 
-            if(locSelect.value === 'custom') document.getElementById('location-custom').focus(); 
-            return; 
-        } 
-    }
+    if (!driver || driver.trim() === "") { alert("請選擇司機！"); return; }
+    if (actionType !== "作業結束" && (!loc || loc.trim() === "")) { alert("請輸入地點！"); return; }
+    if (actionType === "出車" && (!dest || dest.trim() === "")) { alert("請輸入目的地！"); return; }
 
-    if (actionType === "出車" && (!dest || dest.trim() === "")) { 
-        alert("⚠️ 請選擇或輸入「預計前往」的目的地！"); 
-        if(destSelect.value === 'custom') { document.getElementById('destination-custom').focus(); } 
-        else { document.getElementById('destination').focus(); } 
-        return; 
-    }
-
-    // 儲存歷史紀錄
     if(driverSelect.value === 'custom') saveHistory(driver, 'vds_history_driver'); 
     localStorage.setItem('vds_driver', driver);
     if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate'); 
@@ -509,24 +485,46 @@ function processClick(actionType) {
     if (actionType !== "作業結束" && locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc'); 
     if (destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest');
 
-    // 2. 介面鎖定並直接傳送
+    // 介面鎖定
     toggleButtons(true); 
     document.getElementById('loading-mask').style.display = 'flex'; 
-    document.getElementById('loading-text').innerText = "資料傳送中..."; // 不用再顯示抓取GPS
-    document.getElementById('manual-area').style.display = 'none';
+    var loadingText = document.getElementById('loading-text');
+    loadingText.innerText = "🛰️ 定位中 (最多等3秒)...";
+    
+    // 定義傳送函式
+    var hasSent = false;
+    function doSend(lat, lng) {
+        if (hasSent) return; // 避免重複送出
+        hasSent = true;
+        loadingText.innerText = "資料傳送中...";
+        sendDataToGAS(actionType, driver, plate, trip, loc, dest, type, lat, lng);
+    }
 
-    // 3. 直接呼叫送出 (不使用 GPS)
-    sendDataToGAS(actionType, driver, plate, trip, loc, dest, type);
+    // 啟動 GPS (設定 3 秒逾時)
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          doSend(position.coords.latitude, position.coords.longitude);
+        },
+        function(error) {
+          console.warn("GPS 失敗:", error);
+          doSend("", ""); // 失敗就傳空值
+        },
+        { enableHighAccuracy: true, timeout: 3000, maximumAge: 0 } // 只等 3 秒，抓不到就放棄
+      );
+    } else {
+      doSend("", "");
+    }
 
   } catch (e) { 
       alert("Error: " + e.message); 
-      document.getElementById('loading-mask').style.display = 'none'; 
       toggleButtons(false); 
+      document.getElementById('loading-mask').style.display = 'none';
   }
 }
 
-// 實際傳送資料給 GAS 的函式 (移除 lat, lng 參數)
-function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
+// 實際傳送資料給 GAS 的函式
+function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType, lat, lng) {
     var payload = {
         driver: driver,
         plate: plate,
@@ -538,10 +536,11 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
         status: (actionType === '出車' ? '出發' : actionType),
         status_custom: "", 
         taskType: taskType,
-        action: actionType
-        // lat, lng 已移除
+        action: actionType,
+        lat: lat, // ★ 加回來
+        lng: lng  // ★ 加回來
     };
-
+    
     fetch(GAS_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -553,34 +552,31 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
         if(data.result === "success") {
             var msg = createLogMessage(payload);
             
+            // 如果後端有傳回 gpsNote (例如: "GPS校正")，就顯示在 Toast 裡
+            var extraInfo = "";
+            if (data.msg && data.msg.includes("GPS")) extraInfo = "\n(已精準定位)";
+
             if (data.summary) {
                 document.getElementById('summary-content').innerText = data.summary;
                 document.getElementById('summary-modal').style.display = 'flex';
             } else {
-                showToast("✅ 打卡成功！");
+                showToast("✅ 打卡成功！" + extraInfo);
             }
             
             if (liff.isInClient()) {
                 liff.sendMessages([{ type: 'text', text: msg }]).catch(err => console.error(err));
             }
-            
-            if (!data.summary) {
-                 setTimeout(() => liff.closeWindow(), 1500);
-            }
+            if (!data.summary) setTimeout(() => liff.closeWindow(), 1500);
         } else {
             alert("❌ 錯誤: " + data.msg);
         }
-        
         if (!data.summary) {
             document.getElementById('loading-mask').style.display = 'none';
             toggleButtons(false);
-        } else {
-            document.getElementById('loading-mask').style.display = 'none';
         }
     })
     .catch(err => {
-        alert("⚠️ 連線錯誤，請檢查網路");
-        console.error(err);
+        alert("連線錯誤");
         document.getElementById('loading-mask').style.display = 'none';
         toggleButtons(false);
     });
@@ -594,8 +590,6 @@ function createLogMessage(data) {
     var plateStr = (data.plate) ? "[" + data.plate + "] " : ""; 
     var taskSuffix = (data.taskType) ? "(" + data.taskType + ")" : "";
     
-    // ★★★ 關鍵修改：在字串最後加上 \u200B (零寬度空白) ★★★
-    // 這是一個隱形記號，用來告訴後端機器人：「這則訊息是 App 發的，請忽略」
     var silentTag = "\u200B";
 
     if (data.action === "作業結束") return plateStr + data.driver + " 結束時間" + timeStr + silentTag; 
