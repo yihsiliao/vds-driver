@@ -261,17 +261,30 @@
   
   <div id="dashboard-panel">
       <div class="dash-title">🚀 VDS 智慧戰情室</div>
-      <button class="dash-btn dash-btn-ceo" onclick="sendCmd('總裁')"><span>🏭</span> 企業總裁儀表板<br>(今日營運概況)</button>
+      
+      <button class="dash-btn dash-btn-ceo" onclick="sendCmd('總裁')">
+          <span>🏭</span> 企業總裁儀表板<br>(今日營運概況)
+      </button>
+
       <div class="dash-grid">
-          <button class="dash-btn" onclick="sendCmd('效率')"><span>🏎️</span> 司機效率分析</button>
-          <button class="dash-btn" onclick="sendCmd('車輛')"><span>🚛</span> 歷史車輛稼動</button>
-          <button class="dash-btn" onclick="sendCmd('地點')"><span>🛑</span> 地點滯留<br>(分人採/機採)</button>
-          <button class="dash-btn" onclick="sendCmd('路程')"><span>⏱️</span> 路程分析<br>(分二林/東勢)</button>
+          <button class="dash-btn" onclick="sendCmd('日報')"><span>📝</span> 司機行程日報<br>(含薪資預估)</button>
+          <button class="dash-btn" onclick="sendCmd('動態')"><span>📡</span> 今日即時動態<br>(Live)</button>
       </div>
-      <button class="dash-btn dash-btn-full" onclick="sendCmd('動態')"><span>📡</span> 今日即時動態 (Live)</button>
+
+      <div class="dash-grid">
+          <button class="dash-btn" onclick="sendCmd('標準')"><span>🏆</span> 路線黃金標準<br>(最速vs最慢)</button>
+          <button class="dash-btn" onclick="sendCmd('閒置')"><span>⏳</span> 車輛閒置分析<br>(抓摸魚/瓶頸)</button>
+      </div>
+
+      <div class="dash-grid">
+          <button class="dash-btn" onclick="sendCmd('效率')"><span>🏎️</span> 司機效率排行<br>(V.S.標準)</button>
+          <button class="dash-btn" onclick="sendCmd('車輛')"><span>🚛</span> 歷史車輛稼動<br>(使用次數)</button>
+          <button class="dash-btn" onclick="sendCmd('地點')"><span>🛑</span> 地點滯留熱點<br>(停留時間)</button>
+          <button class="dash-btn" onclick="sendCmd('路程')"><span>⏱️</span> 路程耗時統計<br>(平均時間)</button>
+      </div>
   </div>
 
-  <div id="status">系統就緒 v51.0 Lite</div>
+  <div id="status">系統就緒 v51.5</div>
   <div id="manual-area"><div style="color: #d63384; font-weight: bold; margin-bottom:5px;">⚠️ 請點擊下方按鈕發送</div><a id="manual-btn" href="#" target="_blank"><span style="font-size:18px; font-weight:bold;">🟢 點我發送 (Nhấn vào đây)</span></a></div>
 </div>
 
