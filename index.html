@@ -725,7 +725,12 @@ function createLogMessage(data) {
     var silentTag = "\u200B";
 
     if (data.action === "作業結束") return plateStr + data.driver + " 結束時間" + timeStr + silentTag; 
-    if (data.action === "出車") return plateStr + data.driver + " " + data.trip + " " + data.location + "出發前往" + data.destination + taskSuffix + " " + timeStr + silentTag; 
+    
+    if (data.action === "出車") {
+        // ★ 這裡只產生基本訊息，ETA 會在 sendDataToGAS 的 callback 裡被加上去
+        return plateStr + data.driver + " " + data.trip + " " + data.location + "出發前往" + data.destination + taskSuffix + " " + timeStr + silentTag; 
+    }
+    
     if (data.action === "抵達") {
         if (data.location === "公司") return data.driver + " 回到公司 " + timeStr + silentTag; 
         return data.driver + " 抵達" + data.location + taskSuffix + " " + timeStr + silentTag; 
