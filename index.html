@@ -6,7 +6,7 @@
   <title>🥕VDS司機打卡🥕 | Chấm công</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    /* v52.2 Task Memory - 自訂作業記憶版 */
+    /* v53.0 Smart Prediction - 智慧預判版 */
     body { background-color: #f8f9fa; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; margin: 0; }
     .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; }
     h3 { color: #198754; text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 24px; }
@@ -16,11 +16,15 @@
     select, input[type="text"], input[type="password"] { width: 100%; height: 50px; font-size: 17px; font-weight: 500; border: 1px solid #ced4da; border-radius: 10px; background-color: #fff; padding-left: 12px; appearance: none; outline: none; transition: border-color 0.2s; box-sizing: border-box; color: #212529; }
     select:focus, input:focus { border-color: #198754; box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.1); }
     #dest-label { color: #198754; } 
-    #destination { border: 2px solid #198754; background-color: #f0fff4; }
+    #destination { border: 2px solid #198754; background-color: #f0fff4; transition: background-color 0.5s; }
+    
+    /* 預判動畫效果 */
+    .smart-filled { animation: highlightGreen 1s; }
+    @keyframes highlightGreen { 0% { background-color: #d1e7dd; } 100% { background-color: #f0fff4; } }
+
     .custom-input { display: none; margin-top: 8px; border-color: #ffc107 !important; background-color: #fffdf5 !important; }
     #plate-custom { text-transform: uppercase; }
     
-    /* 作業類型 Radio 按鈕優化 */
     .radio-group { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
     .radio-option { flex: 1; position: relative; min-width: 80px; }
     .radio-option input { position: absolute; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
@@ -151,7 +155,7 @@
   <div class="divider"></div>
 
   <label>📍 目前地點 <span>(Vị trí hiện tại)</span></label>
-  <select id="location" onchange="checkCustomInput('location')">
+  <select id="location" onchange="checkCustomInput('location'); predictDestination();">
     <optgroup label="常用地點 (Thường dùng)">
       <option value="公司">🏢 公司 (Công ty)</option>
       <option value="田間(二林)">🌾 田間-二林 (Ngoài đồng - Erlin)</option>
@@ -301,7 +305,7 @@
       </div>
   </div>
 
-  <div id="status">系統就緒 v52.2</div>
+  <div id="status">系統就緒 v53.0</div>
   <div id="manual-area"><div style="color: #d63384; font-weight: bold; margin-bottom:5px;">⚠️ 請點擊下方按鈕發送</div><a id="manual-btn" href="#" target="_blank"><span style="font-size:18px; font-weight:bold;">🟢 點我發送 (Nhấn vào đây)</span></a></div>
 </div>
 
@@ -370,6 +374,46 @@ function checkTaskCustom() {
     }
 }
 
+// ★★★ V53.0 新增：智慧目的地預判 ★★★
+function predictDestination() {
+    var currentLoc = document.getElementById('location').value;
+    var destSelect = document.getElementById('destination');
+    
+    // 簡單的規則引擎
+    var suggestion = "";
+    
+    if (currentLoc === "公司") {
+        suggestion = "田間(二林)"; // 預設去田裡
+    } else if (currentLoc.includes("田間")) {
+        suggestion = "公司"; // 田裡出來通常回公司
+    } else if (currentLoc.includes("工廠") || currentLoc.includes("冠南") || currentLoc.includes("佳美")) {
+        suggestion = "公司"; // 工廠出來通常回公司
+    } else if (currentLoc === "冠南" || currentLoc === "佳美" || currentLoc === "光泉") {
+        suggestion = "公司";
+    }
+
+    // 如果有建議，且目的地欄位還沒選（或選的是預設），就自動幫他選
+    if (suggestion !== "") {
+        // 嘗試在選單中找到這個建議
+        for (var i = 0; i < destSelect.options.length; i++) {
+            if (destSelect.options[i].value === suggestion) {
+                destSelect.selectedIndex = i;
+                checkCustomInput('destination'); // 處理自訂欄位顯示狀態
+                
+                // 加一點視覺回饋 (閃一下綠色)
+                destSelect.classList.remove("smart-filled");
+                void destSelect.offsetWidth; // trigger reflow
+                destSelect.classList.add("smart-filled");
+                
+                // 顯示小提示 (Optional)
+                // showToast("💡 已自動預填目的地：" + suggestion);
+                break;
+            }
+        }
+    }
+}
+
+
 function querySummary(btnElement) {
     var driverSelect = document.getElementById('driver'); 
     var driver = driverSelect ? (driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value) : "";
@@ -425,7 +469,6 @@ window.onload = function() {
       loadHistory('plate', 'vds_history_plate'); 
       loadHistory('location', 'vds_history_loc'); 
       loadHistory('destination', 'vds_history_dest');
-      // ★★★ 新增：載入自訂作業歷史 ★★★
       loadTaskHistory();
       
       var savedDate = localStorage.getItem('vds_trip_date'); var today = new Date().toDateString(); 
@@ -469,13 +512,12 @@ function loadHistory(selectId, storageKey) {
     } catch(e) { console.error("History parse error"); localStorage.removeItem(storageKey); }
 }
 
-// ★★★ 新增：載入自訂作業歷史 (V52.2) ★★★
 function loadTaskHistory() {
     try {
         var history = JSON.parse(localStorage.getItem('vds_history_task') || '[]');
         var datalist = document.getElementById('task-history-list');
         if(datalist && history.length > 0) {
-            datalist.innerHTML = ''; // 清空舊的
+            datalist.innerHTML = ''; 
             history.reverse().forEach(function(item) {
                 var opt = document.createElement('option');
                 opt.value = item;
@@ -511,7 +553,7 @@ function updateDriverSelect(lineName) {
             if (driverSelect.options[i].value === savedDriver) { 
                 driverSelect.selectedIndex = i; 
                 var statusDiv = document.getElementById('status'); 
-                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v52.2)"; 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v53.0)"; 
                 restoreSelection('plate', 'vds_plate'); 
                 return; 
             } 
@@ -520,7 +562,7 @@ function updateDriverSelect(lineName) {
 }
 
 // ==========================================
-// ★ 核心送出邏輯 (V52.2) ★
+// ★ 核心送出邏輯 (V53.0) ★
 // ==========================================
 function processClick(actionType) {
   try {
@@ -535,7 +577,7 @@ function processClick(actionType) {
     var destSelect = document.getElementById('destination'); 
     var dest = destSelect.value === 'custom' ? document.getElementById('destination-custom').value : destSelect.value;
     
-    // ★★★ 取得作業內容並儲存歷史 ★★★
+    // 取得作業內容
     var type = ""; 
     var radios = document.getElementsByName('taskType'); 
     for (var i = 0; i < radios.length; i++) { 
@@ -547,7 +589,6 @@ function processClick(actionType) {
                     document.getElementById('task-custom').focus();
                     return;
                 }
-                // ★ V52.2 儲存自訂作業歷史 ★
                 saveHistory(type, 'vds_history_task');
             } else {
                 type = radios[i].value; 
@@ -622,7 +663,7 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
         destination_custom: document.getElementById('destination-custom').value,
         status: (actionType === '出車' ? '出發' : actionType),
         status_custom: "", 
-        taskType: taskType, // 這裡會傳送 "機採" 或 "冠南冰載棧板"
+        taskType: taskType, 
         action: actionType
     };
 
