@@ -6,7 +6,7 @@
   <title>🥕VDS司機打卡🥕 | Chấm công</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    /* v51.5 Lite - 分流發送版 */
+    /* v52.0 Custom Task - 自訂作業版 */
     body { background-color: #f8f9fa; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; margin: 0; }
     .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; }
     h3 { color: #198754; text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 24px; }
@@ -19,13 +19,16 @@
     #destination { border: 2px solid #198754; background-color: #f0fff4; }
     .custom-input { display: none; margin-top: 8px; border-color: #ffc107 !important; background-color: #fffdf5 !important; }
     #plate-custom { text-transform: uppercase; }
-    .radio-group { display: flex; gap: 8px; margin-top: 8px; }
-    .radio-option { flex: 1; position: relative; }
+    
+    /* 作業類型 Radio 按鈕優化 */
+    .radio-group { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .radio-option { flex: 1; position: relative; min-width: 80px; }
     .radio-option input { position: absolute; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
-    .radio-content { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f1f3f5; border: 1px solid #dee2e6; border-radius: 10px; padding: 10px 0; transition: 0.2s; color: #495057; }
+    .radio-content { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f1f3f5; border: 1px solid #dee2e6; border-radius: 10px; padding: 10px 0; transition: 0.2s; color: #495057; height: 50px; }
     .radio-option input:checked + .radio-content { background-color: #e6f4ea; border-color: #198754; color: #198754; font-weight: bold; box-shadow: inset 0 0 0 1px #198754; }
     .radio-text-main { font-size: 16px; }
     .radio-text-sub { font-size: 11px; margin-top: 1px; }
+
     .divider { height: 1px; background: #e9ecef; margin: 20px 0 10px 0; }
     .btn-row { display: flex; gap: 10px; margin-top: 25px; }
     button { flex: 1; height: 60px; border: none; border-radius: 12px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.1s; font-family: inherit; }
@@ -226,12 +229,21 @@
   </select>
   <input type="text" id="destination-custom" class="custom-input" placeholder="輸入目的地 (Nhập nơi đến)">
 
-  <label>⚙️ 作業/趟次 <span>(Loại công việc)</span></label>
+  <label>⚙️ 作業內容 <span>(Nội dung)</span></label>
   <div class="radio-group">
-    <label class="radio-option"><input type="radio" name="taskType" value="" checked><div class="radio-content"><span class="radio-text-main">其他</span><span class="radio-text-sub">Khác</span></div></label>
-    <label class="radio-option"><input type="radio" name="taskType" value="機採"><div class="radio-content"><span class="radio-text-main">機採</span><span class="radio-text-sub">Máy thu</span></div></label>
-    <label class="radio-option"><input type="radio" name="taskType" value="人採"><div class="radio-content"><span class="radio-text-main">人採</span><span class="radio-text-sub">Người thu</span></div></label>
+    <label class="radio-option"><input type="radio" name="taskType" value="" checked onclick="checkTaskCustom()"><div class="radio-content"><span class="radio-text-main">無</span><span class="radio-text-sub">Không</span></div></label>
+    <label class="radio-option"><input type="radio" name="taskType" value="機採" onclick="checkTaskCustom()"><div class="radio-content"><span class="radio-text-main">機採</span><span class="radio-text-sub">Máy thu</span></div></label>
+    <label class="radio-option"><input type="radio" name="taskType" value="人採" onclick="checkTaskCustom()"><div class="radio-content"><span class="radio-text-main">人採</span><span class="radio-text-sub">Người thu</span></div></label>
+    
+    <label class="radio-option" style="min-width: 100px;">
+        <input type="radio" name="taskType" value="custom" onclick="checkTaskCustom()">
+        <div class="radio-content">
+            <span class="radio-text-main">✏️ 自訂</span>
+            <span class="radio-text-sub">Tùy chỉnh</span>
+        </div>
+    </label>
   </div>
+  <input type="text" id="task-custom" class="custom-input" placeholder="例如：冠南冰載棧板 (VD: Chở pallet)" style="margin-top: 5px;">
 
   <div class="btn-row">
     <button class="btn-go" onclick="processClick('出車')"><span class="btn-text-main">🚀 出發/出車</span><span class="btn-text-sub">Xuất phát</span></button>
@@ -285,7 +297,7 @@
       </div>
   </div>
 
-  <div id="status">系統就緒 v51.5</div>
+  <div id="status">系統就緒 v52.0</div>
   <div id="manual-area"><div style="color: #d63384; font-weight: bold; margin-bottom:5px;">⚠️ 請點擊下方按鈕發送</div><a id="manual-btn" href="#" target="_blank"><span style="font-size:18px; font-weight:bold;">🟢 點我發送 (Nhấn vào đây)</span></a></div>
 </div>
 
@@ -332,6 +344,26 @@ function sendCmd(cmdText) {
 function checkCustomInput(type) {
     var select = document.getElementById(type); var input = document.getElementById(type + '-custom');
     if (select.value === 'custom') { input.style.display = 'block'; input.focus(); } else { input.style.display = 'none'; input.value = ''; }
+}
+
+// ★★★ 新增：檢查作業是否為自訂 ★★★
+function checkTaskCustom() {
+    var radios = document.getElementsByName('taskType');
+    var isCustom = false;
+    for (var i = 0; i < radios.length; i++) {
+        if (radios[i].checked && radios[i].value === 'custom') {
+            isCustom = true;
+            break;
+        }
+    }
+    var input = document.getElementById('task-custom');
+    if (isCustom) {
+        input.style.display = 'block';
+        input.focus();
+    } else {
+        input.style.display = 'none';
+        input.value = ''; // 清空
+    }
 }
 
 function querySummary(btnElement) {
@@ -402,6 +434,8 @@ window.onload = function() {
           for(var i=0; i<opts.length; i++) { if(opts[i].value === lastDest) { locSelect.selectedIndex = i; found = true; break; } }
           if(!found) { locSelect.value = 'custom'; document.getElementById('location-custom').value = lastDest; checkCustomInput('location'); } 
       }
+      // 初始化自訂作業欄位
+      checkTaskCustom();
   } catch(e) { console.warn("Init history error:", e); }
   
   liff.init({ liffId: LIFF_ID }).then(function() {
@@ -413,7 +447,7 @@ window.onload = function() {
   }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; });
 };
 
-// --- 歷史紀錄邏輯 (保持不變) ---
+// --- 歷史紀錄邏輯 ---
 function loadHistory(selectId, storageKey) { 
     try {
         var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); 
@@ -455,7 +489,7 @@ function updateDriverSelect(lineName) {
             if (driverSelect.options[i].value === savedDriver) { 
                 driverSelect.selectedIndex = i; 
                 var statusDiv = document.getElementById('status'); 
-                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v51.5)"; 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v52.0)"; 
                 restoreSelection('plate', 'vds_plate'); 
                 return; 
             } 
@@ -464,7 +498,7 @@ function updateDriverSelect(lineName) {
 }
 
 // ==========================================
-// ★ 核心送出邏輯 (無 GPS 版) ★
+// ★ 核心送出邏輯 (V52.0 支援自訂作業) ★
 // ==========================================
 function processClick(actionType) {
   try {
@@ -479,10 +513,25 @@ function processClick(actionType) {
     var destSelect = document.getElementById('destination'); 
     var dest = destSelect.value === 'custom' ? document.getElementById('destination-custom').value : destSelect.value;
     
+    // ★★★ 取得作業內容 ★★★
     var type = ""; 
     var radios = document.getElementsByName('taskType'); 
     for (var i = 0; i < radios.length; i++) { 
-        if (radios[i].checked) { type = radios[i].value; break; } 
+        if (radios[i].checked) { 
+            // 如果選的是 custom，就抓輸入框的值
+            if (radios[i].value === 'custom') {
+                type = document.getElementById('task-custom').value.trim();
+                // 檢查是否有輸入
+                if (!type) {
+                    alert("⚠️ 請輸入自訂作業內容！");
+                    document.getElementById('task-custom').focus();
+                    return;
+                }
+            } else {
+                type = radios[i].value; 
+            }
+            break; 
+        } 
     }
     
     // 防呆檢查
@@ -526,10 +575,10 @@ function processClick(actionType) {
     // 2. 介面鎖定並直接傳送
     toggleButtons(true); 
     document.getElementById('loading-mask').style.display = 'flex'; 
-    document.getElementById('loading-text').innerText = "資料傳送中..."; // 不用再顯示抓取GPS
+    document.getElementById('loading-text').innerText = "資料傳送中..."; 
     document.getElementById('manual-area').style.display = 'none';
 
-    // 3. 直接呼叫送出 (不使用 GPS)
+    // 3. 直接呼叫送出 (type 已經包含自訂內容)
     sendDataToGAS(actionType, driver, plate, trip, loc, dest, type);
 
   } catch (e) { 
@@ -539,7 +588,7 @@ function processClick(actionType) {
   }
 }
 
-// 實際傳送資料給 GAS 的函式 (移除 lat, lng 參數)
+// 實際傳送資料給 GAS 的函式
 function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
     var payload = {
         driver: driver,
@@ -551,9 +600,8 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
         destination_custom: document.getElementById('destination-custom').value,
         status: (actionType === '出車' ? '出發' : actionType),
         status_custom: "", 
-        taskType: taskType,
+        taskType: taskType, // 這裡會傳送 "機採" 或 "冠南冰載棧板"
         action: actionType
-        // lat, lng 已移除
     };
 
     fetch(GAS_URL, {
@@ -608,15 +656,13 @@ function createLogMessage(data) {
     var plateStr = (data.plate) ? "[" + data.plate + "] " : ""; 
     var taskSuffix = (data.taskType) ? "(" + data.taskType + ")" : "";
     
-    // ★★★ 關鍵修改：在字串最後加上 \u200B (零寬度空白) ★★★
-    // 這是一個隱形記號，用來告訴後端機器人：「這則訊息是 App 發的，請忽略」
     var silentTag = "\u200B";
 
     if (data.action === "作業結束") return plateStr + data.driver + " 結束時間" + timeStr + silentTag; 
     if (data.action === "出車") return plateStr + data.driver + " " + data.trip + " " + data.location + "出發前往" + data.destination + taskSuffix + " " + timeStr + silentTag; 
     if (data.action === "抵達") {
         if (data.location === "公司") return data.driver + " 回到公司 " + timeStr + silentTag; 
-        return data.driver + " 抵達" + data.location + " " + timeStr + silentTag; 
+        return data.driver + " 抵達" + data.location + taskSuffix + " " + timeStr + silentTag; 
     }
     return "";
 }
