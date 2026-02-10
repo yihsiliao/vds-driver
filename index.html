@@ -305,7 +305,7 @@
       </div>
   </div>
 
-  <div id="status">系統就緒 v53.0</div>
+  <div id="status">系統就緒 v55.0</div>
   <div id="manual-area"><div style="color: #d63384; font-weight: bold; margin-bottom:5px;">⚠️ 請點擊下方按鈕發送</div><a id="manual-btn" href="#" target="_blank"><span style="font-size:18px; font-weight:bold;">🟢 點我發送 (Nhấn vào đây)</span></a></div>
 </div>
 
@@ -678,6 +678,12 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
         if(data.result === "success") {
             var msg = createLogMessage(payload);
             
+            // ★★★ V53.0 新增：如果有 ETA 資訊，就加到訊息後面 ★★★
+            if (data.eta) {
+                msg += data.eta;
+            }
+            // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+
             if (data.summary) {
                 document.getElementById('summary-content').innerText = data.summary;
                 document.getElementById('summary-modal').style.display = 'flex';
