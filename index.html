@@ -30,7 +30,7 @@
     .radio-text-sub { font-size: 11px; margin-top: 1px; }
     .divider { height: 1px; background: #e9ecef; margin: 20px 0 10px 0; }
     .btn-row { display: flex; gap: 10px; margin-top: 25px; }
-    button { flex: 1; height: 60px; border: none; border-radius: 12px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.1s; font-family: inherit; }
+    button { flex: 1; height: 70px; border: none; border-radius: 20px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.1s; font-family: inherit; }
     button:active { transform: scale(0.97); }
     button:disabled { background: #ced4da !important; cursor: not-allowed; opacity: 0.7; }
     .btn-go { background: linear-gradient(135deg, #198754, #146c43); } 
@@ -644,7 +644,9 @@ function processClick(actionType) {
   }
 }
 
-// 實際傳送資料給 GAS 的函式
+// ==========================================
+// ★ V61.0 智慧跳趟版 sendDataToGAS ★
+// ==========================================
 function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
     var payload = {
         driver: driver,
@@ -655,7 +657,6 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
         destination: (actionType === '出車') ? dest : "",
         destination_custom: document.getElementById('destination-custom').value,
         status: (actionType === '出車' ? '出發' : actionType),
-        status_custom: "", 
         taskType: taskType, 
         action: actionType
     };
@@ -669,23 +670,30 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
     .then(response => response.json())
     .then(data => {
         if(data.result === "success") {
-            var msg = createLogMessage(payload);
-            
-            // ★★★ V59.0 關鍵更新：接收並顯示 ETA 資訊 ★★★
-            // 如果後端有回傳 eta 欄位，就加到訊息後面
-            if (data.eta) {
-                msg += data.eta;
+            // --- ★ 核心便捷邏輯：自動跳趟次 ★ ---
+            // 判斷條件：如果動作是「抵達」且地點是「公司」
+            if (actionType === '抵達' && loc === '公司') {
+                var tripSelect = document.getElementById('trip');
+                // 抓取當前數字 (例如從 "第1趟" 抓出 1)
+                var currentNum = parseInt(tripSelect.value.replace(/[^0-9]/g, ''));
+                if (currentNum < 10) {
+                    var nextTrip = "第" + (currentNum + 1) + "趟";
+                    tripSelect.value = nextTrip; // 更改介面顯示
+                    
+                    // 同步儲存到手機紀錄，下次打開網頁才會正確帶入
+                    localStorage.setItem('vds_trip_val', nextTrip);
+                    localStorage.setItem('vds_trip_date', new Date().toDateString());
+                }
             }
-            
-            // ★ DEBUG 彈窗 (確認後端到底有沒有傳回東西) ★
-            // 部署成功後可註解掉下面這行
-            // alert("後端回傳資訊:\n" + JSON.stringify(data)); 
+
+            var msg = createLogMessage(payload);
+            if (data.eta) msg += data.eta;
             
             if (data.summary) {
                 document.getElementById('summary-content').innerText = data.summary;
                 document.getElementById('summary-modal').style.display = 'flex';
             } else {
-                showToast("✅ 打卡成功！");
+                showToast("✅ 打卡成功！趟次已自動預設。");
             }
             
             if (liff.isInClient()) {
@@ -699,16 +707,11 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
             alert("❌ 錯誤: " + data.msg);
         }
         
-        if (!data.summary) {
-            document.getElementById('loading-mask').style.display = 'none';
-            toggleButtons(false);
-        } else {
-            document.getElementById('loading-mask').style.display = 'none';
-        }
+        document.getElementById('loading-mask').style.display = 'none';
+        toggleButtons(false);
     })
     .catch(err => {
         alert("⚠️ 連線錯誤，請檢查網路");
-        console.error(err);
         document.getElementById('loading-mask').style.display = 'none';
         toggleButtons(false);
     });
