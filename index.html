@@ -1,75 +1,147 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>🥕VDS司機打卡🥕 | Chấm công</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    /* V60.0 ETA Debug Version */
-    body { background-color: #f8f9fa; padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #212529; min-height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; margin: 0; }
-    .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; }
+    /* ==========================================
+       ★ V62.0 主題變數與高對比設定 ★
+       ========================================== */
+    :root {
+        --bg-color: #f8f9fa;
+        --card-bg: #ffffff;
+        --text-color: #212529;
+        --border-color: #ced4da;
+        --input-bg: #ffffff;
+        --label-color: #343a40;
+        --sub-text: #6c757d;
+        --divider: #e9ecef;
+    }
+
+    /* 夜間模式 (Dark Mode) */
+    [data-theme='dark'] {
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-color: #e9ecef;
+        --border-color: #444;
+        --input-bg: #2d2d2d;
+        --label-color: #f8f9fa;
+        --sub-text: #adb5bd;
+        --divider: #333;
+    }
+
+    /* 高對比模式 (Sunlight Mode - 烈日專用) */
+    [data-theme='high-contrast'] {
+        --bg-color: #ffffff;
+        --card-bg: #ffffff;
+        --text-color: #000000;
+        --border-color: #000000;
+        --input-bg: #ffffff;
+        --label-color: #000000;
+        --sub-text: #000000;
+        --divider: #000000;
+    }
+
+    /* 基礎排版 */
+    body { background-color: var(--bg-color); padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: var(--text-color); min-height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; margin: 0; transition: background-color 0.3s, color 0.3s; }
+    .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; border: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s; }
+    
+    /* 標題與標籤 */
     h3 { color: #198754; text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 24px; }
-    .sub-title { font-size: 14px; color: #6c757d; font-weight: 400; text-align: center; display: block; margin-bottom: 20px; }
-    label { display: block; font-weight: 700; margin-top: 15px; margin-bottom: 6px; font-size: 16px; color: #343a40; }
-    label span { font-weight: 400; color: #6c757d; font-size: 13px; margin-left: 5px; }
-    select, input[type="text"], input[type="password"] { width: 100%; height: 50px; font-size: 17px; font-weight: 500; border: 1px solid #ced4da; border-radius: 10px; background-color: #fff; padding-left: 12px; appearance: none; outline: none; transition: border-color 0.2s; box-sizing: border-box; color: #212529; }
-    select:focus, input:focus { border-color: #198754; box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.1); }
+    .sub-title { font-size: 14px; color: var(--sub-text); font-weight: 400; text-align: center; display: block; margin-bottom: 20px; }
+    label { display: block; font-weight: 700; margin-top: 15px; margin-bottom: 6px; font-size: 16px; color: var(--label-color); transition: color 0.3s; }
+    label span { font-weight: 400; color: var(--sub-text); font-size: 13px; margin-left: 5px; }
+    
+    /* 介面控制按鈕 (主題切換) */
+    .theme-toggle-area { display: flex; justify-content: flex-end; margin-bottom: -10px; }
+    .btn-theme { width: 50px; height: 40px !important; background: #6c757d; border-radius: 8px; font-size: 20px; border: none; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+
+    /* 輸入框 (加大字體) */
+    select, input[type="text"], input[type="password"] { 
+        width: 100%; height: 55px; /* 加高 */
+        font-size: 18px; /* 加大字體 */
+        font-weight: 600; 
+        border: 2px solid var(--border-color); /* 加粗邊框 */
+        border-radius: 10px; 
+        background-color: var(--input-bg); 
+        padding-left: 12px; appearance: none; outline: none; transition: border-color 0.2s, background-color 0.3s, color 0.3s; 
+        box-sizing: border-box; color: var(--text-color); 
+    }
+    select:focus, input:focus { border-color: #198754; box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.2); }
     #dest-label { color: #198754; } 
     #destination { border: 2px solid #198754; background-color: #f0fff4; transition: background-color 0.5s; }
+    [data-theme='dark'] #destination { background-color: #0f291e; }
+    [data-theme='high-contrast'] #destination { background-color: #ffffff; border-width: 3px; }
+
     .smart-filled { animation: highlightGreen 1s; }
     @keyframes highlightGreen { 0% { background-color: #d1e7dd; } 100% { background-color: #f0fff4; } }
     .custom-input { display: none; margin-top: 8px; border-color: #ffc107 !important; background-color: #fffdf5 !important; }
+    [data-theme='dark'] .custom-input { background-color: #332b00 !important; }
     #plate-custom { text-transform: uppercase; }
+    
+    /* 選項按鈕 (作業內容) */
     .radio-group { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
     .radio-option { flex: 1; position: relative; min-width: 80px; }
     .radio-option input { position: absolute; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
-    .radio-content { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f1f3f5; border: 1px solid #dee2e6; border-radius: 10px; padding: 10px 0; transition: 0.2s; color: #495057; height: 50px; }
+    .radio-content { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--input-bg); border: 2px solid var(--border-color); border-radius: 10px; padding: 10px 0; transition: 0.2s; color: var(--text-color); height: 55px; }
     .radio-option input:checked + .radio-content { background-color: #e6f4ea; border-color: #198754; color: #198754; font-weight: bold; box-shadow: inset 0 0 0 1px #198754; }
+    [data-theme='dark'] .radio-option input:checked + .radio-content { background-color: #0f291e; }
     .radio-text-main { font-size: 16px; }
     .radio-text-sub { font-size: 11px; margin-top: 1px; }
-    .divider { height: 1px; background: #e9ecef; margin: 20px 0 10px 0; }
+    .divider { height: 1px; background: var(--divider); margin: 20px 0 10px 0; transition: background-color 0.3s; }
+    
+    /* 底部大按鈕 (加大高度) */
     .btn-row { display: flex; gap: 10px; margin-top: 25px; }
-    button { flex: 1; height: 70px; border: none; border-radius: 20px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.1s; font-family: inherit; }
-    button:active { transform: scale(0.97); }
+    button { flex: 1; height: 75px !important; /* 加高按鈕，讓戴手套更好按 */ border: none; border-radius: 15px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.1s; font-family: inherit; }
+    button:active { transform: scale(0.96); box-shadow: 0 2px 3px rgba(0,0,0,0.2); }
     button:disabled { background: #ced4da !important; cursor: not-allowed; opacity: 0.7; }
     .btn-go { background: linear-gradient(135deg, #198754, #146c43); } 
     .btn-arrive { background: linear-gradient(135deg, #0d6efd, #0a58ca); } 
     .btn-end { background: linear-gradient(135deg, #dc3545, #b02a37); width: 100%; margin-top: 12px; } 
-    .btn-text-main { font-size: 18px; font-weight: 700; line-height: 1.1; }
-    .btn-text-sub { font-size: 12px; opacity: 0.9; margin-top: 2px; font-weight: 400; }
+    .btn-text-main { font-size: 20px; font-weight: 800; line-height: 1.1; }
+    .btn-text-sub { font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500; }
+    
+    /* 載入遮罩與其他元件 */
     #loading-mask { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s; }
-    .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #198754; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+    [data-theme='dark'] #loading-mask { background: rgba(0,0,0,0.95); }
+    .spinner { width: 40px; height: 40px; border: 4px solid var(--border-color); border-top: 4px solid #198754; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     #loading-text { font-size: 16px; color: #198754; font-weight: bold; }
-    #status { text-align:center; margin-top:15px; color:#adb5bd; font-size:12px; }
-    #dashboard-toggle { text-align: center; margin-top: 20px; cursor: pointer; color: #6c757d; font-size: 13px; text-decoration: underline; padding: 10px; }
+    #status { text-align:center; margin-top:15px; color:var(--sub-text); font-size:12px; }
+    
+    /* 戰情室控制面板 */
+    #dashboard-toggle { text-align: center; margin-top: 20px; cursor: pointer; color: var(--sub-text); font-size: 13px; text-decoration: underline; padding: 10px; }
     #dashboard-panel { display: none; background: #2c3e50; border-radius: 16px; padding: 15px; margin-top: 15px; color: white; }
     .dash-title { color: #ffc107; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 16px; border-bottom: 1px solid #495057; padding-bottom: 8px; }
     .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-    .dash-btn { background: #343a40; border: 1px solid #495057; color: #e9ecef; width: 100%; height: 60px; font-size: 13px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+    .dash-btn { background: #343a40; border: 1px solid #495057; color: #e9ecef; width: 100%; height: 60px !important; font-size: 13px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
     .dash-btn span { font-size: 18px; }
-    .dash-btn:active { background: #495057; transform: scale(0.98); }
-    .dash-btn-full { grid-column: span 2; background: linear-gradient(135deg, #0d6efd, #0b5ed7); border: none; font-weight: bold; }
     .dash-btn-ceo { grid-column: span 2; background: linear-gradient(135deg, #1A237E, #303F9F); border: 1px solid #FFD700; color: #FFD700; font-weight: 900; }
+    
+    /* 密碼視窗與 Toast */
     #password-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
-    .pwd-card { background: white; padding: 20px; border-radius: 12px; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-    .pwd-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #333; }
+    .pwd-card { background: var(--card-bg); padding: 20px; border-radius: 12px; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .pwd-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: var(--text-color); }
     .pwd-input { margin-bottom: 15px; letter-spacing: 3px; font-size: 20px !important; text-align: center; }
     .pwd-btns { display: flex; gap: 8px; }
-    .btn-cancel { background: #6c757d; font-size: 15px; height: 45px; }
-    .btn-confirm { background: #198754; font-size: 15px; height: 45px; }
+    .btn-cancel { background: #6c757d; font-size: 15px !important; height: 45px !important; }
+    .btn-confirm { background: #198754; font-size: 15px !important; height: 45px !important; }
+    
     #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 10000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 15px; opacity: 0; transition: opacity 0.3s, bottom 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
     #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+    
     #manual-area { display: none; margin-top: 15px; padding: 12px; background: #fff3cd; border: 1px dashed #ffc107; border-radius: 12px; text-align: center; }
     #manual-btn { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 50px; background: linear-gradient(135deg, #198754, #146c43); color: white; text-decoration: none; border-radius: 10px; margin-top: 8px; box-shadow: 0 3px 6px rgba(25, 135, 84, 0.2); }
     
+    /* 總結視窗 */
     #summary-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center; }
-    .summary-card { background: white; width: 85%; max-width: 350px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out; }
+    .summary-card { background: var(--card-bg); width: 85%; max-width: 350px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out; }
     .summary-header { background: linear-gradient(135deg, #1A237E, #303F9F); color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; }
-    .summary-body { padding: 20px; font-size: 15px; color: #333; line-height: 1.6; white-space: pre-wrap; font-family: monospace; background-color: #f8f9fa; }
-    .summary-footer { padding: 15px; background: white; text-align: center; border-top: 1px solid #eee; }
-    .btn-close-summary { width: 100%; height: 45px; background: #343a40; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .summary-body { padding: 20px; font-size: 15px; color: var(--text-color); line-height: 1.6; white-space: pre-wrap; font-family: monospace; background-color: var(--bg-color); }
+    .summary-footer { padding: 15px; background: var(--card-bg); text-align: center; border-top: 1px solid var(--border-color); }
+    .btn-close-summary { width: 100%; height: 50px !important; background: #343a40; color: white; border: none; border-radius: 8px; font-size: 18px !important; font-weight: bold; cursor: pointer; }
     @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
@@ -100,6 +172,9 @@
 </div>
 
 <div class="card" id="main-card">
+  <div class="theme-toggle-area">
+      <button class="btn-theme" id="themeBtn" onclick="cycleTheme()" title="切換顯示模式">🌓</button>
+  </div>
   <h3>🥕VDS打卡系統🥕</h3>
   <span class="sub-title">Hệ thống chấm công tài xế</span>
   
@@ -155,6 +230,7 @@
       <option value="公司">🏢 公司 (Công ty)</option>
       <option value="田間(二林)">🌾 田間-二林 (Ngoài đồng - Erlin)</option>
       <option value="田間(東勢)">🌾 田間-東勢 (Ngoài đồng - Dongshi)</option>
+      <option value="田間(噴水)">💧 田間-噴水 (Ngoài đồng - Phun nước)</option>
     </optgroup>
     <optgroup label="列表 (Danh sách cũ)">
       <option value="農場晃晃">🌾 農場晃晃 (Nông trường Huang Huang)</option>
@@ -196,6 +272,7 @@
       <option value="公司">🏢 公司 (Công ty)</option>
       <option value="田間(二林)">🌾 田間-二林 (Ngoài đồng - Erlin)</option>
       <option value="田間(東勢)">🌾 田間-東勢 (Ngoài đồng - Dongshi)</option>
+      <option value="田間(噴水)">💧 田間-噴水 (Ngoài đồng - Phun nước)</option>
     </optgroup>
     <optgroup label="列表 (Danh sách cũ)">
       <option value="農場晃晃">🌾 農場晃晃 (Nông trường Huang Huang)</option>
@@ -249,35 +326,31 @@
   <input type="text" id="task-custom" class="custom-input" list="task-history-list" placeholder="例如：冠南冰載棧板 (VD: Chở pallet)" style="margin-top: 5px;">
 
   <div class="btn-row">
-    <button class="btn-go" onclick="processClick('出車')"><span class="btn-text-main">🚀 出發/出車</span><span class="btn-text-sub">Xuất發</span></button>
+    <button class="btn-go" onclick="processClick('出車')"><span class="btn-text-main">🚀 出發/出車</span><span class="btn-text-sub">Xuất phát</span></button>
     <button class="btn-arrive" onclick="processClick('抵達')"><span class="btn-text-main">🏁 抵達/回到</span><span class="btn-text-sub">Đến nơi</span></button>
   </div>
   <button class="btn-end" onclick="processClick('作業結束')"><span class="btn-text-main">🛑 結束今日作業</span><span class="btn-text-sub">Kết thúc công việc</span></button>
-<div style="margin-top: 15px;">
-    <button type="button" onclick="querySummary(this)" style="background-color: #17a2b8; color: white; width: 100%; height: 60px; border: none; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <span style="font-size: 18px; font-weight: 700; line-height: 1.1;">📊 查詢今日小結</span>
-        <span style="font-size: 12px; opacity: 0.9; margin-top: 2px; font-weight: 400;">Xem tổng kết ngày</span>
+  
+  <div style="margin-top: 15px;">
+    <button type="button" onclick="querySummary(this)" style="background-color: #17a2b8; color: white; width: 100%; height: 70px !important; border: none; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+        <span style="font-size: 20px; font-weight: 800; line-height: 1.1;">📊 查詢今日小結</span>
+        <span style="font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500;">Xem tổng kết ngày</span>
     </button>
-</div>
+  </div>
 
   <div style="margin-top: 15px;">
     <a href="https://script.google.com/macros/s/AKfycbxTGWHB7VC5loclFXRNlyc7lQyMpAFyeRbF_GB7nvynlVH48MieTyS8A0yFdn7e2jcA/exec" target="_blank" style="text-decoration: none;">
-        <button type="button" style="background-color: #2E7D32; color: white; width: 100%; height: 60px; border: none; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-            <span style="font-size: 18px; font-weight: 700; line-height: 1.1;">🗺️ 查看司機分布地圖</span>
-            <span style="font-size: 12px; opacity: 0.9; margin-top: 2px; font-weight: 400;">Bản đồ vị trí tài xế</span>
+        <button type="button" style="background-color: #2E7D32; color: white; width: 100%; height: 70px !important; border: none; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+            <span style="font-size: 20px; font-weight: 800; line-height: 1.1;">🗺️ 查看司機分布地圖</span>
+            <span style="font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500;">Bản đồ vị trí tài xế</span>
         </button>
     </a>
-</div>
-  
-
-</div>
+  </div>
   
   <div id="dashboard-toggle" onclick="toggleDashboard()">📊 管理員戰情室 (Admin Dashboard)</div>
-
   
   <div id="dashboard-panel">
       <div class="dash-title">🚀 VDS 智慧戰情室</div>
-      
       <button class="dash-btn dash-btn-ceo" onclick="sendCmd('總裁')">
           <span>🏭</span> 企業總裁儀表板<br>(今日營運概況)
       </button>
@@ -300,7 +373,7 @@
       </div>
   </div>
 
-  <div id="status">系統就緒 v60.0</div>
+  <div id="status">系統就緒 v62.0 </div>
   <div id="manual-area"><div style="color: #d63384; font-weight: bold; margin-bottom:5px;">⚠️ 請點擊下方按鈕發送</div><a id="manual-btn" href="#" target="_blank"><span style="font-size:18px; font-weight:bold;">🟢 點我發送 (Nhấn vào đây)</span></a></div>
 </div>
 
@@ -310,11 +383,47 @@ const LIFF_ID = "2008961063-iwAJvIC3";
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxTGWHB7VC5loclFXRNlyc7lQyMpAFyeRbF_GB7nvynlVH48MieTyS8A0yFdn7e2jcA/exec"; 
 const ADMIN_PWD = "8888"; 
 
+// --- 主題切換邏輯 ---
+function cycleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    let nextTheme = "";
+    let themeIcon = "🌓";
+
+    if (!currentTheme) {
+        nextTheme = "dark";
+        themeIcon = "☀️"; // 切換到深色後，按鈕顯示太陽(提示可切換回亮色)
+        showToast("🌙 已開啟夜間模式");
+    } else if (currentTheme === "dark") {
+        nextTheme = "high-contrast";
+        themeIcon = "🕶️"; 
+        showToast("🕶️ 已開啟烈日高對比模式");
+    } else {
+        nextTheme = "";
+        themeIcon = "🌙";
+        showToast("💡 已回到標準模式");
+    }
+
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    document.getElementById('themeBtn').innerText = themeIcon;
+    localStorage.setItem('vds_theme', nextTheme);
+    localStorage.setItem('vds_theme_icon', themeIcon);
+}
+
+// 頁面載入時自動恢復主題
+window.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('vds_theme');
+    const savedIcon = localStorage.getItem('vds_theme_icon');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        if(savedIcon) document.getElementById('themeBtn').innerText = savedIcon;
+    }
+});
+
+
 // --- 強制解鎖機制 (3秒後自動關閉遮罩) ---
 setTimeout(function() {
     var mask = document.getElementById('loading-mask');
     if (mask && mask.style.display !== 'none') {
-        console.warn("Forcing mask close");
         mask.style.display = 'none';
     }
 }, 3000);
@@ -369,12 +478,10 @@ function checkTaskCustom() {
     }
 }
 
-// ★★★ V53.0 新增：智慧目的地預判 ★★★
 function predictDestination() {
     var currentLoc = document.getElementById('location').value;
     var destSelect = document.getElementById('destination');
     
-    // 簡單的規則引擎
     var suggestion = "";
     
     if (currentLoc === "公司") {
@@ -387,19 +494,14 @@ function predictDestination() {
         suggestion = "公司";
     }
 
-    // 如果有建議，且目的地欄位還沒選（或選的是預設），就自動幫他選
     if (suggestion !== "") {
-        // 嘗試在選單中找到這個建議
         for (var i = 0; i < destSelect.options.length; i++) {
             if (destSelect.options[i].value === suggestion) {
                 destSelect.selectedIndex = i;
-                checkCustomInput('destination'); // 處理自訂欄位顯示狀態
-                
-                // 加一點視覺回饋 (閃一下綠色)
+                checkCustomInput('destination'); 
                 destSelect.classList.remove("smart-filled");
-                void destSelect.offsetWidth; // trigger reflow
+                void destSelect.offsetWidth; 
                 destSelect.classList.add("smart-filled");
-                
                 break;
             }
         }
@@ -452,7 +554,7 @@ function querySummary(btnElement) {
 
 function toggleButtons(disabled) {
     var btns = document.querySelectorAll('button');
-    btns.forEach(function(btn) { if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm') && !btn.classList.contains('btn-close-summary')) { btn.disabled = disabled; } });
+    btns.forEach(function(btn) { if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm') && !btn.classList.contains('btn-close-summary') && !btn.classList.contains('btn-theme')) { btn.disabled = disabled; } });
 }
 
 // --- 初始化 ---
@@ -546,7 +648,7 @@ function updateDriverSelect(lineName) {
             if (driverSelect.options[i].value === savedDriver) { 
                 driverSelect.selectedIndex = i; 
                 var statusDiv = document.getElementById('status'); 
-                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v60.0)"; 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v62.0)"; 
                 restoreSelection('plate', 'vds_plate'); 
                 return; 
             } 
@@ -555,11 +657,10 @@ function updateDriverSelect(lineName) {
 }
 
 // ==========================================
-// ★ 核心送出邏輯 (V53.0) ★
+// ★ 核心送出邏輯 (包含智慧跳趟) ★
 // ==========================================
 function processClick(actionType) {
   try {
-    // 1. 取得資料
     var driverSelect = document.getElementById('driver'); 
     var driver = driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value;
     var plateSelect = document.getElementById('plate'); 
@@ -570,7 +671,6 @@ function processClick(actionType) {
     var destSelect = document.getElementById('destination'); 
     var dest = destSelect.value === 'custom' ? document.getElementById('destination-custom').value : destSelect.value;
     
-    // 取得作業內容
     var type = ""; 
     var radios = document.getElementsByName('taskType'); 
     for (var i = 0; i < radios.length; i++) { 
@@ -590,7 +690,6 @@ function processClick(actionType) {
         } 
     }
     
-    // 防呆檢查
     if (!driver || driver.trim() === "") { 
         alert("請選擇或輸入司機姓名！\n(Vui lòng chọn tên tài xế!)"); 
         if(driverSelect.value === 'custom') document.getElementById('driver-custom').focus(); 
@@ -612,7 +711,6 @@ function processClick(actionType) {
         return; 
     }
 
-    // 儲存歷史紀錄
     if(driverSelect.value === 'custom') saveHistory(driver, 'vds_history_driver'); 
     localStorage.setItem('vds_driver', driver);
     if (plateSelect.value === 'custom' && plate !== "") saveHistory(plate, 'vds_history_plate'); 
@@ -628,13 +726,11 @@ function processClick(actionType) {
     if (actionType !== "作業結束" && locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc'); 
     if (destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest');
 
-    // 2. 介面鎖定並直接傳送
     toggleButtons(true); 
     document.getElementById('loading-mask').style.display = 'flex'; 
     document.getElementById('loading-text').innerText = "資料傳送中..."; 
     document.getElementById('manual-area').style.display = 'none';
 
-    // 3. 直接呼叫送出
     sendDataToGAS(actionType, driver, plate, trip, loc, dest, type);
 
   } catch (e) { 
@@ -644,9 +740,6 @@ function processClick(actionType) {
   }
 }
 
-// ==========================================
-// ★ V61.0 智慧跳趟版 sendDataToGAS ★
-// ==========================================
 function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
     var payload = {
         driver: driver,
@@ -670,17 +763,13 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
     .then(response => response.json())
     .then(data => {
         if(data.result === "success") {
-            // --- ★ 核心便捷邏輯：自動跳趟次 ★ ---
-            // 判斷條件：如果動作是「抵達」且地點是「公司」
+            // ★ 自動跳趟次邏輯
             if (actionType === '抵達' && loc === '公司') {
                 var tripSelect = document.getElementById('trip');
-                // 抓取當前數字 (例如從 "第1趟" 抓出 1)
                 var currentNum = parseInt(tripSelect.value.replace(/[^0-9]/g, ''));
                 if (currentNum < 10) {
                     var nextTrip = "第" + (currentNum + 1) + "趟";
-                    tripSelect.value = nextTrip; // 更改介面顯示
-                    
-                    // 同步儲存到手機紀錄，下次打開網頁才會正確帶入
+                    tripSelect.value = nextTrip; 
                     localStorage.setItem('vds_trip_val', nextTrip);
                     localStorage.setItem('vds_trip_date', new Date().toDateString());
                 }
@@ -693,7 +782,7 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
                 document.getElementById('summary-content').innerText = data.summary;
                 document.getElementById('summary-modal').style.display = 'flex';
             } else {
-                showToast("✅ 打卡成功！趟次已自動預設。");
+                showToast("✅ 打卡成功！");
             }
             
             if (liff.isInClient()) {
@@ -730,7 +819,6 @@ function createLogMessage(data) {
     if (data.action === "作業結束") return plateStr + data.driver + " 結束時間" + timeStr + silentTag; 
     
     if (data.action === "出車") {
-        // ★ 這裡只產生基本訊息，ETA 會在 sendDataToGAS 的 callback 裡被加上去
         return plateStr + data.driver + " " + data.trip + " " + data.location + "出發前往" + data.destination + taskSuffix + " " + timeStr + silentTag; 
     }
     
