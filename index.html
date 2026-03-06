@@ -996,7 +996,7 @@ function submitHarvest() {
     };
 
     // 發送請求到 GAS
-    fetch(GAS_URL, {
+    /*fetch(GAS_URL, {
         method: 'POST',
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         redirect: "follow",
@@ -1004,7 +1004,7 @@ function submitHarvest() {
     })
     .then(function(response) { return response.json(); })
     .then(function(data) {
-        if(data.result === "success") {
+        if(data.result === "success") {*/
             // GAS 寫入成功後，接著發送 LINE 訊息
             if (typeof liff !== 'undefined' && liff.isInClient()) {
                 liff.sendMessages([{ type: 'text', text: messageText }])
@@ -1022,7 +1022,7 @@ function submitHarvest() {
                 console.log(messageText);
                 showToast("✅ 網頁測試：資料已寫入表格，訊息已生成");
             }
-        } else {
+        /*} else {
             document.getElementById('loading-mask').style.display = 'none';
             alert("❌ 寫入 Google Sheet 失敗：" + data.msg);
         }
@@ -1031,7 +1031,7 @@ function submitHarvest() {
         document.getElementById('loading-mask').style.display = 'none';
         console.error("Error:", error);
         alert("⚠️ 連線失敗，請檢查網路或稍後再試。");
-    });
+    });*/
 }
 </script>
 </body>
