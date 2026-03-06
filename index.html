@@ -7,7 +7,7 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     /* ==========================================
-       ★ V64.1 主題變數與高對比設定 (平均產量計算版) ★
+       ★ V65.1 主題變數與高對比設定 (完整排版版) ★
        ========================================== */
     :root {
         --bg-color: #f8f9fa;
@@ -58,7 +58,7 @@
     .btn-theme { width: 50px; height: 40px !important; background: #6c757d; border-radius: 8px; font-size: 20px; border: none; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
     /* ==========================================
-       ★ 頁籤切換樣式 (新增) ★
+       ★ 頁籤切換樣式 ★
        ========================================== */
     .tab-container { display: flex; gap: 5px; background: var(--divider); padding: 5px; border-radius: 12px; margin-top: 10px; margin-bottom: 20px; }
     .tab-btn { flex: 1; height: 50px !important; border-radius: 8px; background: transparent; color: var(--sub-text); font-weight: bold; font-size: 16px; border: none; box-shadow: none; transition: 0.2s; cursor: pointer; }
@@ -117,17 +117,26 @@
     .btn-add-field { background: #f8f9fa; border: 2px dashed #d97706; color: #d97706; width: 100%; height: 50px !important; margin-top: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer;}
     [data-theme='dark'] .btn-add-field { background: #121212; }
 
+    /* 更正區塊樣式 */
+    .correction-box { background-color: #fff3cd; border: 2px solid #ffecb5; border-radius: 10px; padding: 12px; margin-top: 20px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s;}
+    [data-theme='dark'] .correction-box { background-color: #332b00; border-color: #665c00; }
+    .correction-box input[type="checkbox"] { width: 24px; height: 24px; accent-color: #d32f2f; margin: 0; cursor: pointer; }
+    .correction-label { display: flex; flex-direction: column; cursor: pointer; }
+    .correction-label span.main { font-weight: bold; color: #856404; font-size: 16px; }
+    [data-theme='dark'] .correction-label span.main { color: #ffecb5; }
+    .correction-label span.sub { font-size: 12px; color: #d32f2f; margin-top: 2px;}
+
     .divider { height: 1px; background: var(--divider); margin: 20px 0 10px 0; transition: background-color 0.3s; }
     
-    /* 底部大按鈕 (加大高度) */
-    .btn-row { display: flex; gap: 10px; margin-top: 25px; }
-    button { flex: 1; height: 75px !important; /* 加高按鈕，讓戴手套更好按 */ border: none; border-radius: 15px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.1s; font-family: inherit; }
+    /* 底部大按鈕 */
+    .btn-row { display: flex; gap: 10px; margin-top: 15px; }
+    button { flex: 1; height: 75px !important; border: none; border-radius: 15px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.1s; font-family: inherit; }
     button:active { transform: scale(0.96); box-shadow: 0 2px 3px rgba(0,0,0,0.2); }
     button:disabled { background: #ced4da !important; cursor: not-allowed; opacity: 0.7; }
     .btn-go { background: linear-gradient(135deg, #198754, #146c43); } 
     .btn-arrive { background: linear-gradient(135deg, #0d6efd, #0a58ca); } 
     .btn-end { background: linear-gradient(135deg, #dc3545, #b02a37); width: 100%; margin-top: 12px; } 
-    .btn-harvest { background: linear-gradient(135deg, #d97706, #b45309); width: 100%; margin-top: 12px;}
+    .btn-harvest { background: linear-gradient(135deg, #d97706, #b45309); width: 100%; }
     .btn-text-main { font-size: 20px; font-weight: 800; line-height: 1.1; }
     .btn-text-sub { font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500; }
     
@@ -183,7 +192,7 @@
         <div class="summary-header">📊 今日作業小結</div>
         <div id="summary-content" class="summary-body">載入中...</div>
         <div class="summary-footer">
-            <button class="btn-close-summary" onclick="liff.closeWindow()">👌 確認並關閉</button>
+            <button class="btn-close-summary" onclick="document.getElementById('summary-modal').style.display='none'">👌 確認並關閉</button>
         </div>
     </div>
 </div>
@@ -391,7 +400,7 @@
           </button>
 
           <div class="dash-grid">
-              <button class="dash-btn" onclick="sendCmd('日報')"><span>📝</span> 司機行程日報<br>(含薪資預估)</button>
+              <button class="dash-btn" onclick="sendCmd('日報')"><span>📝</span> 司機行程日報<br>(含薪吐預估)</button>
               <button class="dash-btn" onclick="sendCmd('動態')"><span>📡</span> 今日即時動態<br>(Live)</button>
           </div>
 
@@ -435,7 +444,7 @@
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                   <label style="color:#d97706; margin:0;">📍 農地資料 (Dữ liệu khu đất) - 1</label>
               </div>
-              <input type="text" class="f-id" id="harvest-field-id" placeholder="農地編號 (Mã khu đất / VD: A001)" style="margin-bottom:8px;">
+              <input type="text" class="f-id" id="harvest-field-id" placeholder="農地編號 (Mã khu đất / VD: A-01)" style="margin-bottom:8px;">
               <input type="number" class="f-area" placeholder="採收地數 (Diện tích / VD: 1.5)" inputmode="decimal" step="0.01">
               
               <div class="qty-grid">
@@ -455,18 +464,34 @@
 
       <button type="button" class="btn-add-field" onclick="addField()">➕ 繼續新增下一塊農地 (Thêm khu đất)</button>
 
+      <label class="correction-box">
+          <input type="checkbox" id="is-correction">
+          <div class="correction-label">
+              <span class="main">☑️ 這是一筆更正紀錄 (Bản sửa lỗi)</span>
+              <span class="sub">送出後將自動覆蓋舊資料</span>
+          </div>
+      </label>
+
       <div class="btn-row">
-        <button class="btn-harvest" onclick="submitHarvest()"><span class="btn-text-main">📤 送出採收回報</span><span class="btn-text-sub">Gửi báo cáo</span></button>
+        <button class="btn-harvest" onclick="submitHarvest()"><span class="btn-text-main">📤 送出確認</span><span class="btn-text-sub">Xác nhận gửi</span></button>
       </div>
+
+      <div style="margin-top: 15px;">
+        <button type="button" onclick="queryHarvestSummary(this)" style="background-color: #ff9800; color: white; width: 100%; height: 70px !important; border: none; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+            <span style="font-size: 20px; font-weight: 800; line-height: 1.1;">📊 查詢今日採收總覽</span>
+            <span style="font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500;">Xem tổng kết thu hoạch</span>
+        </button>
+      </div>
+
   </div>
 
-  <div id="status">系統就緒 v64.1 (平均產量計算版) </div>
+  <div id="status">系統就緒 v65.1 (雙系統整合防呆版) </div>
 </div>
 
 <script>
 // ★ 請確認您的設定 ★
 const LIFF_ID = "2008961063-iwAJvIC3";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyD0PoIElZYUiD8Es8Jzo9cft4gKYWIWtM-ejjED3UQJcv8YwyF7SbhaPRajqyC0WsQ/exec"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxTGWHB7VC5loclFXRNlyc7lQyMpAFyeRbF_GB7nvynlVH48MieTyS8A0yFdn7e2jcA/exec"; 
 const ADMIN_PWD = "8888"; 
 
 // --- 頁籤切換邏輯 ---
@@ -525,7 +550,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- 強制解鎖機制 ---
+// 強制解鎖遮罩防呆
 setTimeout(function() {
     var mask = document.getElementById('loading-mask');
     if (mask && mask.style.display !== 'none') {
@@ -543,9 +568,33 @@ function toggleDashboard() {
     }
 }
 
-function openPwdModal() { var p = document.getElementById('dashboard-panel'); if(p.style.display === 'block') { p.style.display = 'none'; } else { document.getElementById('password-modal').style.display = 'flex'; document.getElementById('admin-pwd').value = ''; document.getElementById('admin-pwd').focus(); } }
-function closePwdModal() { document.getElementById('password-modal').style.display = 'none'; }
-function checkPwd() { var input = document.getElementById('admin-pwd').value; if (input === ADMIN_PWD) { closePwdModal(); var p = document.getElementById('dashboard-panel'); p.style.display = 'block'; p.scrollIntoView({ behavior: "smooth", block: "center" }); } else { alert("❌ 密碼錯誤！(Sai mật khẩu)"); document.getElementById('admin-pwd').value = ''; } }
+function openPwdModal() { 
+    var p = document.getElementById('dashboard-panel'); 
+    if(p.style.display === 'block') { 
+        p.style.display = 'none'; 
+    } else { 
+        document.getElementById('password-modal').style.display = 'flex'; 
+        document.getElementById('admin-pwd').value = ''; 
+        document.getElementById('admin-pwd').focus(); 
+    } 
+}
+
+function closePwdModal() { 
+    document.getElementById('password-modal').style.display = 'none'; 
+}
+
+function checkPwd() { 
+    var input = document.getElementById('admin-pwd').value; 
+    if (input === ADMIN_PWD) { 
+        closePwdModal(); 
+        var p = document.getElementById('dashboard-panel'); 
+        p.style.display = 'block'; 
+        p.scrollIntoView({ behavior: "smooth", block: "center" }); 
+    } else { 
+        alert("❌ 密碼錯誤！(Sai mật khẩu)"); 
+        document.getElementById('admin-pwd').value = ''; 
+    } 
+}
 
 function sendCmd(cmdText) {
     if (!liff.isInClient()) { alert("請在 LINE 中使用戰情室功能"); return; }
@@ -559,11 +608,17 @@ function sendCmd(cmdText) {
 }
 
 function checkCustomInput(type) {
-    var select = document.getElementById(type); var input = document.getElementById(type + '-custom');
-    if (select.value === 'custom') { input.style.display = 'block'; input.focus(); } else { input.style.display = 'none'; input.value = ''; }
+    var select = document.getElementById(type); 
+    var input = document.getElementById(type + '-custom');
+    if (select.value === 'custom') { 
+        input.style.display = 'block'; 
+        input.focus(); 
+    } else { 
+        input.style.display = 'none'; 
+        input.value = ''; 
+    }
 }
 
-// 檢查作業是否為自訂
 function checkTaskCustom() {
     var radios = document.getElementsByName('taskType');
     var isCustom = false;
@@ -579,14 +634,13 @@ function checkTaskCustom() {
         input.focus();
     } else {
         input.style.display = 'none';
-        input.value = ''; // 清空
+        input.value = '';
     }
 }
 
 function predictDestination() {
     var currentLoc = document.getElementById('location').value;
     var destSelect = document.getElementById('destination');
-    
     var suggestion = "";
     
     if (currentLoc === "公司") {
@@ -623,8 +677,8 @@ function querySummary(btnElement) {
         return;
     }
 
-    var originalText = btnElement.innerText;
-    btnElement.innerText = "⏳ 查詢中...";
+    var originalHTML = btnElement.innerHTML;
+    btnElement.innerHTML = `<span style="font-size: 20px; font-weight: 800;">⏳ 查詢中...</span>`;
     btnElement.disabled = true;
     btnElement.style.opacity = "0.7";
 
@@ -650,15 +704,57 @@ function querySummary(btnElement) {
         alert("❌ 連線失敗，請檢查網路或稍後再試。");
     })
     .finally(function() {
-        btnElement.innerText = originalText;
+        btnElement.innerHTML = originalHTML;
         btnElement.disabled = false;
         btnElement.style.opacity = "1";
     });
 }
 
+// ★ 查詢採收小結 ★
+function queryHarvestSummary(btnElement) {
+    var date = document.getElementById('harvest-date').value;
+    if (!date) return alert("❌ 請先選擇採收日期！\n(Chọn ngày)");
+
+    var originalHTML = btnElement.innerHTML;
+    btnElement.innerHTML = `<span style="font-size: 20px; font-weight: 800;">⏳ 撈取資料中...</span>`;
+    btnElement.disabled = true; 
+    btnElement.style.opacity = "0.7";
+
+    var payload = { action: "查詢採收小結", date: date };
+
+    fetch(GAS_URL, { 
+        method: 'POST', 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        redirect: "follow", 
+        body: JSON.stringify(payload) 
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(json) {
+        if (json.summary) {
+            document.getElementById('summary-content').innerText = json.summary;
+            document.getElementById('summary-modal').style.display = 'flex';
+        } else {
+            alert("⚠️ " + date + " 查無採收資料。");
+        }
+    })
+    .catch(function(error) { 
+        console.error("Error:", error); 
+        alert("❌ 連線失敗，請檢查網路。"); 
+    })
+    .finally(function() { 
+        btnElement.innerHTML = originalHTML; 
+        btnElement.disabled = false; 
+        btnElement.style.opacity = "1"; 
+    });
+}
+
 function toggleButtons(disabled) {
     var btns = document.querySelectorAll('button');
-    btns.forEach(function(btn) { if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm') && !btn.classList.contains('btn-close-summary') && !btn.classList.contains('btn-theme') && !btn.classList.contains('tab-btn')) { btn.disabled = disabled; } });
+    btns.forEach(function(btn) { 
+        if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm') && !btn.classList.contains('btn-close-summary') && !btn.classList.contains('btn-theme') && !btn.classList.contains('tab-btn')) { 
+            btn.disabled = disabled; 
+        } 
+    });
 }
 
 // --- 初始化 ---
@@ -670,17 +766,33 @@ window.onload = function() {
       loadHistory('destination', 'vds_history_dest');
       loadTaskHistory();
       
-      var savedDate = localStorage.getItem('vds_trip_date'); var today = new Date().toDateString(); 
-      if (savedDate === today) { var savedTrip = localStorage.getItem('vds_trip_val'); if(savedTrip) document.getElementById('trip').value = savedTrip; } 
-      else { localStorage.removeItem('vds_trip_val'); localStorage.removeItem('vds_trip_date'); }
+      var savedDate = localStorage.getItem('vds_trip_date'); 
+      var today = new Date().toDateString(); 
+      if (savedDate === today) { 
+          var savedTrip = localStorage.getItem('vds_trip_val'); 
+          if(savedTrip) document.getElementById('trip').value = savedTrip; 
+      } else { 
+          localStorage.removeItem('vds_trip_val'); 
+          localStorage.removeItem('vds_trip_date'); 
+      }
       
       var lastDest = localStorage.getItem('vds_last_dest');
       if (lastDest) { 
           var locSelect = document.getElementById('location'); 
           var found = false; 
           var opts = locSelect.options;
-          for(var i=0; i<opts.length; i++) { if(opts[i].value === lastDest) { locSelect.selectedIndex = i; found = true; break; } }
-          if(!found) { locSelect.value = 'custom'; document.getElementById('location-custom').value = lastDest; checkCustomInput('location'); } 
+          for(var i=0; i<opts.length; i++) { 
+              if(opts[i].value === lastDest) { 
+                  locSelect.selectedIndex = i; 
+                  found = true; 
+                  break; 
+              } 
+          }
+          if(!found) { 
+              locSelect.value = 'custom'; 
+              document.getElementById('location-custom').value = lastDest; 
+              checkCustomInput('location'); 
+          } 
       }
       checkTaskCustom();
 
@@ -702,11 +814,14 @@ window.onload = function() {
     liff.getProfile().then(function(profile) { 
         updateDriverSelect(profile.displayName); 
         document.getElementById('loading-mask').style.display = 'none'; 
-    }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; });
-  }).catch(function() { document.getElementById('loading-mask').style.display = 'none'; });
+    }).catch(function() { 
+        document.getElementById('loading-mask').style.display = 'none'; 
+    });
+  }).catch(function() { 
+      document.getElementById('loading-mask').style.display = 'none'; 
+  });
 };
 
-// --- 歷史紀錄邏輯 ---
 function loadHistory(selectId, storageKey) { 
     try {
         var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); 
@@ -716,11 +831,16 @@ function loadHistory(selectId, storageKey) {
             group.label = "🕒 最近輸入 (Gần đây)"; 
             history.reverse().forEach(function(item) { 
                 var opt = document.createElement('option'); 
-                opt.value = item; opt.text = "🕒 " + item; group.appendChild(opt); 
+                opt.value = item; 
+                opt.text = "🕒 " + item; 
+                group.appendChild(opt); 
             }); 
             select.insertBefore(group, select.firstChild); 
         } 
-    } catch(e) { console.error("History parse error"); localStorage.removeItem(storageKey); }
+    } catch(e) { 
+        console.error("History parse error"); 
+        localStorage.removeItem(storageKey); 
+    }
 }
 
 function loadTaskHistory() {
@@ -735,7 +855,9 @@ function loadTaskHistory() {
                 datalist.appendChild(opt);
             });
         }
-    } catch(e) { console.error("Task history parse error"); }
+    } catch(e) { 
+        console.error("Task history parse error"); 
+    }
 }
 
 function saveHistory(val, storageKey) { 
@@ -743,19 +865,28 @@ function saveHistory(val, storageKey) {
     try {
         var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); 
         var index = history.indexOf(val); 
-        if (index > -1) { history.splice(index, 1); } 
+        if (index > -1) { 
+            history.splice(index, 1); 
+        } 
         history.push(val); 
         if (history.length > 5) history.shift(); 
         localStorage.setItem(storageKey, JSON.stringify(history)); 
     } catch(e) {}
 }
+
 function restoreSelection(elementId, storageKey) { 
     var saved = localStorage.getItem(storageKey); 
     if(saved) { 
         var select = document.getElementById(elementId); 
-        for(var i=0; i<select.options.length; i++) { if(select.options[i].value === saved) { select.selectedIndex = i; break; } } 
+        for(var i=0; i<select.options.length; i++) { 
+            if(select.options[i].value === saved) { 
+                select.selectedIndex = i; 
+                break; 
+            } 
+        } 
     } 
 }
+
 function updateDriverSelect(lineName) { 
     var driverSelect = document.getElementById('driver'); 
     var savedDriver = localStorage.getItem('vds_driver'); 
@@ -764,7 +895,7 @@ function updateDriverSelect(lineName) {
             if (driverSelect.options[i].value === savedDriver) { 
                 driverSelect.selectedIndex = i; 
                 var statusDiv = document.getElementById('status'); 
-                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v64.1 整合版)"; 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v65.1 整合版)"; 
                 restoreSelection('plate', 'vds_plate'); 
                 return; 
             } 
@@ -836,8 +967,11 @@ function processClick(actionType) {
     localStorage.setItem('vds_trip_date', today); 
     localStorage.setItem('vds_trip_val', trip);
     
-    if (actionType === '出車') { if(dest) localStorage.setItem('vds_last_dest', dest); } 
-    else if (actionType === '抵達' || actionType === '作業結束') { if(loc) localStorage.setItem('vds_last_dest', loc); }
+    if (actionType === '出車') { 
+        if(dest) localStorage.setItem('vds_last_dest', dest); 
+    } else if (actionType === '抵達' || actionType === '作業結束') { 
+        if(loc) localStorage.setItem('vds_last_dest', loc); 
+    }
     
     if (actionType !== "作業結束" && locSelect.value === 'custom') saveHistory(loc, 'vds_history_loc'); 
     if (destSelect.value === 'custom') saveHistory(dest, 'vds_history_dest');
@@ -879,7 +1013,7 @@ function sendDataToGAS(actionType, driver, plate, trip, loc, dest, taskType) {
     .then(response => response.json())
     .then(data => {
         if(data.result === "success") {
-            // ★ 自動跳趟次邏輯
+            // 自動跳趟次邏輯
             if (actionType === '抵達' && loc === '公司') {
                 var tripSelect = document.getElementById('trip');
                 var currentNum = parseInt(tripSelect.value.replace(/[^0-9]/g, ''));
@@ -996,17 +1130,17 @@ function addField() {
 }
 
 // ==========================================
-// ★ 採收回報邏輯 (高級排版版 + 自動計算平均包數) ★
+// ★ 採收回報邏輯 (防呆確認 + 更正判斷 + 自動計算平均) ★
 // ==========================================
 function submitHarvest() {
     var date = document.getElementById('harvest-date').value;
     var teamSelect = document.getElementById('harvest-team');
     var team = teamSelect.value === 'custom' ? document.getElementById('harvest-team-custom').value.trim() : teamSelect.value;
+    var isCorrection = document.getElementById('is-correction').checked; 
 
     if (!date) return alert("❌ 請選擇採收日期！\n(Chọn ngày)");
     if (!team) return alert("❌ 請選擇或輸入採收班別！\n(Chọn đội)");
 
-    // 收集所有農地資料
     const fieldBlocks = document.querySelectorAll('.field-block');
     let fieldsData = [];
     let hasError = false;
@@ -1025,49 +1159,59 @@ function submitHarvest() {
             alert(`⚠️ 農地 ${fid} 必須至少填寫一項產量！\n(Nhập sản lượng)`); hasError = true; return;
         }
 
-        // ★ 自動計算：平均一分地產量(包) = 總公斤數 / 60 / 地數
+        // 自動計算：平均一分地產量(包) = 總公斤數 / 60 / 地數
         let totalKg = (sp * 750) + (sb * 32) + (np * 750) + (nb * 32);
         let areaFloat = parseFloat(area);
         let avgBags = "0";
-        
         if (areaFloat > 0) {
             avgBags = ((totalKg / 60) / areaFloat).toFixed(1);
-            if (avgBags.endsWith(".0")) avgBags = avgBags.slice(0, -2); // 如果是整數去掉小數點
+            if (avgBags.endsWith(".0")) avgBags = avgBags.slice(0, -2);
         }
 
         fieldsData.push({
             fieldId: fid, area: area,
             safePieces: sp, safeBoxes: sb, nocertPieces: np, nocertBoxes: nb,
-            calculatedBags: avgBags // 存入平均包數
+            calculatedBags: avgBags 
         });
     });
 
     if (hasError || fieldsData.length === 0) return;
 
+    // ★ 進入防呆確認視窗
+    let confirmMsg = isCorrection ? "⚠️ 【注意：此為更正紀錄】\n您即將送出以下更正資料：\n\n" : "您即將送出以下採收資料：\n\n";
+    fieldsData.forEach(f => {
+        confirmMsg += `📍 ${f.fieldId} (${f.area} 分) ➔ 均量 ${f.calculatedBags} 包/分\n`;
+    });
+    confirmMsg += "\n請問數字確認無誤嗎？\n(Xác nhận gửi?)";
+
+    if (!confirm(confirmMsg)) {
+        return; 
+    }
+
     if (teamSelect.value === 'custom') saveHistory(team, 'vds_history_harvest_team');
-    // 記錄第一塊農地編號方便下次帶入
     localStorage.setItem('vds_history_harvest_field', fieldsData[0].fieldId);
 
     document.getElementById('loading-mask').style.display = 'flex';
     document.getElementById('loading-text').innerText = "資料傳送中...";
 
-    // ==========================================
-    // ★ LINE 聊天室「高級排版」 ★
-    // ==========================================
-    // 轉換日期格式 2023-10-27 => 2023/10/27
+    // 組合 LINE 聊天室排版訊息
     var niceDate = date.replace(/-/g, "/");
-    var messageText = `━━━━━━━━━━━━\n` +
-                      `🚜 【 採收作業回報 】 🥕\n` +
-                      `━━━━━━━━━━━━\n` +
-                      `📅 日期：${niceDate}\n` +
-                      `🧑‍🌾 班別：${team}\n`;
+    var messageText = `━━━━━━━━━━━━\n`;
+    
+    if (isCorrection) {
+        messageText += `🚨 【 採收更正回報 】 🚨\n`;
+    } else {
+        messageText += `🚜 【 採收作業回報 】 🥕\n`;
+    }
+
+    messageText += `━━━━━━━━━━━━\n` +
+                   `📅 日期：${niceDate}\n` +
+                   `🧑‍🌾 班別：${team}\n`;
     
     fieldsData.forEach((f, idx) => {
         messageText += `━━━━━━━━━━━━\n`;
         messageText += `📍 農地：${f.fieldId}\n`;
         messageText += `📏 面積：${f.area} 分\n`;
-        
-        // ★ 更改為平均產量
         messageText += `📦 均量：${f.calculatedBags} 包/分\n`;
         messageText += `------------------------\n`;
         
@@ -1080,9 +1224,8 @@ function submitHarvest() {
     });
     messageText += `━━━━━━━━━━━━\n\u200B`;
 
-    var payload = { action: "採收回報_多筆", date: date, team: team, fields: fieldsData };
+    var payload = { action: "採收回報_多筆", date: date, team: team, isCorrection: isCorrection, fields: fieldsData };
 
-    // 暫時註解，純傳送 LINE 訊息測試用
     /*
     fetch(GAS_URL, {
         method: 'POST',
@@ -1098,7 +1241,7 @@ function submitHarvest() {
                 liff.sendMessages([{ type: 'text', text: messageText }])
                 .then(() => {
                     document.getElementById('loading-mask').style.display = 'none';
-                    showToast("✅ 回報成功！");
+                    showToast(isCorrection ? "✅ 更正回報成功！" : "✅ 回報成功！");
                     setTimeout(() => liff.closeWindow(), 1500);
                 })
                 .catch((err) => {
