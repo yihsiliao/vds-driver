@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>🥕VDS司機打卡🥕 | Chấm công</title>
+  <title>🥕VDS打卡與採收系統🥕 | Hệ thống VDS</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     /* ==========================================
-       ★ V62.0 主題變數與高對比設定 ★
+       ★ V62.1 主題變數與高對比設定 ★
        ========================================== */
     :root {
         --bg-color: #f8f9fa;
@@ -50,6 +50,7 @@
     
     /* 標題與標籤 */
     h3 { color: #198754; text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 24px; }
+    .title-harvest { color: #d97706; }
     .sub-title { font-size: 14px; color: var(--sub-text); font-weight: 400; text-align: center; display: block; margin-bottom: 20px; }
     label { display: block; font-weight: 700; margin-top: 15px; margin-bottom: 6px; font-size: 16px; color: var(--label-color); transition: color 0.3s; }
     label span { font-weight: 400; color: var(--sub-text); font-size: 13px; margin-left: 5px; }
@@ -58,8 +59,19 @@
     .theme-toggle-area { display: flex; justify-content: flex-end; margin-bottom: -10px; }
     .btn-theme { width: 50px; height: 40px !important; background: #6c757d; border-radius: 8px; font-size: 20px; border: none; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
+    /* ==========================================
+       ★ 頁籤切換樣式 (新增) ★
+       ========================================== */
+    .tab-container { display: flex; gap: 5px; background: var(--divider); padding: 5px; border-radius: 12px; margin-top: 10px; margin-bottom: 20px; }
+    .tab-btn { flex: 1; height: 50px !important; border-radius: 8px; background: transparent; color: var(--sub-text); font-weight: bold; font-size: 16px; border: none; box-shadow: none; transition: 0.2s; cursor: pointer; }
+    .tab-btn.active-driver { background: var(--card-bg); color: #198754; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .tab-btn.active-harvest { background: var(--card-bg); color: #d97706; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .form-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+    .form-section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
     /* 輸入框 (加大字體) */
-    select, input[type="text"], input[type="password"] { 
+    select, input[type="text"], input[type="password"], input[type="date"], input[type="number"] { 
         width: 100%; height: 55px; /* 加高 */
         font-size: 18px; /* 加大字體 */
         font-weight: 600; 
@@ -70,6 +82,8 @@
         box-sizing: border-box; color: var(--text-color); 
     }
     select:focus, input:focus { border-color: #198754; box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.2); }
+    #form-harvest select:focus, #form-harvest input:focus { border-color: #d97706; box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2); }
+
     #dest-label { color: #198754; } 
     #destination { border: 2px solid #198754; background-color: #f0fff4; transition: background-color 0.5s; }
     [data-theme='dark'] #destination { background-color: #0f291e; }
@@ -90,16 +104,26 @@
     [data-theme='dark'] .radio-option input:checked + .radio-content { background-color: #0f291e; }
     .radio-text-main { font-size: 16px; }
     .radio-text-sub { font-size: 11px; margin-top: 1px; }
+
+    /* 採收數量輸入區 */
+    .qty-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+    .qty-card { background: var(--input-bg); border: 2px solid var(--border-color); padding: 12px; border-radius: 12px; box-sizing: border-box; }
+    .qty-card:focus-within { border-color: #d97706; }
+    .qty-title { font-weight: 800; text-align: center; margin-bottom: 10px; font-size: 16px; display: flex; flex-direction: column; }
+    .qty-title span { font-size: 11px; font-weight: 400; color: var(--sub-text); margin-top: 2px;}
+    .qty-card input { margin-bottom: 8px; height: 50px; text-align: center; padding-left: 0; }
+
     .divider { height: 1px; background: var(--divider); margin: 20px 0 10px 0; transition: background-color 0.3s; }
     
     /* 底部大按鈕 (加大高度) */
     .btn-row { display: flex; gap: 10px; margin-top: 25px; }
-    button { flex: 1; height: 75px !important; /* 加高按鈕，讓戴手套更好按 */ border: none; border-radius: 15px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.1s; font-family: inherit; }
+    button { flex: 1; height: 75px !important; border: none; border-radius: 15px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.1s; font-family: inherit; }
     button:active { transform: scale(0.96); box-shadow: 0 2px 3px rgba(0,0,0,0.2); }
     button:disabled { background: #ced4da !important; cursor: not-allowed; opacity: 0.7; }
     .btn-go { background: linear-gradient(135deg, #198754, #146c43); } 
     .btn-arrive { background: linear-gradient(135deg, #0d6efd, #0a58ca); } 
     .btn-end { background: linear-gradient(135deg, #dc3545, #b02a37); width: 100%; margin-top: 12px; } 
+    .btn-harvest { background: linear-gradient(135deg, #d97706, #b45309); width: 100%; margin-top: 12px;}
     .btn-text-main { font-size: 20px; font-weight: 800; line-height: 1.1; }
     .btn-text-sub { font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500; }
     
@@ -147,7 +171,7 @@
 </head>
 <body>
 
-<div id="loading-mask"><div class="spinner"></div><div id="loading-text">Loading...</div></div>
+<div id="loading-mask"><div class="spinner" id="spinner-icon"></div><div id="loading-text">Loading...</div></div>
 <div id="toast"></div>
 
 <div id="summary-modal">
@@ -175,206 +199,257 @@
   <div class="theme-toggle-area">
       <button class="btn-theme" id="themeBtn" onclick="cycleTheme()" title="切換顯示模式">🌓</button>
   </div>
-  <h3>🥕VDS打卡系統🥕</h3>
-  <span class="sub-title">Hệ thống chấm công tài xế</span>
-  
-  <label>👨🏼‍🌾 司機姓名 <span>(Tên tài xế)</span></label>
-  <select id="driver" onchange="checkCustomInput('driver')">
-    <option value="" disabled selected>載入中... (Đang tải...)</option>
-    <option value="劉文生">劉文生 (A Sanh)</option>
-    <option value="阮謝練">阮謝練 (Ta Luyện)</option>
-    <option value="郭文統">郭文統 (Văn Thống)</option>
-    <option value="林冠宇">林冠宇 (Quán Vũ)</option>
-    <option value="陳衍介">陳衍介 (A Giới)</option>
-    <option value="黃庭霖">黃庭霖 (Đình Lâm)</option>
-    <option value="張功維">張功維 (Trương Công Duy)</option>
-    <option value="測試">測試 (Test)</option>
-    <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
-  </select>
-  <input type="text" id="driver-custom" class="custom-input" placeholder="輸入姓名 (Nhập tên)">
 
-  <label>🚛 車牌號碼 <span>(Biển số xe)</span></label>
-  <select id="plate" onchange="checkCustomInput('plate')">
-    <option value="" disabled selected>請選擇車牌... (Chọn biển số)</option>
-    <optgroup label="公司車輛 (Xe công ty)">
-        <option value="027-TN">027-TN</option>
-        <option value="KEM-9277">KEM-9277</option>
-        <option value="KER-1677">KER-1677</option>
-        <option value="AAR-227">AAR-227</option>
-        <option value="KES-0127">KES-0127</option>
-        <option value="KEN-6977">KEN-6977</option>
-    </optgroup>
-    <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
-  </select>
-  <input type="text" id="plate-custom" class="custom-input" placeholder="輸入車牌 (Nhập biển số)">
-
-  <label>🔢 趟次 <span>(Số chuyến)</span></label>
-  <select id="trip">
-    <option value="第1趟" selected>第1趟 (Chuyến 1)</option>
-    <option value="第2趟">第2趟 (Chuyến 2)</option>
-    <option value="第3趟">第3趟 (Chuyến 3)</option>
-    <option value="第4趟">第4趟 (Chuyến 4)</option>
-    <option value="第5趟">第5趟 (Chuyến 5)</option>
-    <option value="第6趟">第6趟 (Chuyến 6)</option>
-    <option value="第7趟">第7趟 (Chuyến 7)</option>
-    <option value="第8趟">第8趟 (Chuyến 8)</option>
-    <option value="第9趟">第9趟 (Chuyến 9)</option>
-    <option value="第10趟">第10趟 (Chuyến 10)</option>
-  </select>
-
-  <div class="divider"></div>
-
-  <label>📍 目前地點 <span>(Vị trí hiện tại)</span></label>
-  <select id="location" onchange="checkCustomInput('location'); predictDestination();">
-    <optgroup label="常用地點 (Thường dùng)">
-      <option value="公司">🏢 公司 (Công ty)</option>
-      <option value="田間(二林)">🌾 田間-二林 (Ngoài đồng - Erlin)</option>
-      <option value="田間(東勢)">🌾 田間-東勢 (Ngoài đồng - Dongshi)</option>
-      <option value="田間(噴水)">🌾 田間-噴水 (Ngoài đồng - Phun nước)</option>
-    </optgroup>
-    <optgroup label="列表 (Danh sách cũ)">
-      <option value="農場晃晃">🐄 農場晃晃 (Nông trường Huang Huang)</option>
-      <option value="馬光">🥕 馬光 (Ma Guang)</option>
-      <option value="佳美">🏭 佳美 (Jia Mei)</option>
-      <option value="光泉">🏭 光泉 (Kuang Chuan)</option>
-      <option value="久津">🏭 久津 (Jiu Jin)</option>
-      <option value="達群">🏭 達群 (Da Qun)</option>
-      <option value="淑貞">🏙️ 淑貞 (Shu Zhen)</option>
-      <option value="陳俐霖">🏙️ 陳俐霖 (Li Lin)</option>
-      <option value="吳淑玲">🏙️ 吳淑玲 (Shu Ling)</option>      
-      <option value="楊鴻隆">🏙️ 楊鴻隆 (Hong Long)</option>
-      <option value="三條崙龍達">❄️ 三條崙龍達 (Longda Santiaolun)</option>
-      <option value="西螺龍達">❄️ 西螺龍達 (Longda Xiluo)</option>
-      <option value="好收">❄️ 好收 (Hao Shou)</option>
-      <option value="鹿場">❄️ 鹿場 (Lu Chang)</option>
-      <option value="隆記">❄️ 隆記 (Long Ji)</option>
-      <option value="新豐">❄️ 新豐 (Xin Feng)</option>
-      <option value="玉豐">❄️ 玉豐 (Yu Feng)</option>
-      <option value="清新">❄️ 清新 (Qing Xin)</option>
-      <option value="張武雄">❄️ 張武雄 (Zhang Wu Xiong)</option>
-      <option value="冠南">❄️ 冠南 (Guannan)</option>
-      <option value="大埤倉庫">🏭 大埤倉庫 (Kho Dapi)</option>
-      <option value="斗六倉庫">🏭 斗六倉庫 (Kho Douliu)</option>
-      <option value="斗南保養廠">🔧 斗南保養廠 (Xưởng Dounan)</option>
-      <option value="花壇保養廠">🔧 花壇保養廠 (Xưởng Huatan)</option>
-      <option value="台中港">🚢 台中港 (Cảng Taichung)</option>
-      <option value="高雄港">🚢 高雄港 (Cảng Kaohsiung)</option>
-      <option value="新社種苗場">🌱 新社種苗場 (Trại giống Xinshe)</option>
-    </optgroup>
-    <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
-  </select>
-  <input type="text" id="location-custom" class="custom-input" placeholder="輸入地點 (Nhập địa điểm)">
-
-  <label id="dest-label">🏁 預計前往 <span>(Nơi đến dự kiến)</span></label>
-  <select id="destination" onchange="checkCustomInput('destination')">
-    <option value="" disabled selected>請選擇目的地... (Chọn nơi đến)</option>
-    <optgroup label="常用地點 (Thường dùng)">
-      <option value="公司">🏢 公司 (Công ty)</option>
-      <option value="田間(二林)">🌾 田間-二林 (Ngoài đồng - Erlin)</option>
-      <option value="田間(東勢)">🌾 田間-東勢 (Ngoài đồng - Dongshi)</option>
-      <option value="田間(噴水)">🌾 田間-噴水 (Ngoài đồng - Phun nước)</option>
-    </optgroup>
-    <optgroup label="列表 (Danh sách cũ)">
-      <option value="農場晃晃">🐄 農場晃晃 (Nông trường Huang Huang)</option>
-      <option value="馬光">🥕 馬光 (Ma Guang)</option>
-      <option value="佳美">🏭 佳美 (Jia Mei)</option>
-      <option value="光泉">🏭 光泉 (Kuang Chuan)</option>
-      <option value="久津">🏭 久津 (Jiu Jin)</option>
-      <option value="達群">🏭 達群 (Da Qun)</option>
-      <option value="淑貞">🏙️ 淑貞 (Shu Zhen)</option>
-      <option value="陳俐霖">🏙️ 陳俐霖 (Li Lin)</option>
-      <option value="吳淑玲">🏙️ 吳淑玲 (Shu Ling)</option>      
-      <option value="楊鴻隆">🏙️ 楊鴻隆 (Hong Long)</option>
-      <option value="三條崙龍達">❄️ 三條崙龍達 (Longda Santiaolun)</option>
-      <option value="西螺龍達">❄️ 西螺龍達 (Longda Xiluo)</option>
-      <option value="好收">❄️ 好收 (Hao Shou)</option>
-      <option value="鹿場">❄️ 鹿場 (Lu Chang)</option>
-      <option value="隆記">❄️ 隆記 (Long Ji)</option>
-      <option value="新豐">❄️ 新豐 (Xin Feng)</option>
-      <option value="玉豐">❄️ 玉豐 (Yu Feng)</option>
-      <option value="清新">❄️ 清新 (Qing Xin)</option>
-      <option value="張武雄">❄️ 張武雄 (Zhang Wu Xiong)</option>
-      <option value="冠南">❄️ 冠南 (Guannan)</option>
-      <option value="大埤倉庫">🏭 大埤倉庫 (Kho Dapi)</option>
-      <option value="斗六倉庫">🏭 斗六倉庫 (Kho Douliu)</option>
-      <option value="斗南保養廠">🔧 斗南保養廠 (Xưởng Dounan)</option>
-      <option value="花壇保養廠">🔧 花壇保養廠 (Xưởng Huatan)</option>
-      <option value="台中港">🚢 台中港 (Cảng Taichung)</option>
-      <option value="高雄港">🚢 高雄港 (Cảng Kaohsiung)</option>
-      <option value="新社種苗場">🌱 新社種苗場 (Trại giống Xinshe)</option>
-    </optgroup>
-    <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
-  </select>
-  <input type="text" id="destination-custom" class="custom-input" placeholder="輸入目的地 (Nhập nơi đến)">
-
-  <label>⚙️ 作業內容 <span>(Nội dung)</span></label>
-  <div class="radio-group">
-    <label class="radio-option"><input type="radio" name="taskType" value="" checked onclick="checkTaskCustom()"><div class="radio-content"><span class="radio-text-main">無</span><span class="radio-text-sub">Không</span></div></label>
-    <label class="radio-option"><input type="radio" name="taskType" value="機採" onclick="checkTaskCustom()"><div class="radio-content"><span class="radio-text-main">機採</span><span class="radio-text-sub">Máy thu</span></div></label>
-    <label class="radio-option"><input type="radio" name="taskType" value="人採" onclick="checkTaskCustom()"><div class="radio-content"><span class="radio-text-main">人採</span><span class="radio-text-sub">Người thu</span></div></label>
-    
-    <label class="radio-option" style="min-width: 100px;">
-        <input type="radio" name="taskType" value="custom" onclick="checkTaskCustom()">
-        <div class="radio-content">
-            <span class="radio-text-main">✏️ 自訂</span>
-            <span class="radio-text-sub">Tùy chỉnh</span>
-        </div>
-    </label>
-  </div>
-  
-  <datalist id="task-history-list"></datalist>
-  <input type="text" id="task-custom" class="custom-input" list="task-history-list" placeholder="例如：冠南冰載棧板 (VD: Chở pallet)" style="margin-top: 5px;">
-
-  <div class="btn-row">
-    <button class="btn-go" onclick="processClick('出車')"><span class="btn-text-main">🚀 出發/出車</span><span class="btn-text-sub">Xuất phát</span></button>
-    <button class="btn-arrive" onclick="processClick('抵達')"><span class="btn-text-main">🏁 抵達/回到</span><span class="btn-text-sub">Đến nơi</span></button>
-  </div>
-  <button class="btn-end" onclick="processClick('作業結束')"><span class="btn-text-main">🛑 結束今日作業</span><span class="btn-text-sub">Kết thúc công việc</span></button>
-  
-  <div style="margin-top: 15px;">
-    <button type="button" onclick="querySummary(this)" style="background-color: #17a2b8; color: white; width: 100%; height: 70px !important; border: none; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
-        <span style="font-size: 20px; font-weight: 800; line-height: 1.1;">📊 查詢今日小結</span>
-        <span style="font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500;">Xem tổng kết ngày</span>
-    </button>
+  <div class="tab-container">
+      <button class="tab-btn active-driver" id="tab-driver" onclick="switchTab('driver')">🚛 司機打卡</button>
+      <button class="tab-btn" id="tab-harvest" onclick="switchTab('harvest')">🥕 採收回報</button>
   </div>
 
-  <div style="margin-top: 15px;">
-    <a href="https://script.google.com/macros/s/AKfycbxTGWHB7VC5loclFXRNlyc7lQyMpAFyeRbF_GB7nvynlVH48MieTyS8A0yFdn7e2jcA/exec" target="_blank" style="text-decoration: none;">
-        <button type="button" style="background-color: #2E7D32; color: white; width: 100%; height: 70px !important; border: none; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
-            <span style="font-size: 20px; font-weight: 800; line-height: 1.1;">🗺️ 查看司機分布地圖</span>
-            <span style="font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500;">Bản đồ vị trí tài xế</span>
+  <div id="form-driver" class="form-section active">
+      <h3>🥕VDS打卡系統🥕</h3>
+      <span class="sub-title">Hệ thống chấm công tài xế</span>
+      
+      <label>👨🏼‍🌾 司機姓名 <span>(Tên tài xế)</span></label>
+      <select id="driver" onchange="checkCustomInput('driver')">
+        <option value="" disabled selected>載入中... (Đang tải...)</option>
+        <option value="劉文生">劉文生 (A Sanh)</option>
+        <option value="阮謝練">阮謝練 (Ta Luyện)</option>
+        <option value="郭文統">郭文統 (Văn Thống)</option>
+        <option value="林冠宇">林冠宇 (Quán Vũ)</option>
+        <option value="陳衍介">陳衍介 (A Giới)</option>
+        <option value="黃庭霖">黃庭霖 (Đình Lâm)</option>
+        <option value="張功維">張功維 (Trương Công Duy)</option>
+        <option value="測試">測試 (Test)</option>
+        <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
+      </select>
+      <input type="text" id="driver-custom" class="custom-input" placeholder="輸入姓名 (Nhập tên)">
+
+      <label>🚛 車牌號碼 <span>(Biển số xe)</span></label>
+      <select id="plate" onchange="checkCustomInput('plate')">
+        <option value="" disabled selected>請選擇車牌... (Chọn biển số)</option>
+        <optgroup label="公司車輛 (Xe công ty)">
+            <option value="027-TN">027-TN</option>
+            <option value="KEM-9277">KEM-9277</option>
+            <option value="KER-1677">KER-1677</option>
+            <option value="AAR-227">AAR-227</option>
+            <option value="KES-0127">KES-0127</option>
+            <option value="KEN-6977">KEN-6977</option>
+        </optgroup>
+        <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
+      </select>
+      <input type="text" id="plate-custom" class="custom-input" placeholder="輸入車牌 (Nhập biển số)">
+
+      <label>🔢 趟次 <span>(Số chuyến)</span></label>
+      <select id="trip">
+        <option value="第1趟" selected>第1趟 (Chuyến 1)</option>
+        <option value="第2趟">第2趟 (Chuyến 2)</option>
+        <option value="第3趟">第3趟 (Chuyến 3)</option>
+        <option value="第4趟">第4趟 (Chuyến 4)</option>
+        <option value="第5趟">第5趟 (Chuyến 5)</option>
+        <option value="第6趟">第6趟 (Chuyến 6)</option>
+        <option value="第7趟">第7趟 (Chuyến 7)</option>
+        <option value="第8趟">第8趟 (Chuyến 8)</option>
+        <option value="第9趟">第9趟 (Chuyến 9)</option>
+        <option value="第10趟">第10趟 (Chuyến 10)</option>
+      </select>
+
+      <div class="divider"></div>
+
+      <label>📍 目前地點 <span>(Vị trí hiện tại)</span></label>
+      <select id="location" onchange="checkCustomInput('location'); predictDestination();">
+        <optgroup label="常用地點 (Thường dùng)">
+          <option value="公司">🏢 公司 (Công ty)</option>
+          <option value="田間(二林)">🌾 田間-二林 (Ngoài đồng - Erlin)</option>
+          <option value="田間(東勢)">🌾 田間-東勢 (Ngoài đồng - Dongshi)</option>
+          <option value="田間(噴水)">🌾 田間-噴水 (Ngoài đồng - Phun nước)</option>
+        </optgroup>
+        <optgroup label="列表 (Danh sách cũ)">
+          <option value="農場晃晃">🐄 農場晃晃 (Nông trường Huang Huang)</option>
+          <option value="馬光">🥕 馬光 (Ma Guang)</option>
+          <option value="佳美">🏭 佳美 (Jia Mei)</option>
+          <option value="光泉">🏭 光泉 (Kuang Chuan)</option>
+          <option value="久津">🏭 久津 (Jiu Jin)</option>
+          <option value="達群">🏭 達群 (Da Qun)</option>
+          <option value="淑貞">🏙️ 淑貞 (Shu Zhen)</option>
+          <option value="陳俐霖">🏙️ 陳俐霖 (Li Lin)</option>
+          <option value="吳淑玲">🏙️ 吳淑玲 (Shu Ling)</option>      
+          <option value="楊鴻隆">🏙️ 楊鴻隆 (Hong Long)</option>
+          <option value="三條崙龍達">❄️ 三條崙龍達 (Longda Santiaolun)</option>
+          <option value="西螺龍達">❄️ 西螺龍達 (Longda Xiluo)</option>
+          <option value="好收">❄️ 好收 (Hao Shou)</option>
+          <option value="鹿場">❄️ 鹿場 (Lu Chang)</option>
+          <option value="隆記">❄️ 隆記 (Long Ji)</option>
+          <option value="新豐">❄️ 新豐 (Xin Feng)</option>
+          <option value="玉豐">❄️ 玉豐 (Yu Feng)</option>
+          <option value="清新">❄️ 清新 (Qing Xin)</option>
+          <option value="張武雄">❄️ 張武雄 (Zhang Wu Xiong)</option>
+          <option value="冠南">❄️ 冠南 (Guannan)</option>
+          <option value="大埤倉庫">🏭 大埤倉庫 (Kho Dapi)</option>
+          <option value="斗六倉庫">🏭 斗六倉庫 (Kho Douliu)</option>
+          <option value="斗南保養廠">🔧 斗南保養廠 (Xưởng Dounan)</option>
+          <option value="花壇保養廠">🔧 花壇保養廠 (Xưởng Huatan)</option>
+          <option value="台中港">🚢 台中港 (Cảng Taichung)</option>
+          <option value="高雄港">🚢 高雄港 (Cảng Kaohsiung)</option>
+          <option value="新社種苗場">🌱 新社種苗場 (Trại giống Xinshe)</option>
+        </optgroup>
+        <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
+      </select>
+      <input type="text" id="location-custom" class="custom-input" placeholder="輸入地點 (Nhập địa điểm)">
+
+      <label id="dest-label">🏁 預計前往 <span>(Nơi đến dự kiến)</span></label>
+      <select id="destination" onchange="checkCustomInput('destination')">
+        <option value="" disabled selected>請選擇目的地... (Chọn nơi đến)</option>
+        <optgroup label="常用地點 (Thường dùng)">
+          <option value="公司">🏢 公司 (Công ty)</option>
+          <option value="田間(二林)">🌾 田間-二林 (Ngoài đồng - Erlin)</option>
+          <option value="田間(東勢)">🌾 田間-東勢 (Ngoài đồng - Dongshi)</option>
+          <option value="田間(噴水)">🌾 田間-噴水 (Ngoài đồng - Phun nước)</option>
+        </optgroup>
+        <optgroup label="列表 (Danh sách cũ)">
+          <option value="農場晃晃">🐄 農場晃晃 (Nông trường Huang Huang)</option>
+          <option value="馬光">🥕 馬光 (Ma Guang)</option>
+          <option value="佳美">🏭 佳美 (Jia Mei)</option>
+          <option value="光泉">🏭 光泉 (Kuang Chuan)</option>
+          <option value="久津">🏭 久津 (Jiu Jin)</option>
+          <option value="達群">🏭 達群 (Da Qun)</option>
+          <option value="淑貞">🏙️ 淑貞 (Shu Zhen)</option>
+          <option value="陳俐霖">🏙️ 陳俐霖 (Li Lin)</option>
+          <option value="吳淑玲">🏙️ 吳淑玲 (Shu Ling)</option>      
+          <option value="楊鴻隆">🏙️ 楊鴻隆 (Hong Long)</option>
+          <option value="三條崙龍達">❄️ 三條崙龍達 (Longda Santiaolun)</option>
+          <option value="西螺龍達">❄️ 西螺龍達 (Longda Xiluo)</option>
+          <option value="好收">❄️ 好收 (Hao Shou)</option>
+          <option value="鹿場">❄️ 鹿場 (Lu Chang)</option>
+          <option value="隆記">❄️ 隆記 (Long Ji)</option>
+          <option value="新豐">❄️ 新豐 (Xin Feng)</option>
+          <option value="玉豐">❄️ 玉豐 (Yu Feng)</option>
+          <option value="清新">❄️ 清新 (Qing Xin)</option>
+          <option value="張武雄">❄️ 張武雄 (Zhang Wu Xiong)</option>
+          <option value="冠南">❄️ 冠南 (Guannan)</option>
+          <option value="大埤倉庫">🏭 大埤倉庫 (Kho Dapi)</option>
+          <option value="斗六倉庫">🏭 斗六倉庫 (Kho Douliu)</option>
+          <option value="斗南保養廠">🔧 斗南保養廠 (Xưởng Dounan)</option>
+          <option value="花壇保養廠">🔧 花壇保養廠 (Xưởng Huatan)</option>
+          <option value="台中港">🚢 台中港 (Cảng Taichung)</option>
+          <option value="高雄港">🚢 高雄港 (Cảng Kaohsiung)</option>
+          <option value="新社種苗場">🌱 新社種苗場 (Trại giống Xinshe)</option>
+        </optgroup>
+        <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
+      </select>
+      <input type="text" id="destination-custom" class="custom-input" placeholder="輸入目的地 (Nhập nơi đến)">
+
+      <label>⚙️ 作業內容 <span>(Nội dung)</span></label>
+      <div class="radio-group">
+        <label class="radio-option"><input type="radio" name="taskType" value="" checked onclick="checkTaskCustom()"><div class="radio-content"><span class="radio-text-main">無</span><span class="radio-text-sub">Không</span></div></label>
+        <label class="radio-option"><input type="radio" name="taskType" value="機採" onclick="checkTaskCustom()"><div class="radio-content"><span class="radio-text-main">機採</span><span class="radio-text-sub">Máy thu</span></div></label>
+        <label class="radio-option"><input type="radio" name="taskType" value="人採" onclick="checkTaskCustom()"><div class="radio-content"><span class="radio-text-main">人採</span><span class="radio-text-sub">Người thu</span></div></label>
+        
+        <label class="radio-option" style="min-width: 100px;">
+            <input type="radio" name="taskType" value="custom" onclick="checkTaskCustom()">
+            <div class="radio-content">
+                <span class="radio-text-main">✏️ 自訂</span>
+                <span class="radio-text-sub">Tùy chỉnh</span>
+            </div>
+        </label>
+      </div>
+      
+      <datalist id="task-history-list"></datalist>
+      <input type="text" id="task-custom" class="custom-input" list="task-history-list" placeholder="例如：冠南冰載棧板 (VD: Chở pallet)" style="margin-top: 5px;">
+
+      <div class="btn-row">
+        <button class="btn-go" onclick="processClick('出車')"><span class="btn-text-main">🚀 出發/出車</span><span class="btn-text-sub">Xuất phát</span></button>
+        <button class="btn-arrive" onclick="processClick('抵達')"><span class="btn-text-main">🏁 抵達/回到</span><span class="btn-text-sub">Đến nơi</span></button>
+      </div>
+      <button class="btn-end" onclick="processClick('作業結束')"><span class="btn-text-main">🛑 結束今日作業</span><span class="btn-text-sub">Kết thúc công việc</span></button>
+      
+      <div style="margin-top: 15px;">
+        <button type="button" onclick="querySummary(this)" style="background-color: #17a2b8; color: white; width: 100%; height: 70px !important; border: none; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+            <span style="font-size: 20px; font-weight: 800; line-height: 1.1;">📊 查詢今日小結</span>
+            <span style="font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500;">Xem tổng kết ngày</span>
         </button>
-    </a>
+      </div>
+
+      <div style="margin-top: 15px;">
+        <a href="https://script.google.com/macros/s/AKfycbxTGWHB7VC5loclFXRNlyc7lQyMpAFyeRbF_GB7nvynlVH48MieTyS8A0yFdn7e2jcA/exec" target="_blank" style="text-decoration: none;">
+            <button type="button" style="background-color: #2E7D32; color: white; width: 100%; height: 70px !important; border: none; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+                <span style="font-size: 20px; font-weight: 800; line-height: 1.1;">🗺️ 查看司機分布地圖</span>
+                <span style="font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500;">Bản đồ vị trí tài xế</span>
+            </button>
+        </a>
+      </div>
+      
+      <div id="dashboard-toggle" onclick="toggleDashboard()">📊 管理員戰情室 (Admin Dashboard)</div>
+      
+      <div id="dashboard-panel">
+          <div class="dash-title">🚀 VDS 智慧戰情室</div>
+          <button class="dash-btn dash-btn-ceo" onclick="sendCmd('總裁')">
+              <span>🏭</span> 企業總裁儀表板<br>(今日營運概況)
+          </button>
+
+          <div class="dash-grid">
+              <button class="dash-btn" onclick="sendCmd('日報')"><span>📝</span> 司機行程日報<br>(含薪資預估)</button>
+              <button class="dash-btn" onclick="sendCmd('動態')"><span>📡</span> 今日即時動態<br>(Live)</button>
+          </div>
+
+          <div class="dash-grid">
+              <button class="dash-btn" onclick="sendCmd('標準')"><span>🏆</span> 路線黃金標準<br>(最速vs最慢)</button>
+              <button class="dash-btn" onclick="sendCmd('閒置')"><span>⏳</span> 車輛閒置分析<br>(抓摸魚/瓶頸)</button>
+          </div>
+
+          <div class="dash-grid">
+              <button class="dash-btn" onclick="sendCmd('效率')"><span>🏎️</span> 司機效率排行<br>(V.S.標準)</button>
+              <button class="dash-btn" onclick="sendCmd('車輛')"><span>🚛</span> 歷史車輛稼動<br>(使用次數)</button>
+              <button class="dash-btn" onclick="sendCmd('地點')"><span>🛑</span> 地點滯留熱點<br>(停留時間)</button>
+              <button class="dash-btn" onclick="sendCmd('路程')"><span>⏱️</span> 路程耗時統計<br>(平均時間)</button>
+          </div>
+      </div>
+
+      <div id="manual-area"><div style="color: #d63384; font-weight: bold; margin-bottom:5px;">⚠️ 請點擊下方按鈕發送</div><a id="manual-btn" href="#" target="_blank"><span style="font-size:18px; font-weight:bold;">🟢 點我發送 (Nhấn vào đây)</span></a></div>
   </div>
-  
-  <div id="dashboard-toggle" onclick="toggleDashboard()">📊 管理員戰情室 (Admin Dashboard)</div>
-  
-  <div id="dashboard-panel">
-      <div class="dash-title">🚀 VDS 智慧戰情室</div>
-      <button class="dash-btn dash-btn-ceo" onclick="sendCmd('總裁')">
-          <span>🏭</span> 企業總裁儀表板<br>(今日營運概況)
-      </button>
 
-      <div class="dash-grid">
-          <button class="dash-btn" onclick="sendCmd('日報')"><span>📝</span> 司機行程日報<br>(含薪資預估)</button>
-          <button class="dash-btn" onclick="sendCmd('動態')"><span>📡</span> 今日即時動態<br>(Live)</button>
+  <div id="form-harvest" class="form-section">
+      <h3 class="title-harvest">🥕採收回報🥕</h3>
+      <span class="sub-title">Báo cáo thu hoạch hàng ngày</span>
+      
+      <label>📅 1. 採收日期 <span>(Ngày thu hoạch)</span></label>
+      <input type="date" id="harvest-date" style="padding-right: 15px;">
+
+      <label>🧑‍🌾 2. 採收班別 <span>(Đội thu hoạch)</span></label>
+      <select id="harvest-team" onchange="checkCustomInput('harvest-team')">
+        <option value="" disabled selected>請選擇班別... (Chọn đội)</option>
+        <option value="第一班">第一班 (Đội 1)</option>
+        <option value="第二班">第二班 (Đội 2)</option>
+        <option value="機採班">機採班 (Đội máy)</option>
+        <option value="外包班">外包班 (Đội ngoài)</option>
+        <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
+      </select>
+      <input type="text" id="harvest-team-custom" class="custom-input" placeholder="輸入班別 (Nhập tên đội)">
+
+      <label>🗺️ 3. 採收地數 <span>(Diện tích thu hoạch)</span></label>
+      <input type="number" id="harvest-area" placeholder="請輸入地數 (例如: 1.5)" inputmode="decimal" step="0.01">
+
+      <div class="divider"></div>
+
+      <label>📦 4. 採收數量 <span>(Sản lượng)</span></label>
+      <div class="qty-grid">
+          <div class="qty-card">
+              <div class="qty-title" style="color: #198754;">🟢 安全產量 <span>(Hàng An toàn)</span></div>
+              <input type="number" id="safe-pieces" placeholder="粒數 (Số củ)" inputmode="numeric" min="0">
+              <input type="number" id="safe-boxes" placeholder="箱數 (Số thùng)" inputmode="numeric" min="0">
+          </div>
+          <div class="qty-card">
+              <div class="qty-title" style="color: #dc3545;">🟡 無產銷產量 <span>(Không truy xuất)</span></div>
+              <input type="number" id="nocert-pieces" placeholder="粒數 (Số củ)" inputmode="numeric" min="0">
+              <input type="number" id="nocert-boxes" placeholder="箱數 (Số thùng)" inputmode="numeric" min="0">
+          </div>
       </div>
 
-      <div class="dash-grid">
-          <button class="dash-btn" onclick="sendCmd('標準')"><span>🏆</span> 路線黃金標準<br>(最速vs最慢)</button>
-          <button class="dash-btn" onclick="sendCmd('閒置')"><span>⏳</span> 車輛閒置分析<br>(抓摸魚/瓶頸)</button>
-      </div>
-
-      <div class="dash-grid">
-          <button class="dash-btn" onclick="sendCmd('效率')"><span>🏎️</span> 司機效率排行<br>(V.S.標準)</button>
-          <button class="dash-btn" onclick="sendCmd('車輛')"><span>🚛</span> 歷史車輛稼動<br>(使用次數)</button>
-          <button class="dash-btn" onclick="sendCmd('地點')"><span>🛑</span> 地點滯留熱點<br>(停留時間)</button>
-          <button class="dash-btn" onclick="sendCmd('路程')"><span>⏱️</span> 路程耗時統計<br>(平均時間)</button>
+      <div class="btn-row">
+        <button class="btn-harvest" onclick="submitHarvest()"><span class="btn-text-main">📤 送出採收回報</span><span class="btn-text-sub">Gửi báo cáo</span></button>
       </div>
   </div>
 
-  <div id="status">系統就緒 v62.0 </div>
-  <div id="manual-area"><div style="color: #d63384; font-weight: bold; margin-bottom:5px;">⚠️ 請點擊下方按鈕發送</div><a id="manual-btn" href="#" target="_blank"><span style="font-size:18px; font-weight:bold;">🟢 點我發送 (Nhấn vào đây)</span></a></div>
+  <div id="status">系統就緒 v62.1 (雙系統整合版) </div>
 </div>
 
 <script>
@@ -382,6 +457,26 @@
 const LIFF_ID = "2008961063-iwAJvIC3";
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxTGWHB7VC5loclFXRNlyc7lQyMpAFyeRbF_GB7nvynlVH48MieTyS8A0yFdn7e2jcA/exec"; 
 const ADMIN_PWD = "8888"; 
+
+// --- 頁籤切換邏輯 ---
+function switchTab(tab) {
+    document.getElementById('form-driver').classList.remove('active');
+    document.getElementById('form-harvest').classList.remove('active');
+    document.getElementById('tab-driver').className = "tab-btn";
+    document.getElementById('tab-harvest').className = "tab-btn";
+
+    if (tab === 'driver') {
+        document.getElementById('form-driver').classList.add('active');
+        document.getElementById('tab-driver').classList.add('active-driver');
+        document.getElementById('spinner-icon').style.borderTopColor = "#198754";
+        document.getElementById('loading-text').style.color = "#198754";
+    } else {
+        document.getElementById('form-harvest').classList.add('active');
+        document.getElementById('tab-harvest').classList.add('active-harvest');
+        document.getElementById('spinner-icon').style.borderTopColor = "#d97706";
+        document.getElementById('loading-text').style.color = "#d97706";
+    }
+}
 
 // --- 主題切換邏輯 ---
 function cycleTheme() {
@@ -391,7 +486,7 @@ function cycleTheme() {
 
     if (!currentTheme) {
         nextTheme = "dark";
-        themeIcon = "☀️"; // 切換到深色後，按鈕顯示太陽(提示可切換回亮色)
+        themeIcon = "☀️"; 
         showToast("🌙 已開啟夜間模式");
     } else if (currentTheme === "dark") {
         nextTheme = "high-contrast";
@@ -419,8 +514,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-
-// --- 強制解鎖機制 (3秒後自動關閉遮罩) ---
+// --- 強制解鎖機制 ---
 setTimeout(function() {
     var mask = document.getElementById('loading-mask');
     if (mask && mask.style.display !== 'none') {
@@ -485,11 +579,11 @@ function predictDestination() {
     var suggestion = "";
     
     if (currentLoc === "公司") {
-        suggestion = "田間(二林)"; // 預設去田裡
+        suggestion = "田間(二林)"; 
     } else if (currentLoc.includes("田間")) {
-        suggestion = "公司"; // 田裡出來通常回公司
+        suggestion = "公司"; 
     } else if (currentLoc.includes("工廠") || currentLoc.includes("冠南") || currentLoc.includes("佳美")) {
-        suggestion = "公司"; // 工廠出來通常回公司
+        suggestion = "公司"; 
     } else if (currentLoc === "冠南" || currentLoc === "佳美" || currentLoc === "光泉") {
         suggestion = "公司";
     }
@@ -554,7 +648,7 @@ function querySummary(btnElement) {
 
 function toggleButtons(disabled) {
     var btns = document.querySelectorAll('button');
-    btns.forEach(function(btn) { if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm') && !btn.classList.contains('btn-close-summary') && !btn.classList.contains('btn-theme')) { btn.disabled = disabled; } });
+    btns.forEach(function(btn) { if(!btn.classList.contains('dash-btn') && !btn.classList.contains('btn-cancel') && !btn.classList.contains('btn-confirm') && !btn.classList.contains('btn-close-summary') && !btn.classList.contains('btn-theme') && !btn.classList.contains('tab-btn')) { btn.disabled = disabled; } });
 }
 
 // --- 初始化 ---
@@ -579,6 +673,11 @@ window.onload = function() {
           if(!found) { locSelect.value = 'custom'; document.getElementById('location-custom').value = lastDest; checkCustomInput('location'); } 
       }
       checkTaskCustom();
+
+      // ★ 採收系統初始化
+      document.getElementById('harvest-date').valueAsDate = new Date();
+      loadHistory('harvest-team', 'vds_history_harvest_team');
+
   } catch(e) { console.warn("Init history error:", e); }
   
   liff.init({ liffId: LIFF_ID }).then(function() {
@@ -648,7 +747,7 @@ function updateDriverSelect(lineName) {
             if (driverSelect.options[i].value === savedDriver) { 
                 driverSelect.selectedIndex = i; 
                 var statusDiv = document.getElementById('status'); 
-                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v62.0)"; 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v62.1 整合版)"; 
                 restoreSelection('plate', 'vds_plate'); 
                 return; 
             } 
@@ -657,7 +756,7 @@ function updateDriverSelect(lineName) {
 }
 
 // ==========================================
-// ★ 核心送出邏輯 (包含智慧跳趟) ★
+// ★ 核心送出邏輯 (司機打卡) ★
 // ==========================================
 function processClick(actionType) {
   try {
@@ -843,6 +942,94 @@ function showToast(text) {
     x.innerHTML = text;
     x.className = "show";
     setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+}
+
+// ==========================================
+// ★ 採收回報邏輯 (新增寫入 Sheet 的 API 呼叫) ★
+// ==========================================
+function submitHarvest() {
+    var date = document.getElementById('harvest-date').value;
+    var teamSelect = document.getElementById('harvest-team');
+    var team = teamSelect.value === 'custom' ? document.getElementById('harvest-team-custom').value.trim() : teamSelect.value;
+    var area = document.getElementById('harvest-area').value.trim();
+    
+    var safeP = document.getElementById('safe-pieces').value || "0";
+    var safeB = document.getElementById('safe-boxes').value || "0";
+    var nocertP = document.getElementById('nocert-pieces').value || "0";
+    var nocertB = document.getElementById('nocert-boxes').value || "0";
+
+    if (!date) return alert("❌ 請選擇採收日期！(Chọn ngày)");
+    if (!team) return alert("❌ 請選擇或輸入採收班別！(Chọn đội)");
+    if (!area) return alert("❌ 請輸入採收地數！(Nhập diện tích)");
+    
+    if (safeP === "0" && safeB === "0" && nocertP === "0" && nocertB === "0") {
+        return alert("⚠️ 請至少填寫一項產量(粒數或箱數)！(Nhập sản lượng)");
+    }
+
+    if (teamSelect.value === 'custom') saveHistory(team, 'vds_history_harvest_team');
+
+    document.getElementById('loading-mask').style.display = 'flex';
+    document.getElementById('loading-text').innerText = "資料傳送中...";
+
+    var messageText = `🥕採收回報\n` +
+                      `📅日期：${date}\n` +
+                      `🧑‍🌾班別：${team}\n` +
+                      `🗺️地數：${area}\n` +
+                      `---\n` +
+                      `🟢安全產量\n` +
+                      `👉 ${safeP} 粒 / ${safeB} 箱\n` +
+                      `🟡無產銷產量\n` +
+                      `👉 ${nocertP} 粒 / ${nocertB} 箱\n\n\u200B`;
+
+    // 準備傳給 GAS 的資料 (新增 action 為 "採收回報")
+    var payload = {
+        action: "採收回報",
+        date: date,
+        team: team,
+        area: area,
+        safePieces: safeP,
+        safeBoxes: safeB,
+        nocertPieces: nocertP,
+        nocertBoxes: nocertB
+    };
+
+    // 發送請求到 GAS
+    fetch(GAS_URL, {
+        method: 'POST',
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        redirect: "follow",
+        body: JSON.stringify(payload)
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if(data.result === "success") {
+            // GAS 寫入成功後，接著發送 LINE 訊息
+            if (typeof liff !== 'undefined' && liff.isInClient()) {
+                liff.sendMessages([{ type: 'text', text: messageText }])
+                .then(() => {
+                    document.getElementById('loading-mask').style.display = 'none';
+                    showToast("✅ 回報並寫入成功！");
+                    setTimeout(() => liff.closeWindow(), 1500);
+                })
+                .catch((err) => {
+                    document.getElementById('loading-mask').style.display = 'none';
+                    alert("資料已寫入表格，但發送 LINE 訊息失敗: " + err);
+                });
+            } else {
+                document.getElementById('loading-mask').style.display = 'none';
+                console.log(messageText);
+                showToast("✅ 網頁測試：資料已寫入表格，訊息已生成");
+            }
+        } else {
+            document.getElementById('loading-mask').style.display = 'none';
+            alert("❌ 寫入 Google Sheet 失敗：" + data.msg);
+        }
+    })
+    .catch(function(error) {
+        document.getElementById('loading-mask').style.display = 'none';
+        console.error("Error:", error);
+        alert("⚠️ 連線失敗，請檢查網路或稍後再試。");
+    });
 }
 </script>
 </body>
