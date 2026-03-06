@@ -7,7 +7,7 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     /* ==========================================
-       ★ V64.0 主題變數與高對比設定 (雙語強化排版版) ★
+       ★ V64.1 主題變數與高對比設定 (平均產量計算版) ★
        ========================================== */
     :root {
         --bg-color: #f8f9fa;
@@ -42,18 +42,24 @@
         --divider: #000000;
     }
 
+    /* 基礎排版 */
     body { background-color: var(--bg-color); padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: var(--text-color); min-height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; margin: 0; transition: background-color 0.3s, color 0.3s; }
     .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; border: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s; }
     
+    /* 標題與標籤 */
     h3 { color: #198754; text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 24px; }
     .title-harvest { color: #d97706; }
     .sub-title { font-size: 14px; color: var(--sub-text); font-weight: 400; text-align: center; display: block; margin-bottom: 20px; }
     label { display: block; font-weight: 700; margin-top: 15px; margin-bottom: 6px; font-size: 16px; color: var(--label-color); transition: color 0.3s; }
     label span { font-weight: 400; color: var(--sub-text); font-size: 13px; margin-left: 5px; }
     
+    /* 介面控制按鈕 (主題切換) */
     .theme-toggle-area { display: flex; justify-content: flex-end; margin-bottom: -10px; }
     .btn-theme { width: 50px; height: 40px !important; background: #6c757d; border-radius: 8px; font-size: 20px; border: none; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
+    /* ==========================================
+       ★ 頁籤切換樣式 (新增) ★
+       ========================================== */
     .tab-container { display: flex; gap: 5px; background: var(--divider); padding: 5px; border-radius: 12px; margin-top: 10px; margin-bottom: 20px; }
     .tab-btn { flex: 1; height: 50px !important; border-radius: 8px; background: transparent; color: var(--sub-text); font-weight: bold; font-size: 16px; border: none; box-shadow: none; transition: 0.2s; cursor: pointer; }
     .tab-btn.active-driver { background: var(--card-bg); color: #198754; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -62,11 +68,12 @@
     .form-section.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
+    /* 輸入框 (加大字體) */
     select, input[type="text"], input[type="password"], input[type="date"], input[type="number"] { 
-        width: 100%; height: 55px; 
-        font-size: 18px; 
+        width: 100%; height: 55px; /* 加高 */
+        font-size: 18px; /* 加大字體 */
         font-weight: 600; 
-        border: 2px solid var(--border-color); 
+        border: 2px solid var(--border-color); /* 加粗邊框 */
         border-radius: 10px; 
         background-color: var(--input-bg); 
         padding-left: 12px; appearance: none; outline: none; transition: border-color 0.2s, background-color 0.3s, color 0.3s; 
@@ -86,6 +93,7 @@
     [data-theme='dark'] .custom-input { background-color: #332b00 !important; }
     #plate-custom { text-transform: uppercase; }
     
+    /* 選項按鈕 (作業內容) */
     .radio-group { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
     .radio-option { flex: 1; position: relative; min-width: 80px; }
     .radio-option input { position: absolute; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
@@ -95,6 +103,7 @@
     .radio-text-main { font-size: 16px; }
     .radio-text-sub { font-size: 11px; margin-top: 1px; }
 
+    /* 採收數量輸入區 */
     .qty-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
     .qty-card { background: var(--input-bg); border: 2px solid var(--border-color); padding: 12px; border-radius: 12px; box-sizing: border-box; }
     .qty-card:focus-within { border-color: #d97706; }
@@ -102,15 +111,17 @@
     .qty-title span { font-size: 11px; font-weight: 400; color: var(--sub-text); margin-top: 2px;}
     .qty-card input { margin-bottom: 8px; height: 50px; text-align: center; padding-left: 0; }
 
+    /* 動態農地區塊專用樣式 */
     .field-block { position: relative; margin-top: 15px; padding-top: 10px; border-top: 2px dashed var(--divider); }
-    .remove-btn { position: absolute; right: 0; top: 15px; background: #dc3545; color: white; border: none; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: bold; height: auto !important; width: auto !important; box-shadow: none; cursor: pointer; }
+    .remove-btn { position: absolute; right: 0; top: 15px; background: #dc3545; color: white; border: none; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: bold; height: auto !important; width: auto !important; box-shadow: none; cursor: pointer;}
     .btn-add-field { background: #f8f9fa; border: 2px dashed #d97706; color: #d97706; width: 100%; height: 50px !important; margin-top: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer;}
     [data-theme='dark'] .btn-add-field { background: #121212; }
 
     .divider { height: 1px; background: var(--divider); margin: 20px 0 10px 0; transition: background-color 0.3s; }
     
+    /* 底部大按鈕 (加大高度) */
     .btn-row { display: flex; gap: 10px; margin-top: 25px; }
-    button { flex: 1; height: 75px !important; border: none; border-radius: 15px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.1s; font-family: inherit; }
+    button { flex: 1; height: 75px !important; /* 加高按鈕，讓戴手套更好按 */ border: none; border-radius: 15px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.1s; font-family: inherit; }
     button:active { transform: scale(0.96); box-shadow: 0 2px 3px rgba(0,0,0,0.2); }
     button:disabled { background: #ced4da !important; cursor: not-allowed; opacity: 0.7; }
     .btn-go { background: linear-gradient(135deg, #198754, #146c43); } 
@@ -120,6 +131,7 @@
     .btn-text-main { font-size: 20px; font-weight: 800; line-height: 1.1; }
     .btn-text-sub { font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500; }
     
+    /* 載入遮罩與其他元件 */
     #loading-mask { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s; }
     [data-theme='dark'] #loading-mask { background: rgba(0,0,0,0.95); }
     .spinner { width: 40px; height: 40px; border: 4px solid var(--border-color); border-top: 4px solid #198754; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
@@ -127,6 +139,7 @@
     #loading-text { font-size: 16px; color: #198754; font-weight: bold; }
     #status { text-align:center; margin-top:15px; color:var(--sub-text); font-size:12px; }
     
+    /* 戰情室控制面板 */
     #dashboard-toggle { text-align: center; margin-top: 20px; cursor: pointer; color: var(--sub-text); font-size: 13px; text-decoration: underline; padding: 10px; }
     #dashboard-panel { display: none; background: #2c3e50; border-radius: 16px; padding: 15px; margin-top: 15px; color: white; }
     .dash-title { color: #ffc107; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 16px; border-bottom: 1px solid #495057; padding-bottom: 8px; }
@@ -135,6 +148,7 @@
     .dash-btn span { font-size: 18px; }
     .dash-btn-ceo { grid-column: span 2; background: linear-gradient(135deg, #1A237E, #303F9F); border: 1px solid #FFD700; color: #FFD700; font-weight: 900; }
     
+    /* 密碼視窗與 Toast */
     #password-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
     .pwd-card { background: var(--card-bg); padding: 20px; border-radius: 12px; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     .pwd-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: var(--text-color); }
@@ -149,6 +163,7 @@
     #manual-area { display: none; margin-top: 15px; padding: 12px; background: #fff3cd; border: 1px dashed #ffc107; border-radius: 12px; text-align: center; }
     #manual-btn { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 50px; background: linear-gradient(135deg, #198754, #146c43); color: white; text-decoration: none; border-radius: 10px; margin-top: 8px; box-shadow: 0 3px 6px rgba(25, 135, 84, 0.2); }
     
+    /* 總結視窗 */
     #summary-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center; }
     .summary-card { background: var(--card-bg); width: 85%; max-width: 350px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out; }
     .summary-header { background: linear-gradient(135deg, #1A237E, #303F9F); color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; }
@@ -445,7 +460,7 @@
       </div>
   </div>
 
-  <div id="status">系統就緒 v64.0 (排版強化版) </div>
+  <div id="status">系統就緒 v64.1 (平均產量計算版) </div>
 </div>
 
 <script>
@@ -598,7 +613,6 @@ function predictDestination() {
     }
 }
 
-
 function querySummary(btnElement) {
     var driverSelect = document.getElementById('driver'); 
     var driver = driverSelect ? (driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value) : "";
@@ -750,7 +764,7 @@ function updateDriverSelect(lineName) {
             if (driverSelect.options[i].value === savedDriver) { 
                 driverSelect.selectedIndex = i; 
                 var statusDiv = document.getElementById('status'); 
-                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v64.0 整合版)"; 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v64.1 整合版)"; 
                 restoreSelection('plate', 'vds_plate'); 
                 return; 
             } 
@@ -982,15 +996,15 @@ function addField() {
 }
 
 // ==========================================
-// ★ 採收回報邏輯 (高級排版版 + 自動計算包數) ★
+// ★ 採收回報邏輯 (高級排版版 + 自動計算平均包數) ★
 // ==========================================
 function submitHarvest() {
     var date = document.getElementById('harvest-date').value;
     var teamSelect = document.getElementById('harvest-team');
     var team = teamSelect.value === 'custom' ? document.getElementById('harvest-team-custom').value.trim() : teamSelect.value;
 
-    if (!date) return alert("❌ 請選擇採收日期！(Chọn ngày)");
-    if (!team) return alert("❌ 請選擇或輸入採收班別！(Chọn đội)");
+    if (!date) return alert("❌ 請選擇採收日期！\n(Chọn ngày)");
+    if (!team) return alert("❌ 請選擇或輸入採收班別！\n(Chọn đội)");
 
     // 收集所有農地資料
     const fieldBlocks = document.querySelectorAll('.field-block');
@@ -1011,15 +1025,20 @@ function submitHarvest() {
             alert(`⚠️ 農地 ${fid} 必須至少填寫一項產量！\n(Nhập sản lượng)`); hasError = true; return;
         }
 
-        // ★ 自動計算換算成包數 (1粒750KG, 1箱32KG, 1包60KG)
+        // ★ 自動計算：平均一分地產量(包) = 總公斤數 / 60 / 地數
         let totalKg = (sp * 750) + (sb * 32) + (np * 750) + (nb * 32);
-        let totalBags = (totalKg / 60).toFixed(1); // 取小數點後1位
-        if (totalBags.endsWith(".0")) totalBags = totalBags.slice(0, -2); // 如果是整數，去掉 .0
+        let areaFloat = parseFloat(area);
+        let avgBags = "0";
+        
+        if (areaFloat > 0) {
+            avgBags = ((totalKg / 60) / areaFloat).toFixed(1);
+            if (avgBags.endsWith(".0")) avgBags = avgBags.slice(0, -2); // 如果是整數去掉小數點
+        }
 
         fieldsData.push({
             fieldId: fid, area: area,
             safePieces: sp, safeBoxes: sb, nocertPieces: np, nocertBoxes: nb,
-            calculatedBags: totalBags // 存入包數
+            calculatedBags: avgBags // 存入平均包數
         });
     });
 
@@ -1035,7 +1054,7 @@ function submitHarvest() {
     // ==========================================
     // ★ LINE 聊天室「高級排版」 ★
     // ==========================================
-    // 轉換日期格式 2023-10-27 => 2023/10/27 以求美觀
+    // 轉換日期格式 2023-10-27 => 2023/10/27
     var niceDate = date.replace(/-/g, "/");
     var messageText = `━━━━━━━━━━━━\n` +
                       `🚜 【 採收作業回報 】 🥕\n` +
@@ -1047,7 +1066,9 @@ function submitHarvest() {
         messageText += `━━━━━━━━━━━━\n`;
         messageText += `📍 農地：${f.fieldId}\n`;
         messageText += `📏 面積：${f.area} 分\n`;
-        messageText += `📦 預估產量：${f.calculatedBags} 包\n`;
+        
+        // ★ 更改為平均產量
+        messageText += `📦 均量：${f.calculatedBags} 包/分\n`;
         messageText += `------------------------\n`;
         
         if(f.safePieces !== 0 || f.safeBoxes !== 0) {
