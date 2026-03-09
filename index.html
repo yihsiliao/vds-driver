@@ -485,13 +485,13 @@
 
   </div>
 
-  <div id="status">系統就緒 v65.1 (雙系統整合防呆版) </div>
+  <div id="status">系統就緒 v66 (雙系統整合版) </div>
 </div>
 
 <script>
 // ★ 請確認您的設定 ★
 const LIFF_ID = "2008961063-iwAJvIC3";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxTGWHB7VC5loclFXRNlyc7lQyMpAFyeRbF_GB7nvynlVH48MieTyS8A0yFdn7e2jcA/exec"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyD0PoIElZYUiD8Es8Jzo9cft4gKYWIWtM-ejjED3UQJcv8YwyF7SbhaPRajqyC0WsQ/exec"; 
 const ADMIN_PWD = "8888"; 
 
 // --- 頁籤切換邏輯 ---
@@ -1226,8 +1226,7 @@ function submitHarvest() {
 
     var payload = { action: "採收回報_多筆", date: date, team: team, isCorrection: isCorrection, fields: fieldsData };
 
-    /*
-    fetch(GAS_URL, {
+   fetch(GAS_URL, {
         method: 'POST',
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         redirect: "follow",
@@ -1236,7 +1235,6 @@ function submitHarvest() {
     .then(response => response.json())
     .then(data => {
         if(data.result === "success") {
-    */
             if (typeof liff !== 'undefined' && liff.isInClient()) {
                 liff.sendMessages([{ type: 'text', text: messageText }])
                 .then(() => {
@@ -1254,7 +1252,6 @@ function submitHarvest() {
                 showToast("✅ 網頁測試：訊息已生成");
                 alert("將送出以下內容：\n\n" + messageText);
             }
-    /*
         } else {
             document.getElementById('loading-mask').style.display = 'none';
             alert("❌ 寫入 Google Sheet 失敗：" + data.msg);
@@ -1265,7 +1262,6 @@ function submitHarvest() {
         console.error("Error:", error);
         alert("⚠️ 連線失敗，請檢查網路或稍後再試。");
     });
-    */
 }
 </script>
 </body>
