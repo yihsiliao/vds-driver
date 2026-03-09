@@ -470,7 +470,7 @@
 
   </div>
 
-  <div id="status">系統就緒 v68.0 (單一總均量折合版) </div>
+  <div id="status">系統就緒 v68.0 (單一總均量版) </div>
 </div>
 
 <script>
@@ -921,7 +921,7 @@ function submitHarvest() {
 
     let confirmMsg = isCorrection ? "⚠️ 【注意：此為更正紀錄】\n您即將送出以下更正資料：\n\n" : "您即將送出以下採收資料：\n\n";
     fieldsData.forEach(f => { 
-        confirmMsg += `📍 ${f.fieldId} (${f.area} 分) ➔ 總均量 ${f.avgBags} 包/分 (折合)\n`; 
+        confirmMsg += `📍 ${f.fieldId} (${f.area} 分) ➔ 總均量 ${f.avgBags} 包/分 \n`; 
     });
     confirmMsg += "\n請問數字確認無誤嗎？\n(Xác nhận gửi?)";
 
