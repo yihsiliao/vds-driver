@@ -588,11 +588,19 @@ function querySummary(btnElement) {
     fetch(GAS_URL, { method: 'POST', headers: { "Content-Type": "text/plain;charset=utf-8" }, redirect: "follow", body: JSON.stringify(payload) })
     .then(function(response) { return response.json(); })
     .then(function(json) {
-        if (json.summary) { document.getElementById('summary-content').innerText = json.summary; document.getElementById('summary-modal').style.display = 'flex'; } else { alert("⚠️ 查無資料或系統無回應。"); }
+        if (json.summary) { 
+            document.getElementById('summary-content').innerText = json.summary; 
+            document.getElementById('summary-modal').style.display = 'flex'; 
+            
+            // ★ 將小結傳送到 LINE 聊天室 ★
+            if (typeof liff !== 'undefined' && liff.isInClient()) {
+                liff.sendMessages([{ type: 'text', text: json.summary }])
+                .then(() => { showToast("✅ 已將小結傳送至聊天室！"); })
+                .catch((err) => { console.error("發送小結至聊天室失敗", err); });
+            }
+        } 
+        else { alert("⚠️ " + date + " 查無採收資料。"); }
     })
-    .catch(function(error) { console.error("Error:", error); alert("❌ 連線失敗，請檢查網路或稍後再試。"); })
-    .finally(function() { btnElement.innerHTML = originalHTML; btnElement.disabled = false; btnElement.style.opacity = "1"; });
-}
 
 function queryHarvestSummary(btnElement) {
     var date = document.getElementById('harvest-date').value;
@@ -896,20 +904,27 @@ function submitHarvest() {
             alert(`⚠️ 農地 ${fid} 必須至少填寫一項產量！\n(Nhập sản lượng)`); hasError = true; return; 
         }
 
-        // ★ 核心折合邏輯 ★
+        // ★ 核心折合邏輯 (動態判斷粒數或包仔) ★
         let areaFloat = parseFloat(area);
+        let avgPieces = "0";
         let avgBags = "0";
+        let displayAvgText = "0";
 
         if (areaFloat > 0) {
-            let totalKg = (totalPieces * 750) + 
-                          ((sgl + ngl) * 20) + 
-                          ((sb + nb) * 32) + 
-                          ((xtop + xmid + xbot) * 64);
-            let totalBagsVal = totalKg / 64;
+            let totalBoxKg = ((sgl + ngl) * 20) + ((sb + nb) * 32) + ((xtop + xmid + xbot) * 64);
             
-            if (totalBagsVal > 0) {
+            if (totalBoxKg > 0) {
+                // 有任何箱子/綠葉/包仔，全部折合成包數
+                let totalKg = (totalPieces * 750) + totalBoxKg;
+                let totalBagsVal = totalKg / 64;
                 avgBags = (totalBagsVal / areaFloat).toFixed(1);
                 if (avgBags.endsWith(".0")) avgBags = avgBags.slice(0, -2);
+                displayAvgText = `${avgBags} 包/分 (折合)`;
+            } else if (totalPieces > 0) {
+                // 單純只有粒數
+                avgPieces = (totalPieces / areaFloat).toFixed(1);
+                if (avgPieces.endsWith(".0")) avgPieces = avgPieces.slice(0, -2);
+                displayAvgText = `${avgPieces} 粒/分`;
             }
         }
 
@@ -919,7 +934,7 @@ function submitHarvest() {
             nocertPieces: np, nocertGL: ngl, nocertBoxes: nb, 
             xTop: xtop, xMid: xmid, xBot: xbot,
             ncTop: npTop, ncMid: npMid, ncBot: npBot,
-            avgBags: avgBags // 統一的折合總包數均量
+            avgPieces: avgPieces, avgBags: avgBags, displayAvgText: displayAvgText // 寫入動態文字
         });
     });
 
@@ -927,7 +942,7 @@ function submitHarvest() {
 
     let confirmMsg = isCorrection ? "⚠️ 【注意：此為更正紀錄】\n您即將送出以下更正資料：\n\n" : "您即將送出以下採收資料：\n\n";
     fieldsData.forEach(f => { 
-        confirmMsg += `📍 ${f.fieldId} (${f.area} 分) ➔ 總均量 ${f.avgBags} 包/分 \n`; 
+        confirmMsg += `📍 ${f.fieldId} (${f.area} 分) ➔ 均量 ${f.displayAvgText}\n`; 
     });
     confirmMsg += "\n請問數字確認無誤嗎？\n(Xác nhận gửi?)";
 
@@ -945,7 +960,7 @@ function submitHarvest() {
     messageText += `━━━━━━━━━━━━\n📅 日期：${niceDate}\n🧑‍🌾 班別：${team}\n`;
     
     fieldsData.forEach((f, idx) => {
-        messageText += `━━━━━━━━━━━━\n📍 農地：${f.fieldId}\n📏 面積：${f.area} 分\n📦 總均量：${f.avgBags} 包/分 (折合)\n------------------------\n`;
+        messageText += `━━━━━━━━━━━━\n📍 農地：${f.fieldId}\n📏 採收面積：${f.area} 分\n📦 平均產量：${f.displayAvgText}\n------------------------\n`;
         
         if(f.safePieces !== 0 || f.safeGL !== 0 || f.safeBoxes !== 0) { 
             messageText += `🟢 [安全]\n   ▸ ${f.safePieces} 粒 / ${f.safeGL} 綠葉 / ${f.safeBoxes} VDS箱\n`; 
