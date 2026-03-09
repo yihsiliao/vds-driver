@@ -179,8 +179,14 @@
   </div>
 
   <div class="tab-container">
-      <button class="tab-btn active-driver" id="tab-driver" onclick="switchTab('driver')">🚛 司機打卡</button>
-      <button class="tab-btn" id="tab-harvest" onclick="switchTab('harvest')">🥕 採收回報</button>
+      <button class="tab-btn active-driver" id="tab-driver" onclick="switchTab('driver')" style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2;">
+          <span>🚛 司機打卡</span>
+          <span style="font-size: 12px; font-weight: normal; margin-top: 2px;">Chấm công</span>
+      </button>
+      <button class="tab-btn" id="tab-harvest" onclick="switchTab('harvest')" style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2;">
+          <span>🥕 採收回報</span>
+          <span style="font-size: 12px; font-weight: normal; margin-top: 2px;">Báo cáo</span>
+      </button>
   </div>
 
   <div id="form-driver" class="form-section active">
