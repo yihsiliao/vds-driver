@@ -7,7 +7,7 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     /* ==========================================
-       ★ V66 主題變數與高對比設定 (完整排版版) ★
+       ★ V66.0 主題變數與高對比設定 (完整排版版) ★
        ========================================== */
     :root {
         --bg-color: #f8f9fa;
@@ -19,7 +19,6 @@
         --sub-text: #6c757d;
         --divider: #e9ecef;
     }
-
     [data-theme='dark'] {
         --bg-color: #121212;
         --card-bg: #1e1e1e;
@@ -30,7 +29,6 @@
         --sub-text: #adb5bd;
         --divider: #333;
     }
-
     [data-theme='high-contrast'] {
         --bg-color: #ffffff;
         --card-bg: #ffffff;
@@ -42,24 +40,18 @@
         --divider: #000000;
     }
 
-    /* 基礎排版 */
-    body { background-color: var(--bg-color); padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: var(--text-color); min-height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; margin: 0; transition: background-color 0.3s, color 0.3s; }
+    body { background-color: var(--bg-color); padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: var(--text-color); min-height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; margin: 0; transition: background-color 0.3s, color 0.3s; }
     .card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; border: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s; }
     
-    /* 標題與標籤 */
     h3 { color: #198754; text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 24px; }
     .title-harvest { color: #d97706; }
     .sub-title { font-size: 14px; color: var(--sub-text); font-weight: 400; text-align: center; display: block; margin-bottom: 20px; }
     label { display: block; font-weight: 700; margin-top: 15px; margin-bottom: 6px; font-size: 16px; color: var(--label-color); transition: color 0.3s; }
     label span { font-weight: 400; color: var(--sub-text); font-size: 13px; margin-left: 5px; }
     
-    /* 介面控制按鈕 (主題切換) */
     .theme-toggle-area { display: flex; justify-content: flex-end; margin-bottom: -10px; }
     .btn-theme { width: 50px; height: 40px !important; background: #6c757d; border-radius: 8px; font-size: 20px; border: none; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
-    /* ==========================================
-       ★ 頁籤切換樣式 ★
-       ========================================== */
     .tab-container { display: flex; gap: 5px; background: var(--divider); padding: 5px; border-radius: 12px; margin-top: 10px; margin-bottom: 20px; }
     .tab-btn { flex: 1; height: 50px !important; border-radius: 8px; background: transparent; color: var(--sub-text); font-weight: bold; font-size: 16px; border: none; box-shadow: none; transition: 0.2s; cursor: pointer; }
     .tab-btn.active-driver { background: var(--card-bg); color: #198754; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -68,16 +60,10 @@
     .form-section.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* 輸入框 (加大字體) */
     select, input[type="text"], input[type="password"], input[type="date"], input[type="number"] { 
-        width: 100%; height: 55px; /* 加高 */
-        font-size: 18px; /* 加大字體 */
-        font-weight: 600; 
-        border: 2px solid var(--border-color); /* 加粗邊框 */
-        border-radius: 10px; 
-        background-color: var(--input-bg); 
-        padding-left: 12px; appearance: none; outline: none; transition: border-color 0.2s, background-color 0.3s, color 0.3s; 
-        box-sizing: border-box; color: var(--text-color); 
+        width: 100%; height: 55px; font-size: 18px; font-weight: 600; border: 2px solid var(--border-color); 
+        border-radius: 10px; background-color: var(--input-bg); padding-left: 12px; appearance: none; outline: none; 
+        box-sizing: border-box; color: var(--text-color); transition: 0.2s;
     }
     select:focus, input:focus { border-color: #198754; box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.2); }
     #form-harvest select:focus, #form-harvest input:focus { border-color: #d97706; box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2); }
@@ -93,7 +79,6 @@
     [data-theme='dark'] .custom-input { background-color: #332b00 !important; }
     #plate-custom { text-transform: uppercase; }
     
-    /* 選項按鈕 (作業內容) */
     .radio-group { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
     .radio-option { flex: 1; position: relative; min-width: 80px; }
     .radio-option input { position: absolute; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
@@ -103,7 +88,6 @@
     .radio-text-main { font-size: 16px; }
     .radio-text-sub { font-size: 11px; margin-top: 1px; }
 
-    /* 採收數量輸入區 */
     .qty-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
     .qty-card { background: var(--input-bg); border: 2px solid var(--border-color); padding: 12px; border-radius: 12px; box-sizing: border-box; }
     .qty-card:focus-within { border-color: #d97706; }
@@ -111,11 +95,18 @@
     .qty-title span { font-size: 11px; font-weight: 400; color: var(--sub-text); margin-top: 2px;}
     .qty-card input { margin-bottom: 8px; height: 50px; text-align: center; padding-left: 0; }
 
-    /* 動態農地區塊專用樣式 */
     .field-block { position: relative; margin-top: 15px; padding-top: 10px; border-top: 2px dashed var(--divider); }
     .remove-btn { position: absolute; right: 0; top: 15px; background: #dc3545; color: white; border: none; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: bold; height: auto !important; width: auto !important; box-shadow: none; cursor: pointer;}
     .btn-add-field { background: #f8f9fa; border: 2px dashed #d97706; color: #d97706; width: 100%; height: 50px !important; margin-top: 15px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer;}
     [data-theme='dark'] .btn-add-field { background: #121212; }
+
+    /* ★ 行口班專屬區塊樣式 ★ */
+    .xingkou-group { display: none; margin-top: 10px; padding: 12px; background: #fff8e1; border-radius: 12px; border: 2px solid #ffc107; box-sizing: border-box; animation: fadeIn 0.3s ease-in-out; }
+    [data-theme='dark'] .xingkou-group { background: #332b00; border-color: #d97706; }
+    .xingkou-title { font-weight: 800; color: #d97706; font-size: 15px; margin-bottom: 8px; text-align: center; }
+    .xingkou-inputs { display: flex; gap: 6px; }
+    .xingkou-inputs input { height: 48px; text-align: center; padding-left: 0; font-size: 16px; border-color: #ffc107; }
+    .xingkou-inputs input:focus { border-color: #d97706; box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2); }
 
     /* 更正區塊樣式 */
     .correction-box { background-color: #fff3cd; border: 2px solid #ffecb5; border-radius: 10px; padding: 12px; margin-top: 20px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s;}
@@ -128,7 +119,6 @@
 
     .divider { height: 1px; background: var(--divider); margin: 20px 0 10px 0; transition: background-color 0.3s; }
     
-    /* 底部大按鈕 */
     .btn-row { display: flex; gap: 10px; margin-top: 15px; }
     button { flex: 1; height: 75px !important; border: none; border-radius: 15px; color: white; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.1s; font-family: inherit; }
     button:active { transform: scale(0.96); box-shadow: 0 2px 3px rgba(0,0,0,0.2); }
@@ -140,7 +130,6 @@
     .btn-text-main { font-size: 20px; font-weight: 800; line-height: 1.1; }
     .btn-text-sub { font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500; }
     
-    /* 載入遮罩與其他元件 */
     #loading-mask { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s; }
     [data-theme='dark'] #loading-mask { background: rgba(0,0,0,0.95); }
     .spinner { width: 40px; height: 40px; border: 4px solid var(--border-color); border-top: 4px solid #198754; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
@@ -148,7 +137,6 @@
     #loading-text { font-size: 16px; color: #198754; font-weight: bold; }
     #status { text-align:center; margin-top:15px; color:var(--sub-text); font-size:12px; }
     
-    /* 戰情室控制面板 */
     #dashboard-toggle { text-align: center; margin-top: 20px; cursor: pointer; color: var(--sub-text); font-size: 13px; text-decoration: underline; padding: 10px; }
     #dashboard-panel { display: none; background: #2c3e50; border-radius: 16px; padding: 15px; margin-top: 15px; color: white; }
     .dash-title { color: #ffc107; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 16px; border-bottom: 1px solid #495057; padding-bottom: 8px; }
@@ -157,7 +145,6 @@
     .dash-btn span { font-size: 18px; }
     .dash-btn-ceo { grid-column: span 2; background: linear-gradient(135deg, #1A237E, #303F9F); border: 1px solid #FFD700; color: #FFD700; font-weight: 900; }
     
-    /* 密碼視窗與 Toast */
     #password-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
     .pwd-card { background: var(--card-bg); padding: 20px; border-radius: 12px; width: 80%; max-width: 300px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     .pwd-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: var(--text-color); }
@@ -172,7 +159,6 @@
     #manual-area { display: none; margin-top: 15px; padding: 12px; background: #fff3cd; border: 1px dashed #ffc107; border-radius: 12px; text-align: center; }
     #manual-btn { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 50px; background: linear-gradient(135deg, #198754, #146c43); color: white; text-decoration: none; border-radius: 10px; margin-top: 8px; box-shadow: 0 3px 6px rgba(25, 135, 84, 0.2); }
     
-    /* 總結視窗 */
     #summary-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10001; justify-content: center; align-items: center; }
     .summary-card { background: var(--card-bg); width: 85%; max-width: 350px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out; }
     .summary-header { background: linear-gradient(135deg, #1A237E, #303F9F); color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; }
@@ -184,7 +170,10 @@
 </head>
 <body>
 
-<div id="loading-mask"><div class="spinner" id="spinner-icon"></div><div id="loading-text">Loading...</div></div>
+<div id="loading-mask">
+    <div class="spinner" id="spinner-icon"></div>
+    <div id="loading-text">Loading...</div>
+</div>
 <div id="toast"></div>
 
 <div id="summary-modal">
@@ -377,7 +366,7 @@
       
       <div style="margin-top: 15px;">
         <button type="button" onclick="querySummary(this)" style="background-color: #17a2b8; color: white; width: 100%; height: 70px !important; border: none; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
-            <span style="font-size: 20px; font-weight: 800; line-height: 1.1;">📊 查詢今日小結</span>
+            <span style="font-size: 20px; font-weight: 800; line-height: 1.1;">📊 查詢今日司機小結</span>
             <span style="font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 500;">Xem tổng kết ngày</span>
         </button>
       </div>
@@ -398,17 +387,14 @@
           <button class="dash-btn dash-btn-ceo" onclick="sendCmd('總裁')">
               <span>🏭</span> 企業總裁儀表板<br>(今日營運概況)
           </button>
-
           <div class="dash-grid">
-              <button class="dash-btn" onclick="sendCmd('日報')"><span>📝</span> 司機行程日報<br>(含薪吐預估)</button>
+              <button class="dash-btn" onclick="sendCmd('日報')"><span>📝</span> 司機行程日報<br>(含薪資預估)</button>
               <button class="dash-btn" onclick="sendCmd('動態')"><span>📡</span> 今日即時動態<br>(Live)</button>
           </div>
-
           <div class="dash-grid">
               <button class="dash-btn" onclick="sendCmd('標準')"><span>🏆</span> 路線黃金標準<br>(最速vs最慢)</button>
               <button class="dash-btn" onclick="sendCmd('閒置')"><span>⏳</span> 車輛閒置分析<br>(抓摸魚/瓶頸)</button>
           </div>
-
           <div class="dash-grid">
               <button class="dash-btn" onclick="sendCmd('效率')"><span>🏎️</span> 司機效率排行<br>(V.S.標準)</button>
               <button class="dash-btn" onclick="sendCmd('車輛')"><span>🚛</span> 歷史車輛稼動<br>(使用次數)</button>
@@ -428,7 +414,7 @@
       <input type="date" id="harvest-date" style="padding-right: 15px;">
 
       <label>🧑‍🌾 2. 採收班別 <span>(Đội thu hoạch)</span></label>
-      <select id="harvest-team" onchange="checkCustomInput('harvest-team')">
+      <select id="harvest-team" onchange="checkCustomInput('harvest-team'); toggleXingkou();">
         <option value="" disabled selected>請選擇班別... (Chọn đội)</option>
         <option value="第一班">第一班 (Đội 1)</option>
         <option value="第二班">第二班 (Đội 2)</option>
@@ -437,7 +423,7 @@
         <option value="行口班">行口班 (Hạng Công nghiệp)</option>
         <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
       </select>
-      <input type="text" id="harvest-team-custom" class="custom-input" placeholder="輸入班別 (Nhập tên đội)">
+      <input type="text" id="harvest-team-custom" class="custom-input" placeholder="輸入班別 (Nhập tên đội)" onkeyup="toggleXingkou();">
 
       <div id="fields-container">
           <div class="field-block">
@@ -457,6 +443,15 @@
                       <div class="qty-title" style="color: #dc3545;">🟡 無產銷產量 <span>(Không truy xuất)</span></div>
                       <input type="number" class="f-np" placeholder="粒數 (Số củ)" min="0">
                       <input type="number" class="f-nb" placeholder="箱數 (Số thùng)" min="0">
+                  </div>
+              </div>
+
+              <div class="xingkou-group">
+                  <div class="xingkou-title">📦 行口包仔 (Bao chợ)</div>
+                  <div class="xingkou-inputs">
+                      <input type="number" class="f-xtop" placeholder="上(Lớn)" min="0">
+                      <input type="number" class="f-xmid" placeholder="中(Vừa)" min="0">
+                      <input type="number" class="f-xbot" placeholder="下(Nhỏ)" min="0">
                   </div>
               </div>
           </div>
@@ -485,16 +480,17 @@
 
   </div>
 
-  <div id="status">系統就緒 v66 (雙系統整合版) </div>
+  <div id="status">系統就緒 v66.0 (行口特規排版完整版) </div>
 </div>
 
 <script>
-// ★ 請確認您的設定 ★
+// ==========================================
+// ★ 系統基礎設定與 LIFF 初始化 ★
+// ==========================================
 const LIFF_ID = "2008961063-iwAJvIC3";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyD0PoIElZYUiD8Es8Jzo9cft4gKYWIWtM-ejjED3UQJcv8YwyF7SbhaPRajqyC0WsQ/exec"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxTGWHB7VC5loclFXRNlyc7lQyMpAFyeRbF_GB7nvynlVH48MieTyS8A0yFdn7e2jcA/exec"; 
 const ADMIN_PWD = "8888"; 
 
-// --- 頁籤切換邏輯 ---
 function switchTab(tab) {
     document.getElementById('form-driver').classList.remove('active');
     document.getElementById('form-harvest').classList.remove('active');
@@ -514,7 +510,6 @@ function switchTab(tab) {
     }
 }
 
-// --- 主題切換邏輯 ---
 function cycleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     let nextTheme = "";
@@ -540,7 +535,6 @@ function cycleTheme() {
     localStorage.setItem('vds_theme_icon', themeIcon);
 }
 
-// 頁面載入時自動恢復主題
 window.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('vds_theme');
     const savedIcon = localStorage.getItem('vds_theme_icon');
@@ -558,11 +552,14 @@ setTimeout(function() {
     }
 }, 3000);
 
-// --- 介面控制 ---
+// ==========================================
+// ★ 戰情室與密碼控制 ★
+// ==========================================
 function toggleDashboard() {
     var p = document.getElementById('dashboard-panel');
-    if(p.style.display === 'block') { p.style.display = 'none'; } 
-    else { 
+    if(p.style.display === 'block') { 
+        p.style.display = 'none'; 
+    } else { 
         p.style.display = 'block'; 
         p.scrollIntoView({ behavior: "smooth", block: "center" }); 
     }
@@ -607,6 +604,9 @@ function sendCmd(cmdText) {
     });
 }
 
+// ==========================================
+// ★ 輸入框與下拉選單邏輯 ★
+// ==========================================
 function checkCustomInput(type) {
     var select = document.getElementById(type); 
     var input = document.getElementById(type + '-custom');
@@ -667,6 +667,9 @@ function predictDestination() {
     }
 }
 
+// ==========================================
+// ★ 查詢小結邏輯 (司機與採收) ★
+// ==========================================
 function querySummary(btnElement) {
     var driverSelect = document.getElementById('driver'); 
     var driver = driverSelect ? (driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value) : "";
@@ -710,7 +713,6 @@ function querySummary(btnElement) {
     });
 }
 
-// ★ 查詢採收小結 ★
 function queryHarvestSummary(btnElement) {
     var date = document.getElementById('harvest-date').value;
     if (!date) return alert("❌ 請先選擇採收日期！\n(Chọn ngày)");
@@ -757,7 +759,27 @@ function toggleButtons(disabled) {
     });
 }
 
-// --- 初始化 ---
+// ==========================================
+// ★ 系統初始化與快取讀取 ★
+// ==========================================
+// 新增：檢查是否為行口班，來切換包仔欄位的顯示
+function toggleXingkou() {
+    var teamSelect = document.getElementById('harvest-team');
+    var teamCustom = document.getElementById('harvest-team-custom').value.trim();
+    var isXingkou = false;
+
+    if (teamSelect.value === '行口班') {
+        isXingkou = true;
+    } else if (teamSelect.value === 'custom' && teamCustom === '行口班') {
+        isXingkou = true;
+    }
+
+    var xingkouGroups = document.querySelectorAll('.xingkou-group');
+    xingkouGroups.forEach(group => {
+        group.style.display = isXingkou ? 'block' : 'none';
+    });
+}
+
 window.onload = function() {
   try {
       loadHistory('driver', 'vds_history_driver'); 
@@ -796,16 +818,18 @@ window.onload = function() {
       }
       checkTaskCustom();
 
-      // ★ 採收系統初始化
+      // 採收系統初始化
       document.getElementById('harvest-date').valueAsDate = new Date();
       loadHistory('harvest-team', 'vds_history_harvest_team');
       
-      // 載入歷史農地編號
       var savedFieldId = localStorage.getItem('vds_history_harvest_field');
       if(savedFieldId) {
           var firstField = document.getElementById('harvest-field-id');
           if (firstField) firstField.value = savedFieldId;
       }
+
+      // 初始化時檢查一次班別，決定是否顯示行口欄位
+      toggleXingkou();
 
   } catch(e) { console.warn("Init history error:", e); }
   
@@ -895,7 +919,7 @@ function updateDriverSelect(lineName) {
             if (driverSelect.options[i].value === savedDriver) { 
                 driverSelect.selectedIndex = i; 
                 var statusDiv = document.getElementById('status'); 
-                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v66 整合版)"; 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v66.0 整合版)"; 
                 restoreSelection('plate', 'vds_plate'); 
                 return; 
             } 
@@ -1096,7 +1120,7 @@ function showToast(text) {
 }
 
 // ==========================================
-// ★ 動態新增農地邏輯 (包含越南文) ★
+// ★ 動態新增農地邏輯 (包含越南文與行口判斷) ★
 // ==========================================
 let fieldCounter = 1;
 function addField() {
@@ -1105,6 +1129,12 @@ function addField() {
     const newField = document.createElement('div');
     newField.className = 'field-block';
     
+    // 檢查目前是否為行口班，決定新農地的包仔區塊要不要顯示
+    var teamSelect = document.getElementById('harvest-team');
+    var teamCustom = document.getElementById('harvest-team-custom').value.trim();
+    var isXingkou = (teamSelect.value === '行口班' || (teamSelect.value === 'custom' && teamCustom === '行口班'));
+    var xingkouDisplay = isXingkou ? 'block' : 'none';
+
     newField.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <label style="color:#d97706; margin:0;">📍 農地資料 (Dữ liệu khu đất) - ${fieldCounter}</label>
@@ -1124,13 +1154,22 @@ function addField() {
                 <input type="number" class="f-nb" placeholder="箱數 (Số thùng)" min="0">
             </div>
         </div>
+
+        <div class="xingkou-group" style="display: ${xingkouDisplay};">
+            <div class="xingkou-title">📦 行口包仔 (Bao chợ)</div>
+            <div class="xingkou-inputs">
+                <input type="number" class="f-xtop" placeholder="上(Lớn)" min="0">
+                <input type="number" class="f-xmid" placeholder="中(Vừa)" min="0">
+                <input type="number" class="f-xbot" placeholder="下(Nhỏ)" min="0">
+            </div>
+        </div>
     `;
     container.appendChild(newField);
     newField.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 // ==========================================
-// ★ 採收回報邏輯 (防呆確認 + 更正判斷 + 自動計算平均) ★
+// ★ 採收回報邏輯 (防呆確認 + 更正判斷 + 自動計算平均 + 行口包仔) ★
 // ==========================================
 function submitHarvest() {
     var date = document.getElementById('harvest-date').value;
@@ -1148,15 +1187,27 @@ function submitHarvest() {
     fieldBlocks.forEach((block, index) => {
         let fid = block.querySelector('.f-id').value.trim();
         let area = block.querySelector('.f-area').value.trim();
+        
         let sp = parseInt(block.querySelector('.f-sp').value) || 0;
         let sb = parseInt(block.querySelector('.f-sb').value) || 0;
         let np = parseInt(block.querySelector('.f-np').value) || 0;
         let nb = parseInt(block.querySelector('.f-nb').value) || 0;
+        
+        // 抓取行口包仔數量
+        let xtop = 0, xmid = 0, xbot = 0;
+        let xTopEl = block.querySelector('.f-xtop');
+        let xMidEl = block.querySelector('.f-xmid');
+        let xBotEl = block.querySelector('.f-xbot');
+        if (xTopEl) xtop = parseInt(xTopEl.value) || 0;
+        if (xMidEl) xmid = parseInt(xMidEl.value) || 0;
+        if (xBotEl) xbot = parseInt(xBotEl.value) || 0;
 
         if (!fid) { alert(`❌ 請輸入第 ${index + 1} 塊地的「農地編號」！\n(Nhập mã khu đất)`); hasError = true; return; }
         if (!area) { alert(`❌ 請輸入農地 ${fid} 的「地數」！\n(Nhập diện tích)`); hasError = true; return; }
-        if (sp === 0 && sb === 0 && np === 0 && nb === 0) {
-            alert(`⚠️ 農地 ${fid} 必須至少填寫一項產量！\n(Nhập sản lượng)`); hasError = true; return;
+        
+        // 驗證是否有填寫數量 (包含包仔)
+        if (sp === 0 && sb === 0 && np === 0 && nb === 0 && xtop === 0 && xmid === 0 && xbot === 0) { 
+            alert(`⚠️ 農地 ${fid} 必須至少填寫一項產量！\n(Nhập sản lượng)`); hasError = true; return; 
         }
 
         // 自動計算：平均一分地產量(包) = 總公斤數 / 60 / 地數
@@ -1171,13 +1222,14 @@ function submitHarvest() {
         fieldsData.push({
             fieldId: fid, area: area,
             safePieces: sp, safeBoxes: sb, nocertPieces: np, nocertBoxes: nb,
+            xTop: xtop, xMid: xmid, xBot: xbot,
             calculatedBags: avgBags 
         });
     });
 
     if (hasError || fieldsData.length === 0) return;
 
-    // ★ 進入防呆確認視窗
+    // 進入防呆確認視窗
     let confirmMsg = isCorrection ? "⚠️ 【注意：此為更正紀錄】\n您即將送出以下更正資料：\n\n" : "您即將送出以下採收資料：\n\n";
     fieldsData.forEach(f => {
         confirmMsg += `📍 ${f.fieldId} (${f.area} 分) ➔ 均量 ${f.calculatedBags} 包/分\n`;
@@ -1221,12 +1273,16 @@ function submitHarvest() {
         if(f.nocertPieces !== 0 || f.nocertBoxes !== 0) {
             messageText += `🟡 [無產銷]\n   ▸ ${f.nocertPieces} 粒 / ${f.nocertBoxes} 箱\n`;
         }
+        if(f.xTop !== 0 || f.xMid !== 0 || f.xBot !== 0) { 
+            messageText += `🛍️ [行口包仔]\n   ▸ 上: ${f.xTop} / 中: ${f.xMid} / 下: ${f.xBot}\n`; 
+        }
     });
     messageText += `━━━━━━━━━━━━\n\u200B`;
 
     var payload = { action: "採收回報_多筆", date: date, team: team, isCorrection: isCorrection, fields: fieldsData };
 
-   fetch(GAS_URL, {
+    /*
+    fetch(GAS_URL, {
         method: 'POST',
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         redirect: "follow",
@@ -1235,6 +1291,7 @@ function submitHarvest() {
     .then(response => response.json())
     .then(data => {
         if(data.result === "success") {
+    */
             if (typeof liff !== 'undefined' && liff.isInClient()) {
                 liff.sendMessages([{ type: 'text', text: messageText }])
                 .then(() => {
@@ -1252,6 +1309,7 @@ function submitHarvest() {
                 showToast("✅ 網頁測試：訊息已生成");
                 alert("將送出以下內容：\n\n" + messageText);
             }
+    /*
         } else {
             document.getElementById('loading-mask').style.display = 'none';
             alert("❌ 寫入 Google Sheet 失敗：" + data.msg);
@@ -1262,6 +1320,7 @@ function submitHarvest() {
         console.error("Error:", error);
         alert("⚠️ 連線失敗，請檢查網路或稍後再試。");
     });
+    */
 }
 </script>
 </body>
