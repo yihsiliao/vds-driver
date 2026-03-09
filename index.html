@@ -574,6 +574,9 @@ function predictDestination() {
     }
 }
 
+// ==========================================
+// ★ 司機打卡查詢小結 (保持原樣，不傳LINE) ★
+// ==========================================
 function querySummary(btnElement) {
     var driverSelect = document.getElementById('driver'); 
     var driver = driverSelect ? (driverSelect.value === 'custom' ? document.getElementById('driver-custom').value : driverSelect.value) : "";
@@ -591,17 +594,17 @@ function querySummary(btnElement) {
         if (json.summary) { 
             document.getElementById('summary-content').innerText = json.summary; 
             document.getElementById('summary-modal').style.display = 'flex'; 
-            
-            // ★ 將小結傳送到 LINE 聊天室 ★
-            if (typeof liff !== 'undefined' && liff.isInClient()) {
-                liff.sendMessages([{ type: 'text', text: json.summary }])
-                .then(() => { showToast("✅ 已將小結傳送至聊天室！"); })
-                .catch((err) => { console.error("發送小結至聊天室失敗", err); });
-            }
-        } 
-        else { alert("⚠️ " + date + " 查無採收資料。"); }
+        } else { 
+            alert("⚠️ 查無資料或系統無回應。"); 
+        }
     })
+    .catch(function(error) { console.error("Error:", error); alert("❌ 連線失敗，請檢查網路或稍後再試。"); })
+    .finally(function() { btnElement.innerHTML = originalHTML; btnElement.disabled = false; btnElement.style.opacity = "1"; });
+}
 
+// ==========================================
+// ★ 採收查詢小結 (正確加上傳送 LINE 聊天室功能) ★
+// ==========================================
 function queryHarvestSummary(btnElement) {
     var date = document.getElementById('harvest-date').value;
     if (!date) return alert("❌ 請先選擇採收日期！\n(Chọn ngày)");
@@ -615,7 +618,17 @@ function queryHarvestSummary(btnElement) {
     fetch(GAS_URL, { method: 'POST', headers: { "Content-Type": "text/plain;charset=utf-8" }, redirect: "follow", body: JSON.stringify(payload) })
     .then(function(response) { return response.json(); })
     .then(function(json) {
-        if (json.summary) { document.getElementById('summary-content').innerText = json.summary; document.getElementById('summary-modal').style.display = 'flex'; } 
+        if (json.summary) { 
+            document.getElementById('summary-content').innerText = json.summary; 
+            document.getElementById('summary-modal').style.display = 'flex'; 
+            
+            // ★ 將採收小結傳送到 LINE 聊天室 ★
+            if (typeof liff !== 'undefined' && liff.isInClient()) {
+                liff.sendMessages([{ type: 'text', text: json.summary }])
+                .then(() => { showToast("✅ 已將小結傳送至聊天室！"); })
+                .catch((err) => { console.error("發送小結至聊天室失敗", err); });
+            }
+        } 
         else { alert("⚠️ " + date + " 查無採收資料。"); }
     })
     .catch(function(error) { console.error("Error:", error); alert("❌ 連線失敗，請檢查網路。"); })
