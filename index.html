@@ -7,7 +7,7 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     /* ==========================================
-       ★ V68.0 主題變數與高對比設定 (終極精準版) ★
+       ★ V69.0 主題變數與高對比設定 (均量動態判斷+傳送聊天室版) ★
        ========================================== */
     :root {
         --bg-color: #f8f9fa; --card-bg: #ffffff; --text-color: #212529; --border-color: #ced4da;
@@ -145,7 +145,6 @@
     .summary-body { padding: 20px; font-size: 15px; color: var(--text-color); line-height: 1.6; white-space: pre-wrap; font-family: monospace; background-color: var(--bg-color); }
     .summary-footer { padding: 15px; background: var(--card-bg); text-align: center; border-top: 1px solid var(--border-color); }
     .btn-close-summary { width: 100%; height: 50px !important; background: #343a40; color: white; border: none; border-radius: 8px; font-size: 18px !important; font-weight: bold; cursor: pointer; }
-    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
 <body>
@@ -443,9 +442,9 @@
               <div class="xingkou-group">
                   <div class="xingkou-title">📦 行口包仔 (Bao chợ)</div>
                   <div class="xingkou-inputs">
-                      <input type="number" class="f-xtop" placeholder="上" min="0">
-                      <input type="number" class="f-xmid" placeholder="中" min="0">
-                      <input type="number" class="f-xbot" placeholder="下" min="0">
+                      <input type="number" class="f-xtop" placeholder="上(Lớn)" min="0">
+                      <input type="number" class="f-xmid" placeholder="中(Vừa)" min="0">
+                      <input type="number" class="f-xbot" placeholder="下(Nhỏ)" min="0">
                   </div>
               </div>
           </div>
@@ -474,7 +473,7 @@
 
   </div>
 
-  <div id="status">系統就緒 v68.0 (行口粒數三級版) </div>
+  <div id="status">系統就緒 v69.0 (均量動態判斷版) </div>
 </div>
 
 <script>
@@ -482,7 +481,7 @@
 // ★ 系統基礎設定與 LIFF 初始化 ★
 // ==========================================
 const LIFF_ID = "2008961063-iwAJvIC3";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyD0PoIElZYUiD8Es8Jzo9cft4gKYWIWtM-ejjED3UQJcv8YwyF7SbhaPRajqyC0WsQ/exec"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxTGWHB7VC5loclFXRNlyc7lQyMpAFyeRbF_GB7nvynlVH48MieTyS8A0yFdn7e2jcA/exec"; 
 const ADMIN_PWD = "8888"; 
 
 function switchTab(tab) {
@@ -618,7 +617,8 @@ function querySummary(btnElement) {
 
     var originalHTML = btnElement.innerHTML;
     btnElement.innerHTML = `<span style="font-size: 20px; font-weight: 800;">⏳ 查詢中...</span>`;
-    btnElement.disabled = true; btnElement.style.opacity = "0.7";
+    btnElement.disabled = true;
+    btnElement.style.opacity = "0.7";
 
     var payload = { driver: driver, action: "查詢小結" };
 
@@ -631,20 +631,36 @@ function querySummary(btnElement) {
     .finally(function() { btnElement.innerHTML = originalHTML; btnElement.disabled = false; btnElement.style.opacity = "1"; });
 }
 
+// ★ 採收查詢小結 (同步發送到 LINE 聊天室) ★
 function queryHarvestSummary(btnElement) {
     var date = document.getElementById('harvest-date').value;
     if (!date) return alert("❌ 請先選擇採收日期！\n(Chọn ngày)");
 
     var originalHTML = btnElement.innerHTML;
     btnElement.innerHTML = `<span style="font-size: 20px; font-weight: 800;">⏳ 撈取資料中...</span>`;
-    btnElement.disabled = true; btnElement.style.opacity = "0.7";
+    btnElement.disabled = true; 
+    btnElement.style.opacity = "0.7";
 
     var payload = { action: "查詢採收小結", date: date };
 
     fetch(GAS_URL, { method: 'POST', headers: { "Content-Type": "text/plain;charset=utf-8" }, redirect: "follow", body: JSON.stringify(payload) })
     .then(function(response) { return response.json(); })
     .then(function(json) {
-        if (json.summary) { document.getElementById('summary-content').innerText = json.summary; document.getElementById('summary-modal').style.display = 'flex'; } 
+        if (json.summary) {
+            document.getElementById('summary-content').innerText = json.summary;
+            document.getElementById('summary-modal').style.display = 'flex';
+            
+            // ★ 將小結傳送到 LINE 聊天室
+            if (typeof liff !== 'undefined' && liff.isInClient()) {
+                liff.sendMessages([{ type: 'text', text: json.summary }])
+                .then(() => {
+                    showToast("✅ 已將小結傳送至聊天室！");
+                })
+                .catch((err) => {
+                    console.error("發送小結至聊天室失敗", err);
+                });
+            }
+        } 
         else { alert("⚠️ " + date + " 查無採收資料。"); }
     })
     .catch(function(error) { console.error("Error:", error); alert("❌ 連線失敗，請檢查網路。"); })
@@ -671,7 +687,6 @@ function toggleXingkou() {
     if (teamSelect.value === '行口班') { isXingkou = true; } 
     else if (teamSelect.value === 'custom' && teamCustom === '行口班') { isXingkou = true; }
 
-    // 切換所有農地區塊的顯示狀態
     document.querySelectorAll('.xingkou-group').forEach(group => { group.style.display = isXingkou ? 'block' : 'none'; });
     document.querySelectorAll('.standard-np').forEach(el => { el.style.display = isXingkou ? 'none' : 'block'; });
     document.querySelectorAll('.xingkou-np').forEach(el => { el.style.display = isXingkou ? 'block' : 'none'; });
@@ -752,7 +767,7 @@ function updateDriverSelect(lineName) {
         for (var i = 0; i < driverSelect.options.length; i++) { 
             if (driverSelect.options[i].value === savedDriver) { 
                 driverSelect.selectedIndex = i; var statusDiv = document.getElementById('status'); 
-                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v68.0 整合版)"; restoreSelection('plate', 'vds_plate'); return; 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v69.0 整合版)"; restoreSelection('plate', 'vds_plate'); return; 
             } 
         } 
     } 
@@ -896,7 +911,7 @@ function addField() {
 }
 
 // ==========================================
-// ★ 採收回報邏輯 (含無產銷粒數拆分) ★
+// ★ 採收回報邏輯 (含無產銷粒數拆分與智慧均量判斷) ★
 // ==========================================
 function submitHarvest() {
     var date = document.getElementById('harvest-date').value;
@@ -919,11 +934,9 @@ function submitHarvest() {
         let sp = parseInt(block.querySelector('.f-sp').value) || 0;
         let sgl = parseInt(block.querySelector('.f-sgl').value) || 0;
         let sb = parseInt(block.querySelector('.f-sb').value) || 0;
-        
         let ngl = parseInt(block.querySelector('.f-ngl').value) || 0;
         let nb = parseInt(block.querySelector('.f-nb').value) || 0;
         
-        // ★ 無產銷粒數判斷
         let np = 0, npTop = 0, npMid = 0, npBot = 0;
         if (isXingkou) {
             let npTopEl = block.querySelector('.f-nptop');
@@ -937,7 +950,6 @@ function submitHarvest() {
             if (npEl) np = parseInt(npEl.value) || 0;
         }
         
-        // ★ 行口包仔數量
         let xtop = 0, xmid = 0, xbot = 0;
         let xTopEl = block.querySelector('.f-xtop');
         let xMidEl = block.querySelector('.f-xmid');
@@ -950,26 +962,31 @@ function submitHarvest() {
         if (!area) { alert(`❌ 請輸入農地 ${fid} 的「地數」！\n(Nhập diện tích)`); hasError = true; return; }
         
         let totalPieces = sp + (isXingkou ? (npTop + npMid + npBot) : np);
-        if (totalPieces === 0 && sgl === 0 && sb === 0 && ngl === 0 && nb === 0 && xtop === 0 && xmid === 0 && xbot === 0) { 
+        let totalBoxKg = (sgl * 20) + (sb * 32) + (ngl * 20) + (nb * 32) + ((xtop + xmid + xbot) * 64);
+        
+        if (totalPieces === 0 && totalBoxKg === 0) { 
             alert(`⚠️ 農地 ${fid} 必須至少填寫一項產量！\n(Nhập sản lượng)`); hasError = true; return; 
         }
 
+        // ★ 智慧均量判斷邏輯
         let areaFloat = parseFloat(area);
         let avgPieces = "0";
         let avgBags = "0";
+        let displayAvgText = "0";
 
         if (areaFloat > 0) {
-            if (totalPieces > 0) {
-                avgPieces = (totalPieces / areaFloat).toFixed(1);
-                if (avgPieces.endsWith(".0")) avgPieces = avgPieces.slice(0, -2);
-            }
-            
-            let totalBoxKg = (sgl * 20) + (sb * 32) + (ngl * 20) + (nb * 32);
-            let totalBagsVal = (totalBoxKg / 64) + xtop + xmid + xbot;
-            
-            if (totalBagsVal > 0) {
+            if (totalBoxKg > 0) {
+                // 有任何箱子/綠葉/包仔，全部折合成包數
+                let totalKg = (totalPieces * 750) + totalBoxKg;
+                let totalBagsVal = totalKg / 64;
                 avgBags = (totalBagsVal / areaFloat).toFixed(1);
                 if (avgBags.endsWith(".0")) avgBags = avgBags.slice(0, -2);
+                displayAvgText = `${avgBags} 包/分 (折合)`;
+            } else if (totalPieces > 0) {
+                // 單純只有粒數
+                avgPieces = (totalPieces / areaFloat).toFixed(1);
+                if (avgPieces.endsWith(".0")) avgPieces = avgPieces.slice(0, -2);
+                displayAvgText = `${avgPieces} 粒/分`;
             }
         }
 
@@ -978,8 +995,8 @@ function submitHarvest() {
             safePieces: sp, safeGL: sgl, safeBoxes: sb, 
             nocertPieces: np, nocertGL: ngl, nocertBoxes: nb, 
             xTop: xtop, xMid: xmid, xBot: xbot,
-            ncTop: npTop, ncMid: npMid, ncBot: npBot, // 新增無產銷細項
-            avgPieces: avgPieces, avgBags: avgBags
+            ncTop: npTop, ncMid: npMid, ncBot: npBot,
+            avgPieces: avgPieces, avgBags: avgBags, displayAvgText: displayAvgText
         });
     });
 
@@ -987,11 +1004,7 @@ function submitHarvest() {
 
     let confirmMsg = isCorrection ? "⚠️ 【注意：此為更正紀錄】\n您即將送出以下更正資料：\n\n" : "您即將送出以下採收資料：\n\n";
     fieldsData.forEach(f => { 
-        let avgStr = [];
-        if (f.avgPieces !== "0") avgStr.push(`${f.avgPieces} 粒/分`);
-        if (f.avgBags !== "0") avgStr.push(`${f.avgBags} 包/分`);
-        if (avgStr.length === 0) avgStr.push("0");
-        confirmMsg += `📍 ${f.fieldId} (${f.area} 分) ➔ 均量 ${avgStr.join(" , ")}\n`; 
+        confirmMsg += `📍 ${f.fieldId} (${f.area} 分) ➔ 均量 ${f.displayAvgText}\n`; 
     });
     confirmMsg += "\n請問數字確認無誤嗎？\n(Xác nhận gửi?)";
 
@@ -1009,18 +1022,12 @@ function submitHarvest() {
     messageText += `━━━━━━━━━━━━\n📅 日期：${niceDate}\n🧑‍🌾 班別：${team}\n`;
     
     fieldsData.forEach((f, idx) => {
-        messageText += `━━━━━━━━━━━━\n📍 農地：${f.fieldId}\n📏 面積：${f.area} 分\n`;
-        let avgStr = [];
-        if (f.avgPieces !== "0") avgStr.push(`${f.avgPieces} 粒/分`);
-        if (f.avgBags !== "0") avgStr.push(`${f.avgBags} 包/分`);
-        if (avgStr.length === 0) avgStr.push("0");
-        messageText += `📦 均量：${avgStr.join(" ｜ ")}\n------------------------\n`;
+        messageText += `━━━━━━━━━━━━\n📍 農地：${f.fieldId}\n📏 面積：${f.area} 分\n📦 均量：${f.displayAvgText}\n------------------------\n`;
         
         if(f.safePieces !== 0 || f.safeGL !== 0 || f.safeBoxes !== 0) { 
             messageText += `🟢 [安全]\n   ▸ ${f.safePieces} 粒 / ${f.safeGL} 綠葉 / ${f.safeBoxes} 箱\n`; 
         }
         
-        // 判斷是否為行口班來印出不同的無產銷
         if (isXingkou) {
             if (f.ncTop !== 0 || f.ncMid !== 0 || f.ncBot !== 0 || f.nocertGL !== 0 || f.nocertBoxes !== 0) {
                 messageText += `🟡 [無產銷]\n   ▸ 粒數 上: ${f.ncTop} / 中: ${f.ncMid} / 下: ${f.ncBot}\n   ▸ ${f.nocertGL} 綠葉 / ${f.nocertBoxes} 箱\n`;
