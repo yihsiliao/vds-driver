@@ -967,33 +967,95 @@ function submitHarvest() {
     document.getElementById('loading-mask').style.display = 'flex';
     document.getElementById('loading-text').innerText = "資料傳送中...";
 
-    var niceDate = date.replace(/-/g, "/");
-    var messageText = `━━━━━━━━━━━━\n`;
-    if (isCorrection) { messageText += `🚨 【 採收更正回報 】 🚨\n`; } else { messageText += `🚜 【 採收作業回報 】 🥕\n`; }
-    messageText += `━━━━━━━━━━━━\n📅 日期：${niceDate}\n🧑‍🌾 班別：${team}\n`;
-    
-    fieldsData.forEach((f, idx) => {
-        messageText += `━━━━━━━━━━━━\n📍 農地：${f.fieldId}\n📏 採收面積：${f.area} 分\n📦 平均產量：${f.displayAvgText}\n------------------------\n`;
+    var niceDate = date.replace(/-/g, "/").substring(5); // 只取 MM/DD
+
+    // 1. 計算本次送出的「大總計」 (智慧判斷純粒數或混合包數)
+    let totalReportArea = 0;
+    let globalPieces = 0;
+    let globalBoxKg = 0;
+
+    fieldsData.forEach(f => {
+        totalReportArea += parseFloat(f.area) || 0;
+        let pieces = f.safePieces + (isXingkou ? (f.ncTop + f.ncMid + f.ncBot) : f.nocertPieces);
+        let boxKg = (f.safeGL + f.nocertGL) * 20 + (f.safeBoxes + f.nocertBoxes) * 32 + (f.xTop + f.xMid + f.xBot) * 64;
         
-        if(f.safePieces !== 0 || f.safeGL !== 0 || f.safeBoxes !== 0) { 
-            messageText += `🟢 [安全]\n   ▸ ${f.safePieces} 粒 / ${f.safeGL} 綠葉 / ${f.safeBoxes} VDS箱\n`; 
+        globalPieces += pieces;
+        globalBoxKg += boxKg;
+    });
+
+    // 判斷總計顯示文字
+    let totalDisplayStr = "";
+    if (globalBoxKg > 0) {
+        // 如果有任何箱子、綠葉、包仔，就全部折合成「包」
+        let totalBags = ((globalPieces * 750) + globalBoxKg) / 64;
+        totalDisplayStr = `估 ${totalBags.toFixed(1)}包`;
+    } else if (globalPieces > 0) {
+        // 如果完全沒有箱子，只有「粒數」
+        totalDisplayStr = `共 ${globalPieces}粒`;
+    } else {
+        totalDisplayStr = `估 0包`;
+    }
+
+    var headerIcon = isCorrection ? "🚨" : "🚜";
+    var headerText = isCorrection ? "採收更正回報" : "採收作業回報";
+
+    var messageText = `${headerIcon} 【 ${headerText} 】\n`;
+    messageText += `📅 ${niceDate} ｜ 🧑‍🌾 ${team}\n`;
+    
+    // 顯示大總計
+    if (fieldsData.length > 1) {
+        messageText += `📊 總計：${fieldsData.length} 塊地 ｜ ${totalReportArea.toFixed(1)}分 ｜ ${totalDisplayStr}\n`;
+    } else {
+        messageText += `📊 總計：${totalReportArea.toFixed(1)}分 ｜ ${totalDisplayStr}\n`;
+    }
+    messageText += `════════════\n`;
+    
+    // 2. 逐塊農地列出 (單行極致壓縮)
+    fieldsData.forEach((f, idx) => {
+        messageText += `📍 ${f.fieldId} (${f.area}分) 📈 ${f.displayAvgText}\n`;
+        
+        // 安全產量
+        let safeDetails = [];
+        if (f.safePieces > 0) safeDetails.push(`${f.safePieces}粒`);
+        if (f.safeGL > 0) safeDetails.push(`${f.safeGL}綠葉`);
+        if (f.safeBoxes > 0) safeDetails.push(`${f.safeBoxes}VDS箱`);
+        if (safeDetails.length > 0) {
+            messageText += ` ✅ 安全：${safeDetails.join(" ｜ ")}\n`;
         }
         
+        // 無產銷產量
+        let nocertDetails = [];
         if (isXingkou) {
-            if (f.ncTop !== 0 || f.ncMid !== 0 || f.ncBot !== 0 || f.nocertGL !== 0 || f.nocertBoxes !== 0) {
-                messageText += `🟡 [無產銷]\n   ▸ 粒數 上: ${f.ncTop} / 中: ${f.ncMid} / 下: ${f.ncBot}\n   ▸ ${f.nocertGL} 綠葉 / ${f.nocertBoxes} VDS箱\n`;
-            }
+            let ncPieces = [];
+            if (f.ncTop > 0) ncPieces.push(`上${f.ncTop}`);
+            if (f.ncMid > 0) ncPieces.push(`中${f.ncMid}`);
+            if (f.ncBot > 0) ncPieces.push(`下${f.ncBot}`);
+            if (ncPieces.length > 0) nocertDetails.push(`粒(${ncPieces.join("/")})`);
         } else {
-            if(f.nocertPieces !== 0 || f.nocertGL !== 0 || f.nocertBoxes !== 0) { 
-                messageText += `🟡 [無產銷]\n   ▸ ${f.nocertPieces} 粒 / ${f.nocertGL} 綠葉 / ${f.nocertBoxes} VDS箱\n`; 
-            }
+            if (f.nocertPieces > 0) nocertDetails.push(`${f.nocertPieces}粒`);
+        }
+        if (f.nocertGL > 0) nocertDetails.push(`${f.nocertGL}綠葉`);
+        if (f.nocertBoxes > 0) nocertDetails.push(`${f.nocertBoxes}VDS箱`);
+        
+        if (nocertDetails.length > 0) {
+            messageText += ` ⚠️ 無產銷：${nocertDetails.join(" ｜ ")}\n`;
         }
 
-        if(f.xTop !== 0 || f.xMid !== 0 || f.xBot !== 0) { 
-            messageText += `🛍️ [行口包仔]\n   ▸ 上: ${f.xTop} / 中: ${f.xMid} / 下: ${f.xBot}\n`; 
+        // 行口包仔
+        let xBags = [];
+        if (f.xTop > 0) xBags.push(`上${f.xTop}`);
+        if (f.xMid > 0) xBags.push(`中${f.xMid}`);
+        if (f.xBot > 0) xBags.push(`下${f.xBot}`);
+        if (xBags.length > 0) {
+            messageText += ` 🛒 包仔：${xBags.join(" ｜ ")}\n`;
+        }
+
+        // 農地之間的分隔線 (最後一筆不加)
+        if (idx < fieldsData.length - 1) {
+            messageText += `┈┈┈┈┈┈┈┈┈┈┈┈\n`;
         }
     });
-    messageText += `━━━━━━━━━━━━\n\u200B`;
+    messageText += `════════════\n\u200B`;
 
     var payload = { action: "採收回報_多筆", date: date, team: team, isCorrection: isCorrection, fields: fieldsData };
 
