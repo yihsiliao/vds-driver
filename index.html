@@ -7,7 +7,7 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     /* ==========================================
-       ★ V65.1 主題變數與高對比設定 (完整排版版) ★
+       ★ V66 主題變數與高對比設定 (完整排版版) ★
        ========================================== */
     :root {
         --bg-color: #f8f9fa;
@@ -895,7 +895,7 @@ function updateDriverSelect(lineName) {
             if (driverSelect.options[i].value === savedDriver) { 
                 driverSelect.selectedIndex = i; 
                 var statusDiv = document.getElementById('status'); 
-                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v65.1 整合版)"; 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v66 整合版)"; 
                 restoreSelection('plate', 'vds_plate'); 
                 return; 
             } 
