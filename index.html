@@ -1104,16 +1104,24 @@ function doDriverAutoLocate(selectElement, originalValue) {
 
     showToast("⏳ 正在取得 GPS 座標並比對圖資...");
 
-    // 取得定位並送出 (逾時設定為 4 秒，抓不到就送原本的字串)
+    // 取得定位並悄悄送給後端，保持 LINE 訊息乾淨
 navigator.geolocation.getCurrentPosition(
     function(pos) {
-        let finalMsg = msg + ` (GPS:${pos.coords.latitude},${pos.coords.longitude})`;
+        let lat = pos.coords.latitude;
+        let lon = pos.coords.longitude;
         
-        // ▼ 這裡放您原本送出訊息的程式碼 ▼
-        liff.sendMessages([{ type: 'text', text: finalMsg }]).then(() => liff.closeWindow());
+        // 抓取司機名稱 (請確認您 HTML 中司機選單的 ID，通常是 driver 或 name)
+        let driverName = document.getElementById('driver') ? document.getElementById('driver').value : "未知司機";
+        if (driverName === 'custom') driverName = document.getElementById('driver-custom').value;
+
+        // 1. 背景偷偷呼叫 GAS 記錄 GPS (不影響畫面，速度極快)
+        fetch(GAS_URL + `?op=save_gps&driver=${encodeURIComponent(driverName)}&lat=${lat}&lon=${lon}`, { mode: 'no-cors' });
+        
+        // 2. 送出原本【乾淨】的 LINE 訊息 (沒有經緯度！)
+        liff.sendMessages([{ type: 'text', text: msg }]).then(() => liff.closeWindow());
     },
     function(err) {
-        // ▼ 如果沒開定位，直接送出原本的訊息 ▼
+        // 沒抓到定位，直接送出原本的訊息
         liff.sendMessages([{ type: 'text', text: msg }]).then(() => liff.closeWindow());
     },
     { enableHighAccuracy: true, timeout: 4000, maximumAge: 0 }
