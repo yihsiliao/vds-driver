@@ -28,25 +28,22 @@
         // ★★★ 務必將這裡替換成您的 Google Apps Script 網址 ★★★
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyD0PoIElZYUiD8Es8Jzo9cft4gKYWIWtM-ejjED3UQJcv8YwyF7SbhaPRajqyC0WsQ/exec";
         
-        // 1. 初始化地圖 (預設視角：雲林縣)
+        // 1. 初始化地圖
         const map = L.map('map').setView([23.7, 120.4], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // 2. 同時向後端抓取「司機狀態」與「農地多邊形座標」
         Promise.all([
             fetch(GAS_URL + "?op=drivers").then(res => res.json()),
             fetch(GAS_URL + "?op=fields").then(res => res.json())
         ]).then(([drivers, fields]) => {
             
-            // 建立農地字典 (利用 A001 找座標)
             const fieldMap = {};
             fields.forEach(f => {
                 let parts = f.info.split('/');
                 let fieldId = parts[0] ? parts[0].trim().toUpperCase() : "";
                 if (fieldId && f.coords) {
-                    // 抓取多邊形的第一個點作為圖釘的位置
                     let firstCoord = f.coords.split(';')[0].split(',');
                     let lat = parseFloat(firstCoord[0]);
                     let lon = parseFloat(firstCoord[1]);
@@ -54,36 +51,44 @@
                 }
             });
 
-            // 3. 把司機放上地圖
-            let hasDrivers = false;
+            let bounds = []; // ★ 用來記錄所有圖釘位置，做自動縮放
+
             drivers.forEach(d => {
                 let locStr = d.loc || ""; 
                 let coords = null;
                 
-                // A. 如果是田間，優先比對資料庫的農地編號 (例如：-C095)
                 let match = locStr.match(/-([A-Z0-9]+)/i);
                 if (locStr.includes("田間") && match && fieldMap[match[1].toUpperCase()]) {
                     coords = fieldMap[match[1].toUpperCase()];
                 } 
-                // B. ★ 如果不是田間，且打卡時有抓到真實 GPS，直接使用真實定位！
                 else if (d.exactGps) {
                     coords = d.exactGps;
                 }
-                // C. 如果都抓不到 (例如沒開定位)，才使用模糊預設值
                 else if (locStr.includes("公司")) coords = [23.684650530868296, 120.25181901583427];
                 else if (locStr.includes("東勢")) coords = [23.67, 120.25];
 
-                // 若有找到座標，插上圖釘
                 if (coords) {
-                    hasDrivers = true;
-                    let marker = L.marker(coords).addTo(map);
-                    // 點擊圖釘跳出的資訊框
-                    marker.bindPopup(`🚗 <b>${d.driver}</b><br>📍 ${d.status}<br>🕒 狀態更新：${d.time}`).openPopup();
+                    // ★ 解決重疊問題：加入微小的隨機偏移量 (約 10~30 公尺)
+                    // 這樣同在「公司」的司機，圖釘會稍微散開，不會疊死！
+                    let offsetLat = coords[0] + (Math.random() - 0.5) * 0.002;
+                    let offsetLon = coords[1] + (Math.random() - 0.5) * 0.002;
+                    
+                    bounds.push([offsetLat, offsetLon]);
+                    
+                    let marker = L.marker([offsetLat, offsetLon]).addTo(map);
+                    
+                    // ★ 組合資訊框：加入車牌判斷
+                    let plateHtml = d.plate ? `🚛 車牌：<b>${d.plate}</b><br>` : "";
+                    
+                    marker.bindPopup(`👤 <b>${d.driver}</b><br>${plateHtml}📍 ${d.status}<br>🕒 狀態：${d.time}`);
                 }
             });
 
-            if (!hasDrivers) {
-                alert("目前沒有在外執勤的司機，或無法解析司機位置。");
+            // ★ 自動縮放：將所有圖釘完美收進畫面中
+            if (bounds.length > 0) {
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+            } else {
+                alert("目前沒有在外執勤的司機，或無法解析位置。");
             }
 
         }).catch(err => {
