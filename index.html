@@ -1104,31 +1104,20 @@ function doDriverAutoLocate(selectElement, originalValue) {
 
     showToast("⏳ 正在取得 GPS 座標並比對圖資...");
 
-    navigator.geolocation.getCurrentPosition(
-        function(position) {
-            var lat = position.coords.latitude;
-            var lon = position.coords.longitude;
-
-            // 如果還沒載入田地座標，先去後端抓取
-            if (!cachedFields) {
-                fetch(GAS_URL + "?op=fields")
-                    .then(res => res.json())
-                    .then(fields => {
-                        cachedFields = fields;
-                        matchDriverField(lat, lon, selectElement, originalValue);
-                    })
-                    .catch(err => {
-                        showToast("❌ 讀取田地座標失敗，請檢查網路！");
-                    });
-            } else {
-                matchDriverField(lat, lon, selectElement, originalValue);
-            }
-        },
-        function(error) {
-            alert("⚠️ 無法獲取 GPS 座標！\n請確定手機已開啟「定位服務」並允許 LINE 存取位置。");
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } // 強制啟用高精度 GPS
-    );
+    // 取得定位並送出 (逾時設定為 4 秒，抓不到就送原本的字串)
+navigator.geolocation.getCurrentPosition(
+    function(pos) {
+        let finalMsg = msg + ` (GPS:${pos.coords.latitude},${pos.coords.longitude})`;
+        
+        // ▼ 這裡放您原本送出訊息的程式碼 ▼
+        liff.sendMessages([{ type: 'text', text: finalMsg }]).then(() => liff.closeWindow());
+    },
+    function(err) {
+        // ▼ 如果沒開定位，直接送出原本的訊息 ▼
+        liff.sendMessages([{ type: 'text', text: msg }]).then(() => liff.closeWindow());
+    },
+    { enableHighAccuracy: true, timeout: 4000, maximumAge: 0 }
+);
 }
 
 // 3. 核心：配對 GPS 與多邊形農地
