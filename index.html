@@ -240,7 +240,7 @@
       <div class="divider"></div>
 
       <label>📍 目前地點 <span>(Vị trí hiện tại)</span></label>
-      <select id="location" onchange="checkCustomInput('location'); predictDestination();">
+  <select id="location" onchange="checkCustomInput('location'); predictDestination(); checkAndLocateField(this);">
         <optgroup label="常用地點 (Thường dùng)">
           <option value="公司">🏢 公司 (Công ty)</option>
           <option value="田間(二林)">🌾 田間-二林 (Ngoài đồng - Erlin)</option>
@@ -281,7 +281,7 @@
       <input type="text" id="location-custom" class="custom-input" placeholder="輸入地點 (Nhập địa điểm)">
 
       <label id="dest-label">🏁 預計前往 <span>(Nơi đến dự kiến)</span></label>
-      <select id="destination" onchange="checkCustomInput('destination')">
+  <select id="destination" onchange="checkCustomInput('destination'); checkAndLocateField(this);">
         <option value="" disabled selected>請選擇目的地... (Chọn nơi đến)</option>
         <optgroup label="常用地點 (Thường dùng)">
           <option value="公司">🏢 公司 (Công ty)</option>
@@ -1073,6 +1073,145 @@ function submitHarvest() {
         } else { document.getElementById('loading-mask').style.display = 'none'; alert("❌ 寫入 Google Sheet 失敗：" + data.msg); }
     })
     .catch(error => { document.getElementById('loading-mask').style.display = 'none'; console.error("Error:", error); alert("⚠️ 連線失敗，請檢查網路或稍後再試。"); });
+}
+
+  // ==========================================
+// ★ V64.0 司機專用：GPS 多邊形電子圍籬定位 ★
+// ==========================================
+let cachedFields = null; // 快取田地資料，節省流量
+
+// 1. 監聽選單變化 (全自動無感定位)
+function checkAndLocateField(selectElement) {
+    var val = selectElement.value;
+    
+    // 只有當司機選擇的地點名稱包含「田間」時，才觸發定位
+    if (val.includes("田間")) {
+        doDriverAutoLocate(selectElement, val);
+    }
+}
+
+// 2. 執行 GPS 定位與資料請求
+function doDriverAutoLocate(selectElement, originalValue) {
+    if (!navigator.geolocation) {
+        alert("❌ 您的設備或瀏覽器不支援 GPS 定位！");
+        return;
+    }
+
+    showToast("⏳ 正在取得 GPS 座標並比對圖資...");
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            var lat = position.coords.latitude;
+            var lon = position.coords.longitude;
+
+            // 如果還沒載入田地座標，先去後端抓取
+            if (!cachedFields) {
+                fetch(GAS_URL + "?op=fields")
+                    .then(res => res.json())
+                    .then(fields => {
+                        cachedFields = fields;
+                        matchDriverField(lat, lon, selectElement, originalValue);
+                    })
+                    .catch(err => {
+                        showToast("❌ 讀取田地座標失敗，請檢查網路！");
+                    });
+            } else {
+                matchDriverField(lat, lon, selectElement, originalValue);
+            }
+        },
+        function(error) {
+            alert("⚠️ 無法獲取 GPS 座標！\n請確定手機已開啟「定位服務」並允許 LINE 存取位置。");
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } // 強制啟用高精度 GPS
+    );
+}
+
+// 3. 核心：配對 GPS 與多邊形農地
+function matchDriverField(lat, lon, selectElement, originalValue) {
+    let matchedField = null;
+    let minDistance = Infinity;
+    let nearestField = null;
+
+    // 將資料庫的字串座標轉為陣列
+    function parsePolygon(coordString) {
+        return coordString.split(';').map(pt => {
+            let coords = pt.split(',');
+            return [parseFloat(coords[0].trim()), parseFloat(coords[1].trim())];
+        }).filter(p => !isNaN(p[0]) && !isNaN(p[1]));
+    }
+
+    for (let i = 0; i < cachedFields.length; i++) {
+        let field = cachedFields[i];
+        let polygon = parsePolygon(field.coords);
+        if (polygon.length < 3) continue;
+
+        // A. 射線演算法：判斷是否完全「踩在田裡」
+        if (isPointInPolygon([lat, lon], polygon)) {
+            matchedField = field;
+            break;
+        }
+
+        // B. 邊緣容錯機制：計算距離最近的一塊田
+        let dist = getHaversineDistance(lat, lon, polygon[0][0], polygon[0][1]);
+        if (dist < minDistance) {
+            minDistance = dist;
+            nearestField = field;
+        }
+    }
+
+    // 決策邏輯 (50公尺內算有效)
+    let finalTarget = null;
+    if (matchedField) {
+        finalTarget = matchedField;
+        showToast("📍 定位成功：您正位於田區內！");
+    } else if (nearestField && minDistance <= 0.2) { 
+        finalTarget = nearestField;
+        showToast("📍 定位成功：已為您抓取最近的農地！");
+    }
+
+    if (finalTarget) {
+        // 從資料庫格式 (例如 "A001/陳周奇/8.3分") 萃取出 "A001"
+        let parts = finalTarget.info.split('/');
+        let fieldId = parts[0] ? parts[0].trim() : finalTarget.info;
+        
+        // 將下拉選單切換為「自訂」，並填入組合字串 (例如: 田間(東勢)-A001)
+        selectElement.value = 'custom';
+        let customInputId = selectElement.id + '-custom'; 
+        let customInput = document.getElementById(customInputId);
+        
+        customInput.value = originalValue + "-" + fieldId;
+        customInput.style.display = 'block'; // 展開自訂輸入框
+        
+        // 視覺回饋：閃爍綠色
+        customInput.style.backgroundColor = "#d1e7dd";
+        setTimeout(() => { customInput.style.backgroundColor = ""; }, 1500);
+    } else {
+        showToast("⚠️ 附近沒找到符合的農地，請手動輸入");
+    }
+}
+
+// ---------------------------------------------
+// 數學運算引擎
+// ---------------------------------------------
+function isPointInPolygon(point, vs) {
+    var x = point[0], y = point[1]; 
+    var inside = false;
+    for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        var xi = vs[i][0], yi = vs[i][1];
+        var xj = vs[j][0], yj = vs[j][1];
+        var intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+
+function getHaversineDistance(lat1, lon1, lat2, lon2) {
+    var R = 6371; 
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; 
 }
 </script>
 </body>
