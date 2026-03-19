@@ -218,6 +218,9 @@
             <option value="AAR-227">AAR-227</option>
             <option value="KES-0127">KES-0127</option>
             <option value="KEN-6977">KEN-6977</option>
+            <option value="BHZ-9377">BHZ-9377</option>
+            <option value="BDM-3277">BDM-3277</option>
+            <option value="BWP-2177">BWP-2177</option>
         </optgroup>
         <option value="custom">✏️ 自行輸入 (Nhập tay...)</option>
       </select>
@@ -707,7 +710,7 @@ function saveHistory(val, storageKey) {
     if(!val) return; 
     try {
         var history = JSON.parse(localStorage.getItem(storageKey) || '[]'); var index = history.indexOf(val); 
-        if (index > -1) { history.splice(index, 1); } history.push(val); if (history.length > 5) history.shift(); 
+        if (index > -1) { history.splice(index, 1); } history.push(val); if (history.length > 3) history.shift(); 
         localStorage.setItem(storageKey, JSON.stringify(history)); 
     } catch(e) {}
 }
@@ -723,7 +726,7 @@ function updateDriverSelect(lineName) {
         for (var i = 0; i < driverSelect.options.length; i++) { 
             if (driverSelect.options[i].value === savedDriver) { 
                 driverSelect.selectedIndex = i; var statusDiv = document.getElementById('status'); 
-                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v68.0 整合版)"; restoreSelection('plate', 'vds_plate'); return; 
+                if(statusDiv) statusDiv.innerHTML = "✅ 已識別: " + savedDriver + " (v70.0 整合版)"; restoreSelection('plate', 'vds_plate'); return; 
             } 
         } 
     } 
@@ -963,7 +966,7 @@ function submitHarvest() {
 
     if (!confirm(confirmMsg)) return;
 
-    if (teamSelect.value === 'custom') saveHistory(team, 'vds_history_harvest_team');
+    if (teamSelect.value === 'custom') (team, 'vds_history_harvest_team');
     localStorage.setItem('vds_history_harvest_field', fieldsData[0].fieldId);
 
     document.getElementById('loading-mask').style.display = 'flex';
@@ -1161,12 +1164,12 @@ function matchDriverField(lat, lon, selectElement, originalValue) {
         }
     }
 
-    // 決策邏輯 (50公尺內算有效)
+    // 決策邏輯 (10公尺內算有效)
     let finalTarget = null;
     if (matchedField) {
         finalTarget = matchedField;
         showToast("📍 定位成功：您正位於田區內！");
-    } else if (nearestField && minDistance <= 0.2) { 
+    } else if (nearestField && minDistance <= 0.01) { 
         finalTarget = nearestField;
         showToast("📍 定位成功：已為您抓取最近的農地！");
     }
