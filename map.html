@@ -60,15 +60,18 @@
                 let locStr = d.loc || ""; 
                 let coords = null;
                 
-                // A. 如果地點有農地編號 (例如：田間(東勢)-C095)
+                // A. 如果是田間，優先比對資料庫的農地編號 (例如：-C095)
                 let match = locStr.match(/-([A-Z0-9]+)/i);
-                if (match && fieldMap[match[1].toUpperCase()]) {
+                if (locStr.includes("田間") && match && fieldMap[match[1].toUpperCase()]) {
                     coords = fieldMap[match[1].toUpperCase()];
                 } 
-                // B. 如果地點在公司
-                else if (locStr.includes("公司")) {
-                    coords = [23.7, 120.4]; // ★ 您可以把這裡改成真實公司的經緯度
+                // B. ★ 如果不是田間，且打卡時有抓到真實 GPS，直接使用真實定位！
+                else if (d.exactGps) {
+                    coords = d.exactGps;
                 }
+                // C. 如果都抓不到 (例如沒開定位)，才使用模糊預設值
+                else if (locStr.includes("公司")) coords = [23.684650530868296, 120.25181901583427];
+                else if (locStr.includes("東勢")) coords = [23.67, 120.25];
 
                 // 若有找到座標，插上圖釘
                 if (coords) {
