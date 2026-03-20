@@ -918,7 +918,7 @@ function addField() {
 }
 
 // ==========================================
-// ★ 採收回報邏輯 (含無產銷粒數拆分與總折合計算) ★
+// ★ 採收回報邏輯 (V71.0 由後端結合過磅與生成訊息) ★
 // ==========================================
 function submitHarvest() {
     var date = document.getElementById('harvest-date').value;
@@ -969,28 +969,25 @@ function submitHarvest() {
         if (!area) { alert(`❌ 請輸入農地 ${fid} 的「地數」！\n(Nhập diện tích)`); hasError = true; return; }
         
         let totalPieces = sp + (isXingkou ? (npTop + npMid + npBot) : np);
-        if (totalPieces === 0 && sgl === 0 && sb === 0 && ngl === 0 && nb === 0 && xtop === 0 && xmid === 0 && xbot === 0) { 
+        let totalBoxKg = (sgl * 20) + (sb * 32) + (ngl * 20) + (nb * 32) + ((xtop + xmid + xbot) * 64);
+        
+        if (totalPieces === 0 && totalBoxKg === 0) { 
             alert(`⚠️ 農地 ${fid} 必須至少填寫一項產量！\n(Nhập sản lượng)`); hasError = true; return; 
         }
 
-        // ★ 核心折合邏輯 (動態判斷粒數或包仔) ★
         let areaFloat = parseFloat(area);
         let avgPieces = "0";
         let avgBags = "0";
         let displayAvgText = "0";
 
         if (areaFloat > 0) {
-            let totalBoxKg = ((sgl + ngl) * 20) + ((sb + nb) * 32) + ((xtop + xmid + xbot) * 64);
-            
             if (totalBoxKg > 0) {
-                // 有任何箱子/綠葉/包仔，全部折合成包數
                 let totalKg = (totalPieces * 750) + totalBoxKg;
                 let totalBagsVal = totalKg / 64;
                 avgBags = (totalBagsVal / areaFloat).toFixed(1);
                 if (avgBags.endsWith(".0")) avgBags = avgBags.slice(0, -2);
                 displayAvgText = `${avgBags} 包/分 (折合)`;
             } else if (totalPieces > 0) {
-                // 單純只有粒數
                 avgPieces = (totalPieces / areaFloat).toFixed(1);
                 if (avgPieces.endsWith(".0")) avgPieces = avgPieces.slice(0, -2);
                 displayAvgText = `${avgPieces} 粒/分`;
@@ -1003,115 +1000,23 @@ function submitHarvest() {
             nocertPieces: np, nocertGL: ngl, nocertBoxes: nb, 
             xTop: xtop, xMid: xmid, xBot: xbot,
             ncTop: npTop, ncMid: npMid, ncBot: npBot,
-            avgPieces: avgPieces, avgBags: avgBags, displayAvgText: displayAvgText // 寫入動態文字
+            avgPieces: avgPieces, avgBags: avgBags, displayAvgText: displayAvgText
         });
     });
 
     if (hasError || fieldsData.length === 0) return;
 
     let confirmMsg = isCorrection ? "⚠️ 【注意：此為更正紀錄】\n您即將送出以下更正資料：\n\n" : "您即將送出以下採收資料：\n\n";
-    fieldsData.forEach(f => { 
-        confirmMsg += `📍 ${f.fieldId} (${f.area} 分) ➔ 均量 ${f.displayAvgText}\n`; 
-    });
+    fieldsData.forEach(f => { confirmMsg += `📍 ${f.fieldId} (${f.area} 分) ➔ 均量 ${f.displayAvgText}\n`; });
     confirmMsg += "\n請問數字確認無誤嗎？\n(Xác nhận gửi?)";
 
     if (!confirm(confirmMsg)) return;
 
-    if (teamSelect.value === 'custom') (team, 'vds_history_harvest_team');
+    if (teamSelect.value === 'custom') saveHistory(team, 'vds_history_harvest_team');
     localStorage.setItem('vds_history_harvest_field', fieldsData[0].fieldId);
 
     document.getElementById('loading-mask').style.display = 'flex';
-    document.getElementById('loading-text').innerText = "資料傳送中...";
-
-    var niceDate = date.replace(/-/g, "/").substring(5); // 只取 MM/DD
-
-    // 1. 計算本次送出的「大總計」 (智慧判斷純粒數或混合包數)
-    let totalReportArea = 0;
-    let globalPieces = 0;
-    let globalBoxKg = 0;
-
-    fieldsData.forEach(f => {
-        totalReportArea += parseFloat(f.area) || 0;
-        let pieces = f.safePieces + (isXingkou ? (f.ncTop + f.ncMid + f.ncBot) : f.nocertPieces);
-        let boxKg = (f.safeGL + f.nocertGL) * 20 + (f.safeBoxes + f.nocertBoxes) * 32 + (f.xTop + f.xMid + f.xBot) * 64;
-        
-        globalPieces += pieces;
-        globalBoxKg += boxKg;
-    });
-
-    // 判斷總計顯示文字
-    let totalDisplayStr = "";
-    if (globalBoxKg > 0) {
-        // 如果有任何箱子、綠葉、包仔，就全部折合成「包」
-        let totalBags = ((globalPieces * 750) + globalBoxKg) / 64;
-        totalDisplayStr = `估 ${totalBags.toFixed(1)}包`;
-    } else if (globalPieces > 0) {
-        // 如果完全沒有箱子，只有「粒數」
-        totalDisplayStr = `共 ${globalPieces}粒`;
-    } else {
-        totalDisplayStr = `估 0包`;
-    }
-
-    var headerIcon = isCorrection ? "🚨" : "🚜";
-    var headerText = isCorrection ? "採收更正回報" : "採收作業回報";
-
-    var messageText = `${headerIcon} 【 ${headerText} 】\n`;
-    messageText += `📅 ${niceDate} ｜ 🧑‍🌾 ${team}\n`;
-    
-    // 顯示大總計
-    if (fieldsData.length > 1) {
-        messageText += `📊 總計：${fieldsData.length} 塊地 ｜ ${totalReportArea.toFixed(1)}分 ｜ ${totalDisplayStr}\n`;
-    } else {
-        messageText += `📊 總計：${totalReportArea.toFixed(1)}分 ｜ ${totalDisplayStr}\n`;
-    }
-    messageText += `════════════\n`;
-    
-    // 2. 逐塊農地列出 (單行極致壓縮)
-    fieldsData.forEach((f, idx) => {
-        messageText += `📍 ${f.fieldId} (${f.area}分) 📈 ${f.displayAvgText}\n`;
-        
-        // 安全產量
-        let safeDetails = [];
-        if (f.safePieces > 0) safeDetails.push(`${f.safePieces}粒`);
-        if (f.safeGL > 0) safeDetails.push(`${f.safeGL}綠葉`);
-        if (f.safeBoxes > 0) safeDetails.push(`${f.safeBoxes}VDS箱`);
-        if (safeDetails.length > 0) {
-            messageText += ` ✅ 安全：${safeDetails.join(" ｜ ")}\n`;
-        }
-        
-        // 無產銷產量
-        let nocertDetails = [];
-        if (isXingkou) {
-            let ncPieces = [];
-            if (f.ncTop > 0) ncPieces.push(`上${f.ncTop}`);
-            if (f.ncMid > 0) ncPieces.push(`中${f.ncMid}`);
-            if (f.ncBot > 0) ncPieces.push(`下${f.ncBot}`);
-            if (ncPieces.length > 0) nocertDetails.push(`粒(${ncPieces.join("/")})`);
-        } else {
-            if (f.nocertPieces > 0) nocertDetails.push(`${f.nocertPieces}粒`);
-        }
-        if (f.nocertGL > 0) nocertDetails.push(`${f.nocertGL}綠葉`);
-        if (f.nocertBoxes > 0) nocertDetails.push(`${f.nocertBoxes}VDS箱`);
-        
-        if (nocertDetails.length > 0) {
-            messageText += ` ⚠️ 無產銷：${nocertDetails.join(" ｜ ")}\n`;
-        }
-
-        // 行口包仔
-        let xBags = [];
-        if (f.xTop > 0) xBags.push(`上${f.xTop}`);
-        if (f.xMid > 0) xBags.push(`中${f.xMid}`);
-        if (f.xBot > 0) xBags.push(`下${f.xBot}`);
-        if (xBags.length > 0) {
-            messageText += ` 🛒 包仔：${xBags.join(" ｜ ")}\n`;
-        }
-
-        // 農地之間的分隔線 (最後一筆不加)
-        if (idx < fieldsData.length - 1) {
-            messageText += `┈┈┈┈┈┈┈┈┈┈┈┈\n`;
-        }
-    });
-    messageText += `════════════\n\u200B`;
+    document.getElementById('loading-text').innerText = "資料計算與傳送中...";
 
     var payload = { action: "採收回報_多筆", date: date, team: team, isCorrection: isCorrection, fields: fieldsData };
 
@@ -1120,15 +1025,21 @@ function submitHarvest() {
     .then(data => {
         if(data.result === "success") {
             if (typeof liff !== 'undefined' && liff.isInClient()) {
-                liff.sendMessages([{ type: 'text', text: messageText }]).then(() => {
-                    document.getElementById('loading-mask').style.display = 'none'; showToast(isCorrection ? "✅ 更正回報成功！" : "✅ 回報成功！"); setTimeout(() => liff.closeWindow(), 1500);
-                }).catch((err) => { document.getElementById('loading-mask').style.display = 'none'; alert("資料已寫入表格，但發送 LINE 訊息失敗: " + err); });
+                // ★ 改由接收後端回傳的 data.messageText
+                liff.sendMessages([{ type: 'text', text: data.messageText }]).then(() => {
+                    document.getElementById('loading-mask').style.display = 'none'; 
+                    showToast(isCorrection ? "✅ 更正回報成功！" : "✅ 回報成功！"); 
+                    setTimeout(() => liff.closeWindow(), 1500);
+                }).catch((err) => { 
+                    document.getElementById('loading-mask').style.display = 'none'; alert("資料已寫入，但發送 LINE 失敗: " + err); 
+                });
             } else {
-                document.getElementById('loading-mask').style.display = 'none'; console.log(messageText); showToast("✅ 網頁測試：訊息已生成"); alert("將送出以下內容：\n\n" + messageText);
+                document.getElementById('loading-mask').style.display = 'none'; showToast("✅ 網頁測試成功"); 
+                alert("將送出以下內容：\n\n" + data.messageText);
             }
-        } else { document.getElementById('loading-mask').style.display = 'none'; alert("❌ 寫入 Google Sheet 失敗：" + data.msg); }
+        } else { document.getElementById('loading-mask').style.display = 'none'; alert("❌ 寫入失敗：" + data.msg); }
     })
-    .catch(error => { document.getElementById('loading-mask').style.display = 'none'; console.error("Error:", error); alert("⚠️ 連線失敗，請檢查網路或稍後再試。"); });
+    .catch(error => { document.getElementById('loading-mask').style.display = 'none'; alert("⚠️ 連線失敗，請檢查網路。"); });
 }
 
   // ==========================================
