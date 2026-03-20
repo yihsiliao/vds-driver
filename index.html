@@ -492,7 +492,7 @@
       <div id="weigh-fields-container">
           <div class="weigh-field-block" style="background:#e3f2fd; padding:15px; border-radius:12px; border:2px solid #0d6efd; margin-bottom:15px; position:relative;">
               <label style="color:#0a58ca; margin-top:0;">📍 農地編號 <span>(Mã đất)</span></label>
-              <input type="text" class="w-farm-id" placeholder="例如：A001" style="border-color:#0d6efd;">
+              <input type="text" class="w-farm-id" placeholder="例如：A-01" style="border-color:#0d6efd;">
               
               <div class="qty-grid" style="margin-top: 10px;">
                   <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
@@ -508,22 +508,22 @@
               <div class="qty-grid" style="margin-top: 10px;">
                   <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
                       <div class="qty-title" style="color: #0d6efd;">🎒 太空包 <span>(Bao Jumbo)</span></div>
-                      <input type="number" class="w-jumbo" placeholder="粒數" min="0">
+                      <input type="number" class="w-jumbo" placeholder="粒數" min="0" oninput="handleContainerInput(this)">
                   </div>
                   <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
                       <div class="qty-title" style="color: #0d6efd;">🛍️ 包仔 <span>(Bao nhỏ)</span></div>
-                      <input type="number" class="w-bag" placeholder="包數" min="0">
+                      <input type="number" class="w-bag" placeholder="包數" min="0" oninput="handleContainerInput(this)">
                   </div>
               </div>
 
               <div class="qty-grid" style="margin-top: 10px;">
                   <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
                       <div class="qty-title" style="color: #0d6efd;">🌿 綠葉 <span>(Lá xanh)</span></div>
-                      <input type="number" class="w-gleaf" placeholder="箱數" min="0">
+                      <input type="number" class="w-gleaf" placeholder="箱數" min="0" oninput="handleContainerInput(this)">
                   </div>
                   <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
                       <div class="qty-title" style="color: #0d6efd;">📦 VDS箱 <span>(Thùng)</span></div>
-                      <input type="number" class="w-box" placeholder="箱數" min="0">
+                      <input type="number" class="w-box" placeholder="箱數" min="0" oninput="handleContainerInput(this)">
                   </div>
               </div>
           </div>
@@ -1204,7 +1204,7 @@ function getHaversineDistance(lat1, lon1, lat2, lon2) {
     newField.innerHTML = `
         <button type="button" class="remove-btn" onclick="this.parentElement.remove()" style="position:absolute; top:10px; right:10px; background:#dc3545; color:white; border:none; border-radius:6px; padding:4px 10px;">移除 (Xóa)</button>
         <label style="color:#0a58ca; margin-top:0;">📍 農地編號 <span>(Mã đất)</span></label>
-        <input type="text" class="w-farm-id" placeholder="例如：B002" style="border-color:#0d6efd;">
+        <input type="text" class="w-farm-id" placeholder="例如：B-02" style="border-color:#0d6efd;">
         <div class="qty-grid" style="margin-top: 10px;">
             <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
                 <div class="qty-title" style="color: #0d6efd;">🚚 重車 <span>(Xe nặng)</span></div>
@@ -1218,25 +1218,68 @@ function getHaversineDistance(lat1, lon1, lat2, lon2) {
         <div class="qty-grid" style="margin-top: 10px;">
             <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
                 <div class="qty-title" style="color: #0d6efd;">🎒 太空包 <span>(Bao Jumbo)</span></div>
-                <input type="number" class="w-jumbo" placeholder="粒數" min="0">
+                <input type="number" class="w-jumbo" placeholder="粒數" min="0" oninput="handleContainerInput(this)">
             </div>
             <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
                 <div class="qty-title" style="color: #0d6efd;">🛍️ 包仔 <span>(Bao nhỏ)</span></div>
-                <input type="number" class="w-bag" placeholder="包數" min="0">
+                <input type="number" class="w-bag" placeholder="包數" min="0" oninput="handleContainerInput(this)">
             </div>
         </div>
         <div class="qty-grid" style="margin-top: 10px;">
             <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
                 <div class="qty-title" style="color: #0d6efd;">🌿 綠葉 <span>(Lá xanh)</span></div>
-                <input type="number" class="w-gleaf" placeholder="箱數" min="0">
+                <input type="number" class="w-gleaf" placeholder="箱數" min="0" oninput="handleContainerInput(this)">
             </div>
             <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
                 <div class="qty-title" style="color: #0d6efd;">📦 VDS箱 <span>(Thùng)</span></div>
-                <input type="number" class="w-box" placeholder="箱數" min="0">
+                <input type="number" class="w-box" placeholder="箱數" min="0" oninput="handleContainerInput(this)">
             </div>
         </div>
     `;
     container.appendChild(newField);
+}
+
+// ==========================================
+// ★ 容器互斥鎖定邏輯 (單一過磅只能選一種容器) ★
+// ==========================================
+function handleContainerInput(inputElem) {
+    const block = inputElem.closest('.weigh-field-block');
+    // 抓出同一個區塊裡的 4 個容器輸入框
+    const inputs = [
+        block.querySelector('.w-jumbo'),
+        block.querySelector('.w-bag'),
+        block.querySelector('.w-gleaf'),
+        block.querySelector('.w-box')
+    ];
+
+    // 檢查是不是有人已經填了數字 (>0)
+    let hasValue = false;
+    for (let i = 0; i < inputs.length; i++) {
+        if (parseInt(inputs[i].value) > 0) {
+            hasValue = true;
+            break;
+        }
+    }
+
+    // 如果有人填了數字，把其他空白的框框鎖起來並反灰
+    if (hasValue) {
+        inputs.forEach(el => {
+            if (parseInt(el.value) > 0) {
+                el.disabled = false;
+                el.parentElement.style.opacity = "1"; // 保持清晰
+            } else {
+                el.disabled = true;
+                el.value = ""; // 強制清空
+                el.parentElement.style.opacity = "0.5"; // 視覺上變淡反灰
+            }
+        });
+    } else {
+        // 如果把數字刪掉變回空白，就解鎖所有人
+        inputs.forEach(el => {
+            el.disabled = false;
+            el.parentElement.style.opacity = "1";
+        });
+    }
 }
 
 function submitWeigh() {
