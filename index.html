@@ -1269,9 +1269,20 @@ function getHaversineDistance(lat1, lon1, lat2, lon2) {
 
   function addWeighField() {
     const container = document.getElementById('weigh-fields-container');
+    
+    // ★ 關鍵升級：抓取畫面上「最後一個區塊」的空車重量
+    const existingBlocks = container.querySelectorAll('.weigh-field-block');
+    let lastTareWeight = "";
+    if (existingBlocks.length > 0) {
+        const lastBlock = existingBlocks[existingBlocks.length - 1];
+        lastTareWeight = lastBlock.querySelector('.w-tare').value;
+    }
+
     const newField = document.createElement('div');
     newField.className = 'weigh-field-block';
     newField.style = "background:#e3f2fd; padding:15px; border-radius:12px; border:2px solid #0d6efd; margin-bottom:15px; position:relative;";
+    
+    // 在重車 (w-gross) 的 input 中，自動帶入剛剛抓到的 lastTareWeight
     newField.innerHTML = `
         <button type="button" class="remove-btn" onclick="this.parentElement.remove()" style="position:absolute; top:10px; right:10px; background:#dc3545; color:white; border:none; border-radius:6px; padding:4px 10px;">移除 (Xóa)</button>
         <label style="color:#0a58ca; margin-top:0;">📍 農地編號 <span>(Mã đất)</span></label>
@@ -1279,7 +1290,7 @@ function getHaversineDistance(lat1, lon1, lat2, lon2) {
         <div class="qty-grid" style="margin-top: 10px;">
             <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
                 <div class="qty-title" style="color: #0d6efd;">🚚 重車 <span>(Xe nặng)</span></div>
-                <input type="number" class="w-gross" placeholder="總重 (KG)" min="0">
+                <input type="number" class="w-gross" placeholder="總重 (KG)" min="0" value="${lastTareWeight}">
             </div>
             <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
                 <div class="qty-title" style="color: #0d6efd;">🏁 空車 <span>(Xe không)</span></div>
@@ -1324,13 +1335,27 @@ function submitWeigh() {
         if (isNaN(gross) || isNaN(tare)) { alert(`❌ 請完整輸入農地 ${fid} 的「重車」與「空車」重量！`); hasError = true; return; }
         if (gross <= tare) { alert(`❌ 農地 ${fid} 的「重車」必須大於「空車」重量！`); hasError = true; return; }
 
-        weighData.push({ farmId: fid, gross: gross, tare: tare, net: gross - tare, jumbo: jumbo, box: box });
+        let net = gross - tare;
+        
+        // ★ 自動計算每粒平均重量 (淨重 ÷ 粒數)
+        // 💡 如果您有扣除箱子固定重量的需求，可改為: ((net - (box * 32)) / jumbo).toFixed(1)
+        let avgWeight = 0;
+        if (jumbo > 0) {
+            avgWeight = (net / jumbo).toFixed(1); 
+        }
+
+        weighData.push({ farmId: fid, gross: gross, tare: tare, net: net, jumbo: jumbo, box: box, avgWeight: avgWeight });
     });
 
     if (hasError || weighData.length === 0) return;
 
+    // ★ 在送出前的確認視窗中，加上均重顯示
     let confirmMsg = `您即將送出以下過磅資料：\n\n司機：${driver} [${plate}]\n`;
-    weighData.forEach(w => { confirmMsg += `📍 ${w.farmId} ➔ 淨重 ${w.net} KG\n`; });
+    weighData.forEach(w => { 
+        confirmMsg += `📍 ${w.farmId} ➔ 淨重 ${w.net} KG`; 
+        if (w.jumbo > 0) confirmMsg += ` (每粒均重 ${w.avgWeight} KG)`;
+        confirmMsg += `\n`;
+    });
     if (!confirm(confirmMsg + "\n確認無誤嗎？")) return;
 
     document.getElementById('loading-mask').style.display = 'flex';
@@ -1345,6 +1370,10 @@ function submitWeigh() {
         messageText += `┈┈┈┈┈┈┈┈┈┈┈┈\n📍 農地：${w.farmId}\n🚚 重車：${w.gross} KG\n🏁 空車：${w.tare} KG\n📉 淨重：${w.net} KG\n`;
         if (w.jumbo > 0 || w.box > 0) {
             messageText += `📦 數量：${w.jumbo > 0 ? w.jumbo + ' 粒(太空包) ｜ ' : ''}${w.box > 0 ? w.box + ' 箱' : ''}\n`;
+        }
+        // ★ 在傳送到 LINE 的訊息中，也加上平均重量
+        if (w.jumbo > 0) {
+            messageText += `⚖️ 每粒均重：${w.avgWeight} KG\n`;
         }
     });
     messageText += `════════════\n\u200B`;
