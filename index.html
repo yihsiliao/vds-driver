@@ -421,7 +421,7 @@
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                   <label style="color:#d97706; margin:0;">📍 農地資料 (Dữ liệu khu đất) - 1</label>
               </div>
-              <input type="text" class="f-id" id="harvest-field-id" placeholder="農地編號 (Mã khu đất / VD: A-01)" style="margin-bottom:8px;">
+              <input type="text" class="f-id" id="harvest-field-id" placeholder="農地編號 (Mã khu đất / VD: A001)" style="margin-bottom:8px;">
               <input type="number" class="f-area" placeholder="採收地數 (Diện tích / VD: 1.5)" inputmode="decimal" step="0.01">
               
               <div class="qty-grid">
@@ -886,7 +886,7 @@ function addField() {
             <label style="color:#d97706; margin:0;">📍 農地資料 (Dữ liệu khu đất) - ${fieldCounter}</label>
             <button type="button" class="remove-btn" onclick="this.parentElement.parentElement.remove()">移除 (Xóa)</button>
         </div>
-        <input type="text" class="f-id" placeholder="農地編號 (Mã khu đất / VD: A-01)" style="margin-bottom:8px;">
+        <input type="text" class="f-id" placeholder="農地編號 (Mã khu đất / VD: A001)" style="margin-bottom:8px;">
         <input type="number" class="f-area" placeholder="採收地數 (Diện tích / VD: 1.5)" inputmode="decimal" step="0.01">
         
         <div class="qty-grid">
@@ -1204,7 +1204,7 @@ function getHaversineDistance(lat1, lon1, lat2, lon2) {
     newField.innerHTML = `
         <button type="button" class="remove-btn" onclick="this.parentElement.remove()" style="position:absolute; top:10px; right:10px; background:#dc3545; color:white; border:none; border-radius:6px; padding:4px 10px;">移除 (Xóa)</button>
         <label style="color:#0a58ca; margin-top:0;">📍 農地編號 <span>(Mã đất)</span></label>
-        <input type="text" class="w-farm-id" placeholder="例如：B-02" style="border-color:#0d6efd;">
+        <input type="text" class="w-farm-id" placeholder="例如：B002" style="border-color:#0d6efd;">
         <div class="qty-grid" style="margin-top: 10px;">
             <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
                 <div class="qty-title" style="color: #0d6efd;">🚚 重車 <span>(Xe nặng)</span></div>
@@ -1267,7 +1267,6 @@ function submitWeigh() {
 
         let net = gross - tare;
 
-        // ★ 直接用淨重算每粒均重
         let avgWeight = 0;
         if (jumbo > 0) {
             avgWeight = (net / jumbo).toFixed(1); 
@@ -1281,7 +1280,11 @@ function submitWeigh() {
     let confirmMsg = `您即將送出以下過磅資料：\n\n司機：${driver} [${plate}]\n`;
     weighData.forEach(w => { 
         confirmMsg += `📍 ${w.farmId} ➔ 淨重 ${w.net} KG`; 
-        if (w.jumbo > 0) confirmMsg += `\n   (每粒均重 ${w.avgWeight} KG)`;
+        
+        // ★ 判斷：只有當「有太空包」且「沒有綠葉、VDS箱、包仔」時，才顯示均重
+        if (w.jumbo > 0 && w.gleaf === 0 && w.box === 0 && w.bag === 0) {
+            confirmMsg += `\n   (每粒均重 ${w.avgWeight} KG)`;
+        }
         confirmMsg += `\n`;
     });
     if (!confirm(confirmMsg + "\n確認無誤嗎？")) return;
@@ -1303,9 +1306,11 @@ function submitWeigh() {
             if(w.bag > 0) qtys.push(`${w.bag} 包仔`);
             if(w.gleaf > 0) qtys.push(`${w.gleaf} 綠葉`);
             if(w.box > 0) qtys.push(`${w.box} VDS箱`);
-            messageText += `📦 裝載容器：${qtys.join(" ｜ ")}\n`;
+            messageText += `📦 載具：${qtys.join(" ｜ ")}\n`;
         }
-        if (w.jumbo > 0) {
+        
+        // ★ 判斷：LINE 訊息也只有在純太空包時，才印出每粒均重
+        if (w.jumbo > 0 && w.gleaf === 0 && w.box === 0 && w.bag === 0) {
             messageText += `⚖️ 每粒均重：${w.avgWeight} KG\n`;
         }
     });
