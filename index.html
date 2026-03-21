@@ -492,7 +492,7 @@
       <div id="weigh-fields-container">
           <div class="weigh-field-block" style="background:#e3f2fd; padding:15px; border-radius:12px; border:2px solid #0d6efd; margin-bottom:15px; position:relative;">
               <label style="color:#0a58ca; margin-top:0;">📍 農地編號 <span>(Mã đất)</span></label>
-              <input type="text" class="w-farm-id" placeholder="例如：A-01" style="border-color:#0d6efd;">
+              <input type="text" class="w-farm-id" placeholder="例如：A001" style="border-color:#0d6efd;">
               
               <div class="qty-grid" style="margin-top: 10px;">
                   <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
@@ -1204,7 +1204,7 @@ function getHaversineDistance(lat1, lon1, lat2, lon2) {
     newField.innerHTML = `
         <button type="button" class="remove-btn" onclick="this.parentElement.remove()" style="position:absolute; top:10px; right:10px; background:#dc3545; color:white; border:none; border-radius:6px; padding:4px 10px;">移除 (Xóa)</button>
         <label style="color:#0a58ca; margin-top:0;">📍 農地編號 <span>(Mã đất)</span></label>
-        <input type="text" class="w-farm-id" placeholder="例如：B-02" style="border-color:#0d6efd;">
+        <input type="text" class="w-farm-id" placeholder="例如：B002" style="border-color:#0d6efd;">
         <div class="qty-grid" style="margin-top: 10px;">
             <div class="qty-card" style="border-color: #0d6efd; background-color: #ffffff;">
                 <div class="qty-title" style="color: #0d6efd;">🚚 重車 <span>(Xe nặng)</span></div>
@@ -1308,6 +1308,13 @@ function submitWeigh() {
         if (isNaN(gross) || isNaN(tare)) { alert(`❌ 請完整輸入農地 ${fid} 的「重車」與「空車」重量！`); hasError = true; return; }
         if (gross <= tare) { alert(`❌ 農地 ${fid} 的「重車」必須大於「空車」重量！`); hasError = true; return; }
 
+        // ★ 新增防呆：確保至少填寫了一種容器數量
+        if (jumbo === 0 && bag === 0 && gleaf === 0 && box === 0) {
+            alert(`❌ 農地 ${fid} 請至少填寫一項裝載容器（太空包/包仔/綠葉/VDS箱）！`);
+            hasError = true;
+            return;
+        }
+
         let net = gross - tare;
 
         let avgWeight = 0;
@@ -1323,8 +1330,6 @@ function submitWeigh() {
     let confirmMsg = `您即將送出以下過磅資料：\n\n司機：${driver} [${plate}]\n`;
     weighData.forEach(w => { 
         confirmMsg += `📍 ${w.farmId} ➔ 淨重 ${w.net} KG`; 
-        
-        // ★ 判斷：只有當「有太空包」且「沒有綠葉、VDS箱、包仔」時，才顯示均重
         if (w.jumbo > 0 && w.gleaf === 0 && w.box === 0 && w.bag === 0) {
             confirmMsg += `\n   (每粒均重 ${w.avgWeight} KG)`;
         }
@@ -1352,7 +1357,6 @@ function submitWeigh() {
             messageText += `📦 載具：${qtys.join(" ｜ ")}\n`;
         }
         
-        // ★ 判斷：LINE 訊息也只有在純太空包時，才印出每粒均重
         if (w.jumbo > 0 && w.gleaf === 0 && w.box === 0 && w.bag === 0) {
             messageText += `⚖️ 每粒均重：${w.avgWeight} KG\n`;
         }
