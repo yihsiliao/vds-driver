@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>🌱 VDS 倉儲與溯源系統 | Kho VDS</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    :root {
+        --bg-color: #f4f6f8; --card-bg: #ffffff; --text-color: #2c3e50; --border-color: #dce1e6;
+        --input-bg: #ffffff; --label-color: #34495e; --sub-text: #7f8c8d; --divider: #ecf0f1;
+        --primary: #2E7D32; --secondary: #f39c12;
+    }
+    body { background-color: var(--bg-color); padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: var(--text-color); min-height: 100vh; margin: 0; }
+    .card { background: var(--card-bg); padding: 25px 20px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; border: 1px solid var(--border-color); }
+    
+    h3 { color: var(--primary); text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 26px; letter-spacing: 1px; }
+    .sub-title { font-size: 14px; color: var(--sub-text); font-weight: 500; text-align: center; display: block; margin-bottom: 25px; }
+    
+    label { display: block; font-weight: 700; margin-top: 18px; margin-bottom: 8px; font-size: 16px; color: var(--label-color); }
+    label span { font-weight: 400; color: var(--sub-text); font-size: 13px; margin-left: 5px; }
+    
+    select, input[type="text"], input[type="date"], input[type="number"] { 
+        width: 100%; height: 55px; font-size: 18px; font-weight: 600; border: 2px solid var(--border-color); 
+        border-radius: 12px; background-color: var(--input-bg); padding-left: 15px; appearance: none; outline: none; 
+        box-sizing: border-box; color: var(--text-color); transition: 0.2s;
+    }
+    select:focus, input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15); }
+    
+    .scan-btn { 
+        background: linear-gradient(135deg, #34495e, #2c3e50); color: white; border: none; border-radius: 12px; 
+        height: 60px; font-size: 18px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 5px; margin-bottom: 10px;
+        display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .scan-btn:active { transform: scale(0.98); }
+    
+    #original-barcode { background-color: #f8f9fa; border-color: #bdc3c7; color: #16a085; font-family: monospace; letter-spacing: 1px; }
+
+    .submit-btn { 
+        background: linear-gradient(135deg, var(--primary), #1b5e20); color: white; border: none; border-radius: 15px; 
+        height: 70px; width: 100%; font-size: 20px; font-weight: 800; cursor: pointer; margin-top: 30px; 
+        box-shadow: 0 6px 15px rgba(46, 125, 50, 0.3); transition: 0.2s; display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.2;
+    }
+    .submit-btn:active { transform: scale(0.97); }
+    .btn-sub { font-size: 13px; font-weight: 500; opacity: 0.9; margin-top: 2px; }
+
+    .custom-input { display: none; margin-top: 8px; border-color: var(--secondary) !important; background-color: #fffdf5 !important; }
+
+    #loading-mask { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+    .spinner { width: 45px; height: 45px; border: 5px solid var(--border-color); border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    #loading-text { font-size: 18px; color: var(--primary); font-weight: bold; }
+    
+    #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 10px; padding: 16px; position: fixed; z-index: 10000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 16px; font-weight: bold; opacity: 0; transition: opacity 0.3s, bottom 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+  </style>
+</head>
+<body>
+
+<div id="loading-mask">
+    <div class="spinner"></div>
+    <div id="loading-text">系統初始化中...</div>
+</div>
+<div id="toast"></div>
+
+<div class="card">
+    <h3>🌱 VDS 倉儲管理</h3>
+    <span class="sub-title">Hệ thống kho & truy xuất nguồn gốc</span>
+    
+    <label>📅 進貨日期 <span>(Ngày nhập kho)</span></label>
+    <input type="date" id="inbound-date">
+
+    <label>📸 1. 原廠種子條碼 <span>(Quét mã vạch gốc)</span></label>
+    <button class="scan-btn" onclick="scanOriginalBarcode()">
+        <span style="font-size: 24px;">📷</span> 點擊打開相機掃描
+    </button>
+    <input type="text" id="original-barcode" placeholder="掃描結果會出現在這裡..." readonly>
+
+    <label>🥕 2. 品種名稱 <span>(Tên giống)</span></label>
+    <select id="seed-variety" onchange="checkCustom('seed-variety')">
+        <option value="" disabled selected>請選擇品種...</option>
+        <option value="日本黑田五寸">日本黑田五寸</option>
+        <option value="向陽二號">向陽二號</option>
+        <option value="改良紅輝">改良紅輝</option>
+        <option value="custom">✏️ 其他 (自行輸入)</option>
+    </select>
+    <input type="text" id="seed-variety-custom" class="custom-input" placeholder="請輸入品種名稱">
+
+    <label>🏢 3. 供應廠商 <span>(Nhà cung cấp)</span></label>
+    <select id="seed-vendor" onchange="checkCustom('seed-vendor')">
+        <option value="" disabled selected>請選擇廠商...</option>
+        <option value="生生種苗">生生種苗</option>
+        <option value="農友種苗">農友種苗</option>
+        <option value="已知生技">已知生技</option>
+        <option value="custom">✏️ 其他 (自行輸入)</option>
+    </select>
+    <input type="text" id="seed-vendor-custom" class="custom-input" placeholder="請輸入廠商名稱">
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div>
+            <label>📦 箱數 <span>(Số thùng)</span></label>
+            <input type="number" id="box-qty" value="1" min="1" style="text-align: center;">
+        </div>
+        <div>
+            <label>🥫 每箱罐數 <span>(Lon/Thùng)</span></label>
+            <input type="number" id="cans-per-box" value="50" min="1" style="text-align: center;">
+        </div>
+    </div>
+
+    <button class="submit-btn" onclick="submitInbound()">
+        <span>📤 生成 VDS 專屬批號與標籤</span>
+        <span class="btn-sub">Tạo mã lô & in tem</span>
+    </button>
+</div>
+
+<script>
+// ==========================================
+// 系統設定
+// ==========================================
+const LIFF_ID = "2009601199-exo5jfDe"; // 您的全新 LIFF ID
+const GAS_URL = "https://script.google.com/macros/s/AKfycbz0awiapo_XZJ_BmF52MNVLTi2OwOfPsBRl-VjtdvcNslWDLsA-YBdgmbWKO6GxECnF/exec"; // 我們會共用同一個 GAS 大腦
+
+window.onload = function() {
+    document.getElementById('inbound-date').valueAsDate = new Date();
+    
+    liff.init({ liffId: LIFF_ID }).then(function() {
+        if (!liff.isLoggedIn()) { liff.login(); return; }
+        document.getElementById('loading-mask').style.display = 'none';
+    }).catch(function(err) {
+        document.getElementById('loading-mask').style.display = 'none';
+        console.error(err);
+    });
+};
+
+function checkCustom(type) {
+    var select = document.getElementById(type);
+    var input = document.getElementById(type + '-custom');
+    if (select.value === 'custom') { 
+        input.style.display = 'block'; input.focus(); 
+    } else { 
+        input.style.display = 'none'; input.value = ''; 
+    }
+}
+
+function showToast(text) {
+    var x = document.getElementById("toast"); 
+    x.innerHTML = text; x.className = "show"; 
+    setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+}
+
+// ==========================================
+// 📷 核心功能：呼叫 LINE 相機掃描原廠條碼
+// ==========================================
+function scanOriginalBarcode() {
+    if (liff.isInClient() && liff.isApiAvailable('scanCodeV2')) {
+        liff.scanCodeV2().then(result => {
+            // 將掃出來的號碼填入文字框
+            var barcodeInput = document.getElementById('original-barcode');
+            barcodeInput.value = result.value;
+            
+            // 視覺回饋：閃爍綠色
+            barcodeInput.style.backgroundColor = "#e8f5e9";
+            barcodeInput.style.borderColor = "#2E7D32";
+            setTimeout(() => { 
+                barcodeInput.style.backgroundColor = "#f8f9fa"; 
+                barcodeInput.style.borderColor = "#bdc3c7";
+            }, 1500);
+            
+            showToast("✅ 條碼掃描成功！");
+        }).catch(error => {
+            alert("⚠️ 掃碼取消或發生錯誤");
+        });
+    } else {
+        alert("❌ 掃碼功能只能在手機的 LINE APP 裡面使用喔！");
+        // 為了測試方便，如果在電腦上，我們可以自動塞入一組假條碼
+        if (!liff.isInClient()) {
+            document.getElementById('original-barcode').value = "TEST-JP-99812";
+            showToast("💻 電腦版測試模式：已載入假條碼");
+        }
+    }
+}
+
+// ==========================================
+// 📤 送出入庫請求 (準備跟 GAS 對接)
+// ==========================================
+function submitInbound() {
+    var date = document.getElementById('inbound-date').value;
+    var barcode = document.getElementById('original-barcode').value.trim();
+    var vSelect = document.getElementById('seed-variety');
+    var variety = vSelect.value === 'custom' ? document.getElementById('seed-variety-custom').value.trim() : vSelect.value;
+    var venSelect = document.getElementById('seed-vendor');
+    var vendor = venSelect.value === 'custom' ? document.getElementById('seed-vendor-custom').value.trim() : venSelect.value;
+    var boxes = parseInt(document.getElementById('box-qty').value) || 0;
+    var cans = parseInt(document.getElementById('cans-per-box').value) || 0;
+
+    if (!barcode) return alert("❌ 請先掃描原廠條碼！");
+    if (!variety) return alert("❌ 請選擇或輸入品種！");
+    if (!vendor) return alert("❌ 請選擇或輸入廠商！");
+    if (boxes < 1 || cans < 1) return alert("❌ 箱數與罐數必須大於 0！");
+
+    let totalCans = boxes * cans;
+    if (!confirm(`您即將入庫：\n\n📌 條碼: ${barcode}\n🌱 品種: ${variety}\n🏢 廠商: ${vendor}\n📦 數量: ${boxes} 箱 (共 ${totalCans} 罐)\n\n系統將為您自動生成 ${totalCans} 張標籤，確認無誤嗎？`)) return;
+
+    document.getElementById('loading-mask').style.display = 'flex';
+    document.getElementById('loading-text').innerText = "正在生成 VDS 專屬標籤...";
+
+    // 準備送給 GAS 後端的資料
+    var payload = {
+        action: "種子進貨_寫入",
+        date: date,
+        barcode: barcode,
+        variety: variety,
+        vendor: vendor,
+        boxes: boxes,
+        cansPerBox: cans,
+        totalCans: totalCans
+    };
+
+    fetch(GAS_URL, { 
+        method: 'POST', 
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+        redirect: "follow", 
+        body: JSON.stringify(payload) 
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loading-mask').style.display = 'none';
+        if(data.result === "success") {
+            showToast("🎉 進貨成功！標籤已生成。");
+            // 未來這裡會跳出 PDF 下載連結，或傳送訊息到 LINE
+            if (liff.isInClient()) {
+                liff.sendMessages([{ type: 'text', text: data.messageText }]).then(() => {
+                    setTimeout(() => liff.closeWindow(), 1500);
+                });
+            } else {
+                alert("測試成功，系統回傳訊息：\n" + data.messageText);
+            }
+        } else {
+            alert("❌ 發生錯誤：" + data.msg);
+        }
+    })
+    .catch(error => {
+        document.getElementById('loading-mask').style.display = 'none';
+        alert("⚠️ 連線失敗，請檢查網路。");
+    });
+}
+</script>
+</body>
+</html>
