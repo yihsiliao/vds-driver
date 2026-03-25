@@ -53,6 +53,17 @@
     
     #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 10px; padding: 16px; position: fixed; z-index: 10000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 16px; font-weight: bold; opacity: 0; transition: opacity 0.3s, bottom 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
     #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+
+    /* ★ 專屬列印成功彈跳視窗 */
+    #success-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10001; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+    .success-card { background: white; width: 100%; max-width: 360px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out; display: flex; flex-direction: column; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .success-header { background: linear-gradient(135deg, #2E7D32, #1b5e20); color: white; padding: 20px; text-align: center; font-weight: bold; font-size: 24px; }
+    .success-body { padding: 20px; font-size: 16px; color: #333; line-height: 1.6; white-space: pre-wrap; background-color: #f9f9f9; font-family: monospace; }
+    .success-footer { padding: 20px; background: white; text-align: center; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 12px; }
+    .btn-print { background: #0288D1; color: white; border: none; border-radius: 12px; height: 60px; font-size: 20px; font-weight: bold; width: 100%; cursor: pointer; display: flex; justify-content: center; align-items: center; text-decoration: none; box-shadow: 0 4px 10px rgba(2, 136, 209, 0.3); }
+    .btn-print:active { transform: scale(0.97); }
+    .btn-close { background: #95a5a6; color: white; border: none; border-radius: 12px; height: 50px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -62,6 +73,17 @@
     <div id="loading-text">系統初始化中...</div>
 </div>
 <div id="toast"></div>
+
+<div id="success-modal">
+    <div class="success-card">
+        <div class="success-header">🎉 入庫成功！</div>
+        <div id="success-content" class="success-body">加載中...</div>
+        <div class="success-footer">
+            <a id="btn-print-link" href="#" target="_blank" class="btn-print">🖨️ 開啟標籤並列印</a>
+            <button class="btn-close" onclick="closeSuccessModal()">返回繼續作業</button>
+        </div>
+    </div>
+</div>
 
 <div class="card">
     <h3>🌱 VDS 倉儲管理</h3>
@@ -118,7 +140,8 @@
 // 系統設定
 // ==========================================
 const LIFF_ID = "2009601199-exo5jfDe"; // 您的全新 LIFF ID
-const GAS_URL = "https://script.google.com/macros/s/AKfycbz0awiapo_XZJ_BmF52MNVLTi2OwOfPsBRl-VjtdvcNslWDLsA-YBdgmbWKO6GxECnF/exec"; // 我們會共用同一個 GAS 大腦
+// 這裡保留您上次貼過來的 GAS 網址！(請確認是最新部署的那個)
+const GAS_URL = "https://script.google.com/macros/s/AKfycbz0awiapo_XZJ_BmF52MNVLTi2OwOfPsBRl-VjtdvcNslWDLsA-YBdgmbWKO6GxECnF/exec"; 
 
 window.onload = function() {
     document.getElementById('inbound-date').valueAsDate = new Date();
@@ -148,41 +171,31 @@ function showToast(text) {
     setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
 }
 
-// ==========================================
-// 📷 核心功能：呼叫 LINE 相機掃描原廠條碼
-// ==========================================
 function scanOriginalBarcode() {
     if (liff.isInClient() && liff.isApiAvailable('scanCodeV2')) {
         liff.scanCodeV2().then(result => {
-            // 將掃出來的號碼填入文字框
             var barcodeInput = document.getElementById('original-barcode');
             barcodeInput.value = result.value;
-            
-            // 視覺回饋：閃爍綠色
             barcodeInput.style.backgroundColor = "#e8f5e9";
             barcodeInput.style.borderColor = "#2E7D32";
             setTimeout(() => { 
                 barcodeInput.style.backgroundColor = "#f8f9fa"; 
                 barcodeInput.style.borderColor = "#bdc3c7";
             }, 1500);
-            
             showToast("✅ 條碼掃描成功！");
         }).catch(error => {
             alert("⚠️ 掃碼取消或發生錯誤");
         });
     } else {
-        alert("❌ 掃碼功能只能在手機的 LINE APP 裡面使用喔！");
-        // 為了測試方便，如果在電腦上，我們可以自動塞入一組假條碼
         if (!liff.isInClient()) {
             document.getElementById('original-barcode').value = "TEST-JP-99812";
             showToast("💻 電腦版測試模式：已載入假條碼");
+        } else {
+            alert("❌ 掃碼功能需在手機 LINE APP 使用！");
         }
     }
 }
 
-// ==========================================
-// 📤 送出入庫請求 (準備跟 GAS 對接)
-// ==========================================
 function submitInbound() {
     var date = document.getElementById('inbound-date').value;
     var barcode = document.getElementById('original-barcode').value.trim();
@@ -202,9 +215,8 @@ function submitInbound() {
     if (!confirm(`您即將入庫：\n\n📌 條碼: ${barcode}\n🌱 品種: ${variety}\n🏢 廠商: ${vendor}\n📦 數量: ${boxes} 箱 (共 ${totalCans} 罐)\n\n系統將為您自動生成 ${totalCans} 張標籤，確認無誤嗎？`)) return;
 
     document.getElementById('loading-mask').style.display = 'flex';
-    document.getElementById('loading-text').innerText = "正在生成 VDS 專屬標籤...";
+    document.getElementById('loading-text').innerText = "正在生成 PDF 標籤檔案...";
 
-    // 準備送給 GAS 後端的資料
     var payload = {
         action: "種子進貨_寫入",
         date: date,
@@ -226,14 +238,32 @@ function submitInbound() {
     .then(data => {
         document.getElementById('loading-mask').style.display = 'none';
         if(data.result === "success") {
-            showToast("🎉 進貨成功！標籤已生成。");
-            // 未來這裡會跳出 PDF 下載連結，或傳送訊息到 LINE
-            if (liff.isInClient()) {
-                liff.sendMessages([{ type: 'text', text: data.messageText }]).then(() => {
-                    setTimeout(() => liff.closeWindow(), 1500);
-                });
+            showToast("🎉 進貨成功！");
+            
+            // ★ 將後端傳來的文字分離出網址
+            let msg = data.messageText;
+            let urlRegex = /(https:\/\/drive\.google\.com[^\s]+)/;
+            let urlMatch = msg.match(urlRegex);
+            let pdfUrl = urlMatch ? urlMatch[0] : "";
+            // 把網址和提示文字從原本的訊息中挖掉，讓卡片變乾淨
+            let cleanMsg = msg.replace(urlRegex, "").replace("🖨️ 您的 8x8cm 標籤 PDF 已生成完畢！請點擊下方連結下載並列印：\n\n", "").trim();
+
+            document.getElementById('success-content').innerText = cleanMsg;
+            let printBtn = document.getElementById('btn-print-link');
+            
+            if(pdfUrl) {
+                printBtn.href = pdfUrl;
+                printBtn.style.display = "flex";
             } else {
-                alert("測試成功，系統回傳訊息：\n" + data.messageText);
+                printBtn.style.display = "none";
+            }
+
+            // 彈出成功畫面
+            document.getElementById('success-modal').style.display = 'flex';
+
+            // 背景還是悄悄發一個 LINE 訊息做紀錄
+            if (liff.isInClient()) {
+                liff.sendMessages([{ type: 'text', text: data.messageText }]).catch(e => console.log(e));
             }
         } else {
             alert("❌ 發生錯誤：" + data.msg);
@@ -243,6 +273,13 @@ function submitInbound() {
         document.getElementById('loading-mask').style.display = 'none';
         alert("⚠️ 連線失敗，請檢查網路。");
     });
+}
+
+function closeSuccessModal() {
+    document.getElementById('success-modal').style.display = 'none';
+    // 關閉後，順便把條碼框清空，方便掃描下一箱
+    document.getElementById('original-barcode').value = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 </script>
 </body>
