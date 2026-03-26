@@ -72,6 +72,11 @@
     .germ-result { text-align: center; margin-top: 15px; font-size: 18px; font-weight: bold; color: #2c3e50; }
     .germ-result span { color: #e74c3c; font-size: 28px; }
 
+    /* 選填發芽率 Checkbox 美化 */
+    .toggle-checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: bold; color: #2E7D32; background: #e8f5e9; padding: 12px 15px; border-radius: 10px; border: 2px solid #a5d6a7; cursor: pointer; margin-top: 15px; transition: 0.2s; }
+    .toggle-checkbox-label:active { transform: scale(0.98); }
+    .toggle-checkbox-label input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; margin: 0; accent-color: #2E7D32; }
+
     #loading-mask { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
     .spinner { width: 45px; height: 45px; border: 5px solid var(--border-color); border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -88,7 +93,7 @@
 <body>
 
 <div id="loading-mask"><div class="spinner"></div><div id="loading-text" style="font-weight:bold; color:#2E7D32;">系統處理中...</div></div>
-<div id="success-modal"><div class="success-card"><div id="modal-title" class="success-header">🎉 處理成功！</div><div id="success-content" class="success-body">加載中...</div><div class="success-footer"><a id="btn-print-link" href="#" target="_blank" class="btn-print" style="display:none;">🖨️ 開啟標籤並列印</a><button class="btn-close" onclick="closeSuccessModal()">返回繼續作業</button></div></div></div>
+<div id="success-modal"><div class="success-card"><div id="modal-title" class="success-header">🎉 處理成功！</div><div id="success-content" class="success-body">加載中...</div><div class="success-footer"><button class="btn-close" onclick="closeSuccessModal()">返回繼續作業</button></div></div></div>
 
 <div id="home-view">
     <div class="home-header"><h2>VDS 智慧農業系統</h2><span class="sub-title">Hệ thống Quản lý VDS</span></div>
@@ -133,8 +138,8 @@
 <div id="scout-module" style="display: none;">
     <button class="back-btn" onclick="goHome()">⬅️ 返回主選單</button>
     <div class="card">
-        <h3 style="color: var(--scout);">🚶‍♂️ 田間巡視與發芽率</h3>
-        <span class="sub-title">記錄田間狀況，或自動計算發芽率</span>
+        <h3 style="color: var(--scout);">🚶‍♂️ 田間巡視與紀錄</h3>
+        <span class="sub-title">隨手記錄田間狀況，並可選填發芽率</span>
         
         <label>📅 巡視日期</label><input type="date" id="scout-date">
         
@@ -149,13 +154,17 @@
         <input type="text" id="scout-field-number-custom" class="custom-input" placeholder="請輸入農地編號">
         
         <label>🏷️ 2. 狀況分類</label>
-        <select id="scout-category" onchange="toggleGerminationCalc()">
+        <select id="scout-category">
             <option value="👍 生長良好" selected>👍 生長良好</option>
-            <option value="🌱 發芽率調查">🌱 發芽率調查 (自動計算)</option>
             <option value="🐛 發現病蟲害">🐛 發現病蟲害</option>
             <option value="💦 淹水或災損">💦 淹水或災損</option>
             <option value="📝 其他狀況">📝 其他狀況</option>
         </select>
+
+        <label class="toggle-checkbox-label">
+            <input type="checkbox" id="scout-germ-toggle" onchange="toggleGerminationCalc()">
+            🌱 3. 記錄發芽率 (選填)
+        </label>
 
         <div id="germination-calc-box" class="germ-calc-box">
             <h4>🧮 發芽率自動試算機</h4>
@@ -164,18 +173,16 @@
                 <div><label>株距(cm)</label><input type="number" id="scout-space" value="6" oninput="calcGermRate()"></div>
                 <div><label>行數(行)</label><input type="number" id="scout-rows" value="4" oninput="calcGermRate()"></div>
             </div>
-            <label style="color:#d35400;">👇 實際數到幾株？ (輸入後自動算出)</label>
+            <label style="color:#d35400;">👇 實際數到幾株？</label>
             <input type="number" id="scout-actual" placeholder="例如輸入: 20" oninput="calcGermRate()" style="border: 2px solid #d35400; color: #d35400; font-weight: bold; font-size: 20px;">
-            <div class="germ-result">
-                發芽率：<span id="scout-rate-result">-- %</span>
-            </div>
+            <div class="germ-result">發芽率：<span id="scout-rate-result">-- %</span></div>
             <div id="scout-expected-text" style="text-align:center; font-size:12px; color:#7f8c8d; margin-top:5px;">(100% 滿苗標準應為 -- 株)</div>
         </div>
         
-        <label>📝 3. 詳細說明 (選填)</label>
+        <label>📝 4. 詳細說明 (選填)</label>
         <textarea id="scout-notes" rows="3" placeholder="請簡單描述現場看到的狀況..."></textarea>
         
-        <label>📸 4. 現場拍照上傳</label>
+        <label>📸 5. 現場拍照上傳</label>
         <div class="camera-upload-btn" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
             📷 點擊開啟相機拍照
             <input type="file" accept="image/*" capture="environment" onchange="compressAndPreviewImage(event)">
@@ -218,7 +225,6 @@ function compressAndPreviewImage(event) {
             canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h);
             const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
             
-            // 判斷是哪個模組的照片預覽
             let previewMat = document.getElementById('image-preview');
             let previewScout = document.getElementById('scout-image-preview');
             if (previewMat && document.getElementById('mat-module').style.display === 'block') { previewMat.src = dataUrl; previewMat.style.display = 'block'; }
@@ -229,12 +235,12 @@ function compressAndPreviewImage(event) {
     }
 }
 
-// ================= 🧮 發芽率計算機邏輯 =================
+// ================= 🧮 發芽率開關與計算機邏輯 =================
 function toggleGerminationCalc() {
-    var cat = document.getElementById('scout-category').value;
-    if (cat === '🌱 發芽率調查') {
+    var isChecked = document.getElementById('scout-germ-toggle').checked;
+    if (isChecked) {
         document.getElementById('germination-calc-box').style.display = 'block';
-        calcGermRate(); // 顯示時自動算一次
+        calcGermRate(); // 顯示時自動試算一次
     } else {
         document.getElementById('germination-calc-box').style.display = 'none';
     }
@@ -247,13 +253,10 @@ function calcGermRate() {
     let actual = parseFloat(document.getElementById('scout-actual').value) || 0;
 
     if (space > 0 && len > 0 && rows > 0) {
-        let expected = (len / space) * rows; // 公式：(長度 / 間距) * 行數
+        let expected = (len / space) * rows; 
         let rate = (actual / expected) * 100;
-        
-        // 更新畫面顯示
         document.getElementById('scout-rate-result').innerText = rate.toFixed(1) + ' %';
         document.getElementById('scout-expected-text').innerText = '(100% 滿苗標準應為 ' + expected.toFixed(1) + ' 株)';
-        
         return { expected: expected, rate: rate, actual: actual };
     } else {
         document.getElementById('scout-rate-result').innerText = '-- %';
@@ -267,20 +270,20 @@ function submitScout() {
     var date = document.getElementById('scout-date').value;
     var fSelect = document.getElementById('scout-field-number');
     var fieldNum = fSelect.value === 'custom' ? document.getElementById('scout-field-number-custom').value.trim() : fSelect.value;
-    var category = document.getElementById('scout-category').value;
+    var category = document.getElementById('scout-category').value; // 這邊現在只有生長良好/病蟲害等
     var notes = document.getElementById('scout-notes').value.trim();
 
     if (!fieldNum) return alert("❌ 請選擇或輸入巡視的農地編號！");
     
-    // 如果是發芽率調查，自動把計算結果塞進「備註說明」裡面
-    if (category === '🌱 發芽率調查') {
+    // 如果有勾選【記錄發芽率】
+    if (document.getElementById('scout-germ-toggle').checked) {
         let actualVal = document.getElementById('scout-actual').value;
-        if (!actualVal) return alert("❌ 您還沒有輸入「實際數到幾株」喔！");
+        if (!actualVal) return alert("❌ 您已勾選發芽率紀錄，請輸入「實際數到幾株」！");
         
         let stats = calcGermRate();
         if (stats) {
             let autoText = `【發芽率調查：${stats.rate.toFixed(1)}%】\n實測 ${stats.actual} 株 / 滿苗標準應為 ${stats.expected.toFixed(1)} 株\n(設定條件: 測量長${document.getElementById('scout-len').value}cm, 株距${document.getElementById('scout-space').value}cm, ${document.getElementById('scout-rows').value}行)\n┈┈┈┈┈┈\n`;
-            notes = autoText + notes; // 把算好的文字疊加在阿姨自己打的備註前面
+            notes = autoText + notes; // 將算好的發芽率資料，蓋在手打的備註前面
         }
     }
 
@@ -289,19 +292,11 @@ function submitScout() {
     showLoading("正在上傳巡田紀錄與照片...");
     fetch(GAS_URL, { 
         method: 'POST', 
-        body: JSON.stringify({ 
-            action: "巡田紀錄_寫入", 
-            date: date, 
-            fieldNum: fieldNum, 
-            category: category, 
-            notes: notes, 
-            imageBase64: currentCompressedImage 
-        }) 
+        body: JSON.stringify({ action: "巡田紀錄_寫入", date: date, fieldNum: fieldNum, category: category, notes: notes, imageBase64: currentCompressedImage }) 
     })
     .then(res => res.json()).then(data => handleResponse(data, "scout")).catch(() => hideLoading(true));
 }
 
-// 隱藏其他未改動的 API 函式 (進貨、領用等...)
 function submitSeedInbound() {} function submitSeedAction() {} function submitSeedPlanting() {}
 function submitMatInbound() {} function submitMatAction() {} function submitMatApplyMix() {}
 
@@ -324,10 +319,13 @@ function closeSuccessModal() {
     currentCompressedImage = "";
     document.getElementById('scout-notes').value = '';
     document.getElementById('scout-actual').value = '';
+    
+    // 把發芽率計算機收起來，取消勾選
+    document.getElementById('scout-germ-toggle').checked = false;
+    document.getElementById('germination-calc-box').style.display = 'none';
+    
     let previewScout = document.getElementById('scout-image-preview');
     if(previewScout) { previewScout.style.display = 'none'; previewScout.src = ''; }
-    // 如果剛剛是發芽率，重置一下文字
-    if(document.getElementById('scout-category').value === '🌱 發芽率調查') calcGermRate();
 }
 </script>
 </body>
