@@ -6,14 +6,9 @@
   <title>🌱 VDS 倉儲與溯源系統 | Kho VDS</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    :root {
-        --bg-color: #f4f6f8; --card-bg: #ffffff; --text-color: #2c3e50; --border-color: #dce1e6;
-        --input-bg: #ffffff; --label-color: #34495e; --sub-text: #7f8c8d;
-        --primary: #2E7D32; --secondary: #f39c12; --outbound: #d35400; --plant: #8e44ad;
-    }
+    :root { --bg-color: #f4f6f8; --card-bg: #ffffff; --text-color: #2c3e50; --border-color: #dce1e6; --input-bg: #ffffff; --label-color: #34495e; --sub-text: #7f8c8d; --primary: #2E7D32; --secondary: #f39c12; --outbound: #d35400; --plant: #8e44ad; }
     body { background-color: var(--bg-color); padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text-color); margin: 0; }
     
-    /* 三分頁切換按鈕設計 */
     .tab-container { display: flex; gap: 8px; margin-bottom: 20px; max-width: 480px; margin-left: auto; margin-right: auto; }
     .tab-btn { flex: 1; height: 50px; border-radius: 12px; border: 2px solid var(--border-color); background: white; font-size: 14px; font-weight: bold; color: var(--sub-text); cursor: pointer; transition: 0.3s; padding: 0; }
     .tab-btn.active.inbound-tab { background: var(--primary); color: white; border-color: var(--primary); }
@@ -23,18 +18,18 @@
     .card { background: var(--card-bg); padding: 25px 20px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; border: 1px solid var(--border-color); }
     
     h3 { text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 24px; letter-spacing: 1px; }
-    .title-inbound { color: var(--primary); }
-    .title-outbound { color: var(--outbound); }
-    .title-plant { color: var(--plant); }
-    .sub-title { font-size: 13px; color: var(--sub-text); font-weight: 500; text-align: center; display: block; margin-bottom: 25px; }
+    .title-inbound { color: var(--primary); } .title-outbound { color: var(--outbound); } .title-plant { color: var(--plant); }
+    .sub-title { font-size: 13px; color: var(--sub-text); font-weight: 500; text-align: center; display: block; margin-bottom: 20px; }
     
-    label { display: block; font-weight: 700; margin-top: 18px; margin-bottom: 8px; font-size: 16px; color: var(--label-color); }
+    label { display: block; font-weight: 700; margin-top: 15px; margin-bottom: 8px; font-size: 16px; color: var(--label-color); }
     label span { font-weight: 400; color: var(--sub-text); font-size: 13px; margin-left: 5px; }
     
-    select, input[type="text"], input[type="date"], input[type="number"] { 
-        width: 100%; height: 55px; font-size: 17px; font-weight: 600; border: 2px solid var(--border-color); 
+    select, input[type="text"], input[type="date"], input[type="number"], textarea { 
+        width: 100%; font-size: 17px; font-weight: 600; border: 2px solid var(--border-color); 
         border-radius: 12px; background-color: var(--input-bg); padding-left: 15px; box-sizing: border-box;
     }
+    select, input[type="text"], input[type="date"], input[type="number"] { height: 55px; }
+    textarea { padding: 15px; font-family: monospace; line-height: 1.5; resize: none; color: #16a085; background-color: #f8f9fa; }
     
     .scan-btn { 
         background: linear-gradient(135deg, #34495e, #2c3e50); color: white; border: none; border-radius: 12px; 
@@ -42,11 +37,9 @@
         display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
     
-    input[readonly] { background-color: #f8f9fa; border-color: #bdc3c7; color: #16a085; font-family: monospace; letter-spacing: 1px; }
-
     .submit-btn { 
         color: white; border: none; border-radius: 15px; height: 70px; width: 100%; font-size: 18px; font-weight: 800; 
-        cursor: pointer; margin-top: 30px; display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.2;
+        cursor: pointer; margin-top: 25px; display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.2;
     }
     .btn-inbound { background: linear-gradient(135deg, var(--primary), #1b5e20); box-shadow: 0 6px 15px rgba(46, 125, 50, 0.3); }
     .btn-outbound { background: linear-gradient(135deg, var(--outbound), #a04000); box-shadow: 0 6px 15px rgba(211, 84, 0, 0.3); }
@@ -59,14 +52,15 @@
     .spinner { width: 45px; height: 45px; border: 5px solid var(--border-color); border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
-    /* 彈跳視窗 */
     #success-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10001; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
     .success-card { background: white; width: 100%; max-width: 360px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
-    .success-header { background: linear-gradient(135deg, #2E7D32, #1b5e20); color: white; padding: 20px; text-align: center; font-weight: bold; font-size: 22px; }
+    .success-header { color: white; padding: 20px; text-align: center; font-weight: bold; font-size: 22px; }
     .success-body { padding: 20px; font-size: 15px; color: #333; line-height: 1.6; white-space: pre-wrap; background-color: #f9f9f9; font-family: monospace; }
     .success-footer { padding: 20px; text-align: center; display: flex; flex-direction: column; gap: 12px; }
     .btn-print { background: #0288D1; color: white; border: none; border-radius: 12px; height: 60px; font-size: 18px; font-weight: bold; display: flex; justify-content: center; align-items: center; text-decoration: none; }
     .btn-close { background: #95a5a6; color: white; border: none; border-radius: 12px; height: 50px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    
+    .scan-count-badge { background-color: #e74c3c; color: white; font-size: 12px; padding: 2px 8px; border-radius: 10px; margin-left: 5px; display: none; }
   </style>
 </head>
 <body>
@@ -95,14 +89,11 @@
 
 <div id="inbound-section" class="card">
     <h3 class="title-inbound">🌱 種子進貨入庫</h3>
-    <span class="sub-title">Nhập kho hạt giống</span>
-    
     <label>📅 進貨日期</label><input type="date" id="inbound-date">
-
     <label>📸 1. 原廠種子條碼</label>
-    <button class="scan-btn" onclick="scanBarcode('original-barcode')">📷 掃描原廠條碼</button>
-    <input type="text" id="original-barcode" placeholder="掃描結果..." readonly>
-
+    <button class="scan-btn" onclick="scanSingleBarcode('original-barcode')">📷 掃描原廠條碼</button>
+    <input type="text" id="original-barcode" placeholder="掃描結果..." readonly style="background-color: #f8f9fa;">
+    
     <label>🥕 2. 品種名稱</label>
     <select id="seed-variety" onchange="checkCustom('seed-variety')">
         <option value="" disabled selected>請選擇品種...</option>
@@ -125,56 +116,40 @@
         <div><label>📦 箱數</label><input type="number" id="box-qty" value="1" min="1" style="text-align:center;"></div>
         <div><label>🥫 每箱罐數</label><input type="number" id="cans-per-box" value="50" min="1" style="text-align:center;"></div>
     </div>
-
-    <button class="submit-btn btn-inbound" onclick="submitInbound()">
-        <span>📤 生成批號與標籤</span><span class="btn-sub">Tạo mã lô & in tem</span>
-    </button>
+    <button class="submit-btn btn-inbound" onclick="submitInbound()"><span>📤 生成批號與標籤</span></button>
 </div>
 
 <div id="outbound-section" class="card" style="display: none;">
-    <h3 class="title-outbound">🚜 倉庫領用出庫</h3>
-    <span class="sub-title">Xuất kho hạt giống</span>
+    <h3 class="title-outbound">🚜 倉庫批次領用</h3>
+    <label>📅 領用日期</label><input type="date" id="outbound-date">
     
-    <label>📅 領用日期</label>
-    <input type="date" id="outbound-date">
-
-    <label>📸 掃描種子身分證</label>
-    <button class="scan-btn" onclick="scanBarcode('vds-outbound-barcode')" style="background: linear-gradient(135deg, #d35400, #a04000);">
-        📷 掃描 VDS 標籤
+    <label>📸 掃描種子身分證 <span id="outbound-count" class="scan-count-badge">已掃 0 罐</span></label>
+    <button class="scan-btn" onclick="scanMultiBarcode('vds-outbound-barcodes', 'outbound-count')" style="background: linear-gradient(135deg, #d35400, #a04000);">
+        📷 連續掃描 VDS 標籤
     </button>
-    <input type="text" id="vds-outbound-barcode" placeholder="掃描要領出的 QR Code" readonly>
-
-    <button class="submit-btn btn-outbound" onclick="submitOutbound()">
-        <span>🚜 確認領用出庫</span><span class="btn-sub">Xác nhận xuất kho</span>
-    </button>
+    <textarea id="vds-outbound-barcodes" rows="5" placeholder="掃描的條碼會列在這裡...&#10;支援連續點擊按鈕掃描多罐" readonly></textarea>
+    <button class="submit-btn btn-outbound" onclick="submitOutbound()"><span>🚜 確認批次出庫</span></button>
 </div>
 
 <div id="plant-section" class="card" style="display: none;">
-    <h3 class="title-plant">🌍 田間綁定農地</h3>
-    <span class="sub-title">Gắn mã vùng trồng</span>
-    
-    <label>📅 實際種植日期</label>
-    <input type="date" id="plant-date">
+    <h3 class="title-plant">🌍 田間批次綁定</h3>
+    <label>📅 實際種植日期</label><input type="date" id="plant-date">
 
-    <label>📸 掃描準備種下的種子</label>
-    <button class="scan-btn" onclick="scanBarcode('vds-plant-barcode')" style="background: linear-gradient(135deg, #8e44ad, #5b2c6f);">
-        📷 掃描罐上 QR Code
+    <label>📸 掃描準備種下的種子 <span id="plant-count" class="scan-count-badge">已掃 0 罐</span></label>
+    <button class="scan-btn" onclick="scanMultiBarcode('vds-plant-barcodes', 'plant-count')" style="background: linear-gradient(135deg, #8e44ad, #5b2c6f);">
+        📷 連續掃描罐上 QR Code
     </button>
-    <input type="text" id="vds-plant-barcode" placeholder="掃描要種的 QR Code" readonly>
+    <textarea id="vds-plant-barcodes" rows="5" placeholder="掃描的條碼會列在這裡...&#10;支援連續點擊按鈕掃描多罐" readonly></textarea>
 
     <label>📍 綁定農地編號</label>
     <select id="field-number" onchange="checkCustom('field-number')">
         <option value="" disabled selected>請選擇農地...</option>
         <option value="A區-01">A區-01</option>
         <option value="A區-02">A區-02</option>
-        <option value="B區-01">B區-01</option>
         <option value="custom">✏️ 其他 (自行輸入)</option>
     </select>
     <input type="text" id="field-number-custom" class="custom-input" placeholder="請輸入農地編號">
-
-    <button class="submit-btn btn-plant" onclick="submitPlanting()">
-        <span>🌍 確認種植並綁定</span><span class="btn-sub">Xác nhận trồng</span>
-    </button>
+    <button class="submit-btn btn-plant" onclick="submitPlanting()"><span>🌍 確認種植並綁定</span></button>
 </div>
 
 <script>
@@ -190,7 +165,6 @@ window.onload = function() {
     }).catch(err => console.error(err));
 };
 
-// 畫面切換邏輯 (支援三個分頁)
 function switchTab(tab) {
     document.getElementById('inbound-section').style.display = (tab === 'inbound') ? 'block' : 'none';
     document.getElementById('outbound-section').style.display = (tab === 'outbound') ? 'block' : 'none';
@@ -206,20 +180,60 @@ function checkCustom(type) {
     if (sel.value === 'custom') { inp.style.display = 'block'; inp.focus(); } else { inp.style.display = 'none'; inp.value = ''; }
 }
 
-function scanBarcode(targetInputId) {
+// 單一條碼掃描 (進貨用)
+function scanSingleBarcode(targetInputId) {
     if (liff.isInClient() && liff.isApiAvailable('scanCodeV2')) {
-        liff.scanCodeV2().then(result => {
-            document.getElementById(targetInputId).value = result.value;
-        }).catch(err => alert("⚠️ 掃碼取消"));
+        liff.scanCodeV2().then(result => { document.getElementById(targetInputId).value = result.value; }).catch(err => alert("⚠️ 掃碼取消"));
     } else {
-        if (!liff.isInClient()) {
-            // 電腦版測試用的假條碼
-            document.getElementById(targetInputId).value = targetInputId.includes('vds') ? "VDS-TEST-01" : "TEST-JP-123";
-        } else alert("❌ 需在手機 LINE APP 使用！");
+        if (!liff.isInClient()) document.getElementById(targetInputId).value = "TEST-JP-123";
+        else alert("❌ 需在手機 LINE APP 使用！");
     }
 }
 
-// =================== 三大功能 API 呼叫 ===================
+// ==========================================
+// 🚀 多筆條碼連續收集器 (自動連掃連發版)
+// ==========================================
+function scanMultiBarcode(textareaId, countBadgeId) {
+    if (liff.isInClient() && liff.isApiAvailable('scanCodeV2')) {
+        liff.scanCodeV2().then(result => {
+            let val = result.value.trim();
+            let el = document.getElementById(textareaId);
+            let currentList = el.value ? el.value.split('\n') : [];
+            
+            // 檢查是否重複掃描
+            if (currentList.includes(val)) {
+                alert("⚠️ 這罐【" + val + "】已經在清單裡囉！不用重複掃。");
+            } else {
+                currentList.push(val);
+                el.value = currentList.join('\n');
+                
+                // 更新數量標籤
+                let badge = document.getElementById(countBadgeId);
+                badge.innerText = "已掃 " + currentList.length + " 罐";
+                badge.style.display = "inline-block";
+            }
+
+            // 🔥 魔法在這裡：成功掃描處理完後，延遲 0.5 秒「自動再次呼叫相機」！
+            setTimeout(() => {
+                scanMultiBarcode(textareaId, countBadgeId);
+            }, 500);
+
+        }).catch(err => {
+            // 當阿姨不想掃了，按下相機畫面的「❌取消 / X」時，就會來到這裡
+            // 我們在這裡什麼都不做，自動連發就停止了，畫面會停留在清單頁面
+        });
+    } else {
+        if (!liff.isInClient()) {
+            let el = document.getElementById(textareaId);
+            let randomId = "VDS-TEST-" + Math.floor(Math.random() * 100);
+            el.value = el.value ? el.value + '\n' + randomId : randomId;
+            document.getElementById(countBadgeId).innerText = "已掃 " + el.value.split('\n').length + " 罐";
+            document.getElementById(countBadgeId).style.display = "inline-block";
+        } else {
+            alert("❌ 需在手機 LINE APP 使用！");
+        }
+    }
+}
 
 // 📦 1. 進貨
 function submitInbound() {
@@ -241,36 +255,35 @@ function submitInbound() {
     .then(res => res.json()).then(data => handleResponse(data, "inbound")).catch(() => hideLoading(true));
 }
 
-// 🚜 2. 領用
+// 🚜 2. 批次領用
 function submitOutbound() {
     var date = document.getElementById('outbound-date').value;
-    var vdsBarcode = document.getElementById('vds-outbound-barcode').value.trim();
+    // 將清單切成陣列，並過濾掉空白行
+    var barcodes = document.getElementById('vds-outbound-barcodes').value.trim().split('\n').filter(Boolean);
 
-    if (!vdsBarcode) return alert("❌ 請先掃描我們印出來的 VDS 專屬條碼！");
-    if (!confirm(`確定要將【 ${vdsBarcode} 】領用出庫嗎？`)) return;
+    if (barcodes.length === 0) return alert("❌ 請先點擊相機，至少掃描一罐種子！");
+    if (!confirm(`確定要將清單中的 ${barcodes.length} 罐種子【領用出庫】嗎？`)) return;
 
-    showLoading("正在更新雲端庫存狀態...");
-    fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "種子領用_寫入", date: date, vdsBarcode: vdsBarcode }) })
+    showLoading("正在批次更新雲端庫存...");
+    fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "種子領用_寫入", date: date, vdsBarcodes: barcodes }) })
     .then(res => res.json()).then(data => handleResponse(data, "outbound")).catch(() => hideLoading(true));
 }
 
-// 🌍 3. 種植 (新功能)
+// 🌍 3. 批次種植
 function submitPlanting() {
     var date = document.getElementById('plant-date').value;
-    var vdsBarcode = document.getElementById('vds-plant-barcode').value.trim();
+    var barcodes = document.getElementById('vds-plant-barcodes').value.trim().split('\n').filter(Boolean);
     var fSelect = document.getElementById('field-number');
     var fieldNum = fSelect.value === 'custom' ? document.getElementById('field-number-custom').value.trim() : fSelect.value;
 
-    if (!vdsBarcode) return alert("❌ 請先掃描罐上的 VDS 專屬條碼！");
+    if (barcodes.length === 0) return alert("❌ 請先點擊相機，至少掃描一罐要種的種子！");
     if (!fieldNum) return alert("❌ 請選擇或輸入要綁定的農地編號！");
-    if (!confirm(`確定要將【 ${vdsBarcode} 】種植在農地【 ${fieldNum} 】嗎？`)) return;
+    if (!confirm(`確定要把清單中的 ${barcodes.length} 罐種子，種在【 ${fieldNum} 】嗎？`)) return;
 
-    showLoading("正在將種子與農地綁定...");
-    fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "種子種植_寫入", date: date, vdsBarcode: vdsBarcode, fieldNum: fieldNum }) })
+    showLoading("正在批次綁定農地資料...");
+    fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "種子種植_寫入", date: date, vdsBarcodes: barcodes, fieldNum: fieldNum }) })
     .then(res => res.json()).then(data => handleResponse(data, "plant")).catch(() => hideLoading(true));
 }
-
-// =================== 畫面處理共用 ===================
 
 function showLoading(text) {
     document.getElementById('loading-text').innerText = text;
@@ -283,48 +296,33 @@ function hideLoading(error) {
 
 function handleResponse(data, type) {
     hideLoading(false);
-    if(data.result === "success") {
-        let titleEl = document.getElementById('modal-title');
-        
-        // 依照不同操作給予不同顏色的成功標題
-        if (type === "inbound") {
-            titleEl.innerText = "🎉 入庫成功！";
-            titleEl.style.background = "linear-gradient(135deg, #2E7D32, #1b5e20)";
-        } else if (type === "outbound") {
-            titleEl.innerText = "🚜 領用成功！";
-            titleEl.style.background = "linear-gradient(135deg, #d35400, #a04000)";
-        } else if (type === "plant") {
-            titleEl.innerText = "🌍 綁定成功！";
-            titleEl.style.background = "linear-gradient(135deg, #8e44ad, #5b2c6f)";
-        }
-        
-        let msg = data.messageText;
-        let urlMatch = msg.match(/(https:\/\/drive\.google\.com[^\s]+)/);
-        let pdfUrl = urlMatch ? urlMatch[0] : "";
-        
-        document.getElementById('success-content').innerText = msg.replace(/(https:\/\/drive\.google\.com[^\s]+)/, "").trim();
-        
-        let printBtn = document.getElementById('btn-print-link');
-        if(type === "inbound" && pdfUrl) {
-            printBtn.href = pdfUrl;
-            printBtn.style.display = "flex";
-        } else {
-            printBtn.style.display = "none";
-        }
+    
+    let titleEl = document.getElementById('modal-title');
+    if (type === "inbound") { titleEl.innerText = "🎉 入庫成功！"; titleEl.style.background = "linear-gradient(135deg, #2E7D32, #1b5e20)"; } 
+    else if (type === "outbound") { titleEl.innerText = "🚜 批次領用完成"; titleEl.style.background = "linear-gradient(135deg, #d35400, #a04000)"; } 
+    else if (type === "plant") { titleEl.innerText = "🌍 批次綁定完成"; titleEl.style.background = "linear-gradient(135deg, #8e44ad, #5b2c6f)"; }
+    
+    // 若有部分錯誤，系統會回傳 error，但我們一樣會把結果秀在彈跳視窗裡給阿姨看
+    let msg = data.msg || data.messageText;
+    let urlMatch = msg.match(/(https:\/\/drive\.google\.com[^\s]+)/);
+    let pdfUrl = urlMatch ? urlMatch[0] : "";
+    
+    document.getElementById('success-content').innerText = msg.replace(/(https:\/\/drive\.google\.com[^\s]+)/, "").trim();
+    
+    let printBtn = document.getElementById('btn-print-link');
+    if(type === "inbound" && pdfUrl) { printBtn.href = pdfUrl; printBtn.style.display = "flex"; } 
+    else { printBtn.style.display = "none"; }
 
-        document.getElementById('success-modal').style.display = 'flex';
-        if (liff.isInClient()) liff.sendMessages([{ type: 'text', text: msg }]).catch(e => console.log(e));
-    } else {
-        alert("❌ 發生錯誤：" + data.msg);
-    }
+    document.getElementById('success-modal').style.display = 'flex';
 }
 
 function closeSuccessModal() {
     document.getElementById('success-modal').style.display = 'none';
-    // 清空條碼框方便下一次作業
     document.getElementById('original-barcode').value = '';
-    document.getElementById('vds-outbound-barcode').value = '';
-    document.getElementById('vds-plant-barcode').value = '';
+    document.getElementById('vds-outbound-barcodes').value = '';
+    document.getElementById('vds-plant-barcodes').value = '';
+    document.getElementById('outbound-count').style.display = 'none';
+    document.getElementById('plant-count').style.display = 'none';
 }
 </script>
 </body>
