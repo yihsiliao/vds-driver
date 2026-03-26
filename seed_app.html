@@ -9,28 +9,30 @@
     :root {
         --bg-color: #f4f6f8; --card-bg: #ffffff; --text-color: #2c3e50; --border-color: #dce1e6;
         --input-bg: #ffffff; --label-color: #34495e; --sub-text: #7f8c8d;
-        --primary: #2E7D32; --secondary: #f39c12; --outbound: #d35400;
+        --primary: #2E7D32; --secondary: #f39c12; --outbound: #d35400; --plant: #8e44ad;
     }
     body { background-color: var(--bg-color); padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text-color); margin: 0; }
     
-    /* 分頁切換按鈕設計 */
-    .tab-container { display: flex; gap: 10px; margin-bottom: 20px; max-width: 480px; margin-left: auto; margin-right: auto; }
-    .tab-btn { flex: 1; height: 50px; border-radius: 12px; border: 2px solid var(--border-color); background: white; font-size: 18px; font-weight: bold; color: var(--sub-text); cursor: pointer; transition: 0.3s; }
+    /* 三分頁切換按鈕設計 */
+    .tab-container { display: flex; gap: 8px; margin-bottom: 20px; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .tab-btn { flex: 1; height: 50px; border-radius: 12px; border: 2px solid var(--border-color); background: white; font-size: 14px; font-weight: bold; color: var(--sub-text); cursor: pointer; transition: 0.3s; padding: 0; }
     .tab-btn.active.inbound-tab { background: var(--primary); color: white; border-color: var(--primary); }
     .tab-btn.active.outbound-tab { background: var(--outbound); color: white; border-color: var(--outbound); }
+    .tab-btn.active.plant-tab { background: var(--plant); color: white; border-color: var(--plant); }
 
     .card { background: var(--card-bg); padding: 25px 20px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; border: 1px solid var(--border-color); }
     
-    h3 { text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 26px; letter-spacing: 1px; }
+    h3 { text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 24px; letter-spacing: 1px; }
     .title-inbound { color: var(--primary); }
     .title-outbound { color: var(--outbound); }
-    .sub-title { font-size: 14px; color: var(--sub-text); font-weight: 500; text-align: center; display: block; margin-bottom: 25px; }
+    .title-plant { color: var(--plant); }
+    .sub-title { font-size: 13px; color: var(--sub-text); font-weight: 500; text-align: center; display: block; margin-bottom: 25px; }
     
     label { display: block; font-weight: 700; margin-top: 18px; margin-bottom: 8px; font-size: 16px; color: var(--label-color); }
     label span { font-weight: 400; color: var(--sub-text); font-size: 13px; margin-left: 5px; }
     
     select, input[type="text"], input[type="date"], input[type="number"] { 
-        width: 100%; height: 55px; font-size: 18px; font-weight: 600; border: 2px solid var(--border-color); 
+        width: 100%; height: 55px; font-size: 17px; font-weight: 600; border: 2px solid var(--border-color); 
         border-radius: 12px; background-color: var(--input-bg); padding-left: 15px; box-sizing: border-box;
     }
     
@@ -40,17 +42,19 @@
         display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
     
-    #original-barcode, #vds-barcode { background-color: #f8f9fa; border-color: #bdc3c7; color: #16a085; font-family: monospace; letter-spacing: 1px; }
+    input[readonly] { background-color: #f8f9fa; border-color: #bdc3c7; color: #16a085; font-family: monospace; letter-spacing: 1px; }
 
     .submit-btn { 
-        color: white; border: none; border-radius: 15px; height: 70px; width: 100%; font-size: 20px; font-weight: 800; 
+        color: white; border: none; border-radius: 15px; height: 70px; width: 100%; font-size: 18px; font-weight: 800; 
         cursor: pointer; margin-top: 30px; display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.2;
     }
     .btn-inbound { background: linear-gradient(135deg, var(--primary), #1b5e20); box-shadow: 0 6px 15px rgba(46, 125, 50, 0.3); }
     .btn-outbound { background: linear-gradient(135deg, var(--outbound), #a04000); box-shadow: 0 6px 15px rgba(211, 84, 0, 0.3); }
+    .btn-plant { background: linear-gradient(135deg, var(--plant), #5b2c6f); box-shadow: 0 6px 15px rgba(142, 68, 173, 0.3); }
     .btn-sub { font-size: 13px; font-weight: 500; opacity: 0.9; margin-top: 2px; }
 
-    .custom-input { display: none; margin-top: 8px; }
+    .custom-input { display: none; margin-top: 8px; border-color: var(--secondary) !important; background-color: #fffdf5 !important; }
+    
     #loading-mask { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
     .spinner { width: 45px; height: 45px; border: 5px solid var(--border-color); border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -58,10 +62,10 @@
     /* 彈跳視窗 */
     #success-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10001; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
     .success-card { background: white; width: 100%; max-width: 360px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
-    .success-header { background: linear-gradient(135deg, #2E7D32, #1b5e20); color: white; padding: 20px; text-align: center; font-weight: bold; font-size: 24px; }
-    .success-body { padding: 20px; font-size: 16px; color: #333; line-height: 1.6; white-space: pre-wrap; background-color: #f9f9f9; font-family: monospace; }
+    .success-header { background: linear-gradient(135deg, #2E7D32, #1b5e20); color: white; padding: 20px; text-align: center; font-weight: bold; font-size: 22px; }
+    .success-body { padding: 20px; font-size: 15px; color: #333; line-height: 1.6; white-space: pre-wrap; background-color: #f9f9f9; font-family: monospace; }
     .success-footer { padding: 20px; text-align: center; display: flex; flex-direction: column; gap: 12px; }
-    .btn-print { background: #0288D1; color: white; border: none; border-radius: 12px; height: 60px; font-size: 20px; font-weight: bold; display: flex; justify-content: center; align-items: center; text-decoration: none; }
+    .btn-print { background: #0288D1; color: white; border: none; border-radius: 12px; height: 60px; font-size: 18px; font-weight: bold; display: flex; justify-content: center; align-items: center; text-decoration: none; }
     .btn-close { background: #95a5a6; color: white; border: none; border-radius: 12px; height: 50px; font-size: 16px; font-weight: bold; cursor: pointer; }
   </style>
 </head>
@@ -84,16 +88,16 @@
 </div>
 
 <div class="tab-container">
-    <button class="tab-btn active inbound-tab" onclick="switchTab('inbound')">📦 進貨作業</button>
-    <button class="tab-btn outbound-tab" onclick="switchTab('outbound')">🚜 領用作業</button>
+    <button class="tab-btn active inbound-tab" onclick="switchTab('inbound')">📦 進貨</button>
+    <button class="tab-btn outbound-tab" onclick="switchTab('outbound')">🚜 領用</button>
+    <button class="tab-btn plant-tab" onclick="switchTab('plant')">🌍 種植</button>
 </div>
 
 <div id="inbound-section" class="card">
-    <h3 class="title-inbound">🌱 VDS 種子進貨</h3>
+    <h3 class="title-inbound">🌱 種子進貨入庫</h3>
     <span class="sub-title">Nhập kho hạt giống</span>
     
-    <label>📅 進貨日期</label>
-    <input type="date" id="inbound-date">
+    <label>📅 進貨日期</label><input type="date" id="inbound-date">
 
     <label>📸 1. 原廠種子條碼</label>
     <button class="scan-btn" onclick="scanBarcode('original-barcode')">📷 掃描原廠條碼</button>
@@ -128,20 +132,48 @@
 </div>
 
 <div id="outbound-section" class="card" style="display: none;">
-    <h3 class="title-outbound">🚜 VDS 種子領用</h3>
+    <h3 class="title-outbound">🚜 倉庫領用出庫</h3>
     <span class="sub-title">Xuất kho hạt giống</span>
     
     <label>📅 領用日期</label>
     <input type="date" id="outbound-date">
 
     <label>📸 掃描種子身分證</label>
-    <button class="scan-btn" onclick="scanBarcode('vds-barcode')" style="background: linear-gradient(135deg, #d35400, #a04000);">
-        <span style="font-size: 24px;">📷</span> 掃描 VDS 標籤
+    <button class="scan-btn" onclick="scanBarcode('vds-outbound-barcode')" style="background: linear-gradient(135deg, #d35400, #a04000);">
+        📷 掃描 VDS 標籤
     </button>
-    <input type="text" id="vds-barcode" placeholder="請掃描我們印出來的 QR Code" readonly>
+    <input type="text" id="vds-outbound-barcode" placeholder="掃描要領出的 QR Code" readonly>
 
     <button class="submit-btn btn-outbound" onclick="submitOutbound()">
         <span>🚜 確認領用出庫</span><span class="btn-sub">Xác nhận xuất kho</span>
+    </button>
+</div>
+
+<div id="plant-section" class="card" style="display: none;">
+    <h3 class="title-plant">🌍 田間綁定農地</h3>
+    <span class="sub-title">Gắn mã vùng trồng</span>
+    
+    <label>📅 實際種植日期</label>
+    <input type="date" id="plant-date">
+
+    <label>📸 掃描準備種下的種子</label>
+    <button class="scan-btn" onclick="scanBarcode('vds-plant-barcode')" style="background: linear-gradient(135deg, #8e44ad, #5b2c6f);">
+        📷 掃描罐上 QR Code
+    </button>
+    <input type="text" id="vds-plant-barcode" placeholder="掃描要種的 QR Code" readonly>
+
+    <label>📍 綁定農地編號</label>
+    <select id="field-number" onchange="checkCustom('field-number')">
+        <option value="" disabled selected>請選擇農地...</option>
+        <option value="A區-01">A區-01</option>
+        <option value="A區-02">A區-02</option>
+        <option value="B區-01">B區-01</option>
+        <option value="custom">✏️ 其他 (自行輸入)</option>
+    </select>
+    <input type="text" id="field-number-custom" class="custom-input" placeholder="請輸入農地編號">
+
+    <button class="submit-btn btn-plant" onclick="submitPlanting()">
+        <span>🌍 確認種植並綁定</span><span class="btn-sub">Xác nhận trồng</span>
     </button>
 </div>
 
@@ -152,18 +184,21 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbz0awiapo_XZJ_BmF52MNVL
 window.onload = function() {
     document.getElementById('inbound-date').valueAsDate = new Date();
     document.getElementById('outbound-date').valueAsDate = new Date();
+    document.getElementById('plant-date').valueAsDate = new Date();
     liff.init({ liffId: LIFF_ID }).then(() => {
         if (!liff.isLoggedIn()) liff.login();
     }).catch(err => console.error(err));
 };
 
-// 切換分頁邏輯
+// 畫面切換邏輯 (支援三個分頁)
 function switchTab(tab) {
     document.getElementById('inbound-section').style.display = (tab === 'inbound') ? 'block' : 'none';
     document.getElementById('outbound-section').style.display = (tab === 'outbound') ? 'block' : 'none';
+    document.getElementById('plant-section').style.display = (tab === 'plant') ? 'block' : 'none';
     
     document.querySelector('.inbound-tab').classList.toggle('active', tab === 'inbound');
     document.querySelector('.outbound-tab').classList.toggle('active', tab === 'outbound');
+    document.querySelector('.plant-tab').classList.toggle('active', tab === 'plant');
 }
 
 function checkCustom(type) {
@@ -171,7 +206,6 @@ function checkCustom(type) {
     if (sel.value === 'custom') { inp.style.display = 'block'; inp.focus(); } else { inp.style.display = 'none'; inp.value = ''; }
 }
 
-// 共用的掃描功能
 function scanBarcode(targetInputId) {
     if (liff.isInClient() && liff.isApiAvailable('scanCodeV2')) {
         liff.scanCodeV2().then(result => {
@@ -179,12 +213,15 @@ function scanBarcode(targetInputId) {
         }).catch(err => alert("⚠️ 掃碼取消"));
     } else {
         if (!liff.isInClient()) {
-            document.getElementById(targetInputId).value = (targetInputId === 'vds-barcode') ? "VDS-TEST-01" : "TEST-JP-123";
+            // 電腦版測試用的假條碼
+            document.getElementById(targetInputId).value = targetInputId.includes('vds') ? "VDS-TEST-01" : "TEST-JP-123";
         } else alert("❌ 需在手機 LINE APP 使用！");
     }
 }
 
-// 送出進貨
+// =================== 三大功能 API 呼叫 ===================
+
+// 📦 1. 進貨
 function submitInbound() {
     var date = document.getElementById('inbound-date').value;
     var barcode = document.getElementById('original-barcode').value.trim();
@@ -196,29 +233,44 @@ function submitInbound() {
     var cans = parseInt(document.getElementById('cans-per-box').value) || 0;
 
     if (!barcode || !variety || !vendor) return alert("❌ 請確認欄位皆已填寫並掃描條碼！");
-
     let totalCans = boxes * cans;
     if (!confirm(`確定入庫：共 ${totalCans} 罐？`)) return;
 
     showLoading("正在生成 PDF 標籤檔案...");
-    
     fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "種子進貨_寫入", date, barcode, variety, vendor, boxes, cansPerBox: cans, totalCans }) })
-    .then(res => res.json()).then(data => handleResponse(data, true)).catch(() => hideLoading(true));
+    .then(res => res.json()).then(data => handleResponse(data, "inbound")).catch(() => hideLoading(true));
 }
 
-// 送出領用 (新功能！)
+// 🚜 2. 領用
 function submitOutbound() {
     var date = document.getElementById('outbound-date').value;
-    var vdsBarcode = document.getElementById('vds-barcode').value.trim();
+    var vdsBarcode = document.getElementById('vds-outbound-barcode').value.trim();
 
     if (!vdsBarcode) return alert("❌ 請先掃描我們印出來的 VDS 專屬條碼！");
     if (!confirm(`確定要將【 ${vdsBarcode} 】領用出庫嗎？`)) return;
 
     showLoading("正在更新雲端庫存狀態...");
-
     fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "種子領用_寫入", date: date, vdsBarcode: vdsBarcode }) })
-    .then(res => res.json()).then(data => handleResponse(data, false)).catch(() => hideLoading(true));
+    .then(res => res.json()).then(data => handleResponse(data, "outbound")).catch(() => hideLoading(true));
 }
+
+// 🌍 3. 種植 (新功能)
+function submitPlanting() {
+    var date = document.getElementById('plant-date').value;
+    var vdsBarcode = document.getElementById('vds-plant-barcode').value.trim();
+    var fSelect = document.getElementById('field-number');
+    var fieldNum = fSelect.value === 'custom' ? document.getElementById('field-number-custom').value.trim() : fSelect.value;
+
+    if (!vdsBarcode) return alert("❌ 請先掃描罐上的 VDS 專屬條碼！");
+    if (!fieldNum) return alert("❌ 請選擇或輸入要綁定的農地編號！");
+    if (!confirm(`確定要將【 ${vdsBarcode} 】種植在農地【 ${fieldNum} 】嗎？`)) return;
+
+    showLoading("正在將種子與農地綁定...");
+    fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "種子種植_寫入", date: date, vdsBarcode: vdsBarcode, fieldNum: fieldNum }) })
+    .then(res => res.json()).then(data => handleResponse(data, "plant")).catch(() => hideLoading(true));
+}
+
+// =================== 畫面處理共用 ===================
 
 function showLoading(text) {
     document.getElementById('loading-text').innerText = text;
@@ -229,11 +281,22 @@ function hideLoading(error) {
     if(error) alert("⚠️ 連線失敗，請檢查網路。");
 }
 
-function handleResponse(data, isInbound) {
+function handleResponse(data, type) {
     hideLoading(false);
     if(data.result === "success") {
-        document.getElementById('modal-title').innerText = isInbound ? "🎉 入庫成功！" : "🚜 領用成功！";
-        document.getElementById('modal-title').style.background = isInbound ? "linear-gradient(135deg, #2E7D32, #1b5e20)" : "linear-gradient(135deg, #d35400, #a04000)";
+        let titleEl = document.getElementById('modal-title');
+        
+        // 依照不同操作給予不同顏色的成功標題
+        if (type === "inbound") {
+            titleEl.innerText = "🎉 入庫成功！";
+            titleEl.style.background = "linear-gradient(135deg, #2E7D32, #1b5e20)";
+        } else if (type === "outbound") {
+            titleEl.innerText = "🚜 領用成功！";
+            titleEl.style.background = "linear-gradient(135deg, #d35400, #a04000)";
+        } else if (type === "plant") {
+            titleEl.innerText = "🌍 綁定成功！";
+            titleEl.style.background = "linear-gradient(135deg, #8e44ad, #5b2c6f)";
+        }
         
         let msg = data.messageText;
         let urlMatch = msg.match(/(https:\/\/drive\.google\.com[^\s]+)/);
@@ -242,11 +305,11 @@ function handleResponse(data, isInbound) {
         document.getElementById('success-content').innerText = msg.replace(/(https:\/\/drive\.google\.com[^\s]+)/, "").trim();
         
         let printBtn = document.getElementById('btn-print-link');
-        if(isInbound && pdfUrl) {
+        if(type === "inbound" && pdfUrl) {
             printBtn.href = pdfUrl;
             printBtn.style.display = "flex";
         } else {
-            printBtn.style.display = "none"; // 領用不需要列印按鈕
+            printBtn.style.display = "none";
         }
 
         document.getElementById('success-modal').style.display = 'flex';
@@ -258,8 +321,10 @@ function handleResponse(data, isInbound) {
 
 function closeSuccessModal() {
     document.getElementById('success-modal').style.display = 'none';
+    // 清空條碼框方便下一次作業
     document.getElementById('original-barcode').value = '';
-    document.getElementById('vds-barcode').value = '';
+    document.getElementById('vds-outbound-barcode').value = '';
+    document.getElementById('vds-plant-barcode').value = '';
 }
 </script>
 </body>
