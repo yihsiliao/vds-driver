@@ -9,7 +9,7 @@
     :root { --bg-color: #f4f6f8; --card-bg: #ffffff; --text-color: #2c3e50; --border-color: #dce1e6; --input-bg: #ffffff; --label-color: #34495e; --sub-text: #7f8c8d; --primary: #2E7D32; --secondary: #f39c12; --outbound: #d35400; --plant: #8e44ad; --return: #2980b9; }
     body { background-color: var(--bg-color); padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text-color); margin: 0; }
     
-    /* ================= APP 主選單設計 ================= */
+    /* APP 主選單設計 */
     .home-header { text-align: center; margin-top: 20px; margin-bottom: 30px; }
     .home-header h2 { color: var(--text-color); margin: 0 0 5px 0; font-size: 26px; font-weight: 900; letter-spacing: 1px; }
     .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 480px; margin: 0 auto; }
@@ -24,7 +24,7 @@
     /* 返回按鈕 */
     .back-btn { background: none; border: none; color: var(--primary); font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; padding: 0; max-width: 480px; margin-left: auto; margin-right: auto; }
     
-    /* ================= 以下為原本的作業畫面設計 ================= */
+    /* 作業畫面設計 */
     .tab-container { display: flex; gap: 5px; margin-bottom: 20px; max-width: 480px; margin-left: auto; margin-right: auto; flex-wrap: wrap; }
     .tab-btn { flex: 1 1 22%; height: 45px; border-radius: 10px; border: 2px solid var(--border-color); background: white; font-size: 13px; font-weight: bold; color: var(--sub-text); cursor: pointer; transition: 0.3s; padding: 0; }
     .tab-btn.active.inbound-tab { background: var(--primary); color: white; border-color: var(--primary); }
@@ -112,9 +112,11 @@
     <div id="inbound-section" class="card">
         <h3 class="title-inbound">🌱 種子進貨入庫</h3>
         <label>📅 進貨日期</label><input type="date" id="inbound-date">
+        
         <label>📸 1. 原廠種子條碼</label>
         <button class="scan-btn" onclick="scanSingleBarcode('original-barcode')">📷 掃描原廠條碼</button>
-        <input type="text" id="original-barcode" placeholder="掃描結果..." readonly style="background-color: #f8f9fa;">
+        <input type="text" id="original-barcode" placeholder="可點擊相機掃描，或在此手動輸入...">
+        
         <label>🥕 2. 品種名稱</label>
         <select id="seed-variety" onchange="checkCustom('seed-variety')">
             <option value="" disabled selected>請選擇品種...</option><option value="日本黑田五寸">日本黑田五寸</option><option value="向陽二號">向陽二號</option><option value="custom">✏️ 其他 (自行輸入)</option>
@@ -137,7 +139,7 @@
         <label>📅 領用日期</label><input type="date" id="outbound-date">
         <label>📸 掃描種子身分證 <span id="outbound-count" class="scan-count-badge">已掃 0 罐</span></label>
         <button class="scan-btn" onclick="scanMultiBarcode('vds-outbound-barcodes', 'outbound-count')" style="background: linear-gradient(135deg, #d35400, #a04000);">📷 連掃 VDS 標籤</button>
-        <textarea id="vds-outbound-barcodes" rows="5" placeholder="掃描的條碼會列在這裡..." readonly></textarea>
+        <textarea id="vds-outbound-barcodes" rows="5" placeholder="可掃描，也可手動輸入條碼 (每行一個)..."></textarea>
         <button class="submit-btn btn-outbound" onclick="submitAction('種子領用_寫入', 'outbound-date', 'vds-outbound-barcodes', 'outbound')"><span>🚜 確認批次出庫</span></button>
     </div>
 
@@ -146,7 +148,7 @@
         <label>📅 歸還日期</label><input type="date" id="return-date">
         <label>📸 掃描種子身分證 <span id="return-count" class="scan-count-badge">已掃 0 罐</span></label>
         <button class="scan-btn" onclick="scanMultiBarcode('vds-return-barcodes', 'return-count')" style="background: linear-gradient(135deg, #2980b9, #1f618d);">📷 連掃 VDS 標籤</button>
-        <textarea id="vds-return-barcodes" rows="5" placeholder="掃描的條碼會列在這裡..." readonly></textarea>
+        <textarea id="vds-return-barcodes" rows="5" placeholder="可掃描，也可手動輸入條碼 (每行一個)..."></textarea>
         <button class="submit-btn btn-return" onclick="submitAction('種子歸還_寫入', 'return-date', 'vds-return-barcodes', 'return')"><span>🔄 確認退回在庫</span></button>
     </div>
 
@@ -155,7 +157,7 @@
         <label>📅 實際種植日期</label><input type="date" id="plant-date">
         <label>📸 掃描準備種下的種子 <span id="plant-count" class="scan-count-badge">已掃 0 罐</span></label>
         <button class="scan-btn" onclick="scanMultiBarcode('vds-plant-barcodes', 'plant-count')" style="background: linear-gradient(135deg, #8e44ad, #5b2c6f);">📷 連掃罐上 QR Code</button>
-        <textarea id="vds-plant-barcodes" rows="5" placeholder="掃描的條碼會列在這裡..." readonly></textarea>
+        <textarea id="vds-plant-barcodes" rows="5" placeholder="可掃描，也可手動輸入條碼 (每行一個)..."></textarea>
         <label>📍 綁定農地編號</label>
         <select id="field-number" onchange="checkCustom('field-number')">
             <option value="" disabled selected>請選擇農地...</option><option value="A區-01">A區-01</option><option value="A區-02">A區-02</option><option value="custom">✏️ 其他 (自行輸入)</option>
@@ -177,7 +179,6 @@ window.onload = function() {
     liff.init({ liffId: LIFF_ID }).then(() => { if (!liff.isLoggedIn()) liff.login(); }).catch(err => console.error(err));
 };
 
-// ================= 主畫面導航邏輯 =================
 function openModule(moduleId) {
     document.getElementById('home-view').style.display = 'none';
     if(moduleId === 'seed') {
@@ -191,7 +192,6 @@ function goHome() {
     window.scrollTo(0,0);
 }
 
-// ================= 分頁切換邏輯 =================
 function switchTab(tab) {
     document.getElementById('inbound-section').style.display = (tab === 'inbound') ? 'block' : 'none';
     document.getElementById('outbound-section').style.display = (tab === 'outbound') ? 'block' : 'none';
@@ -255,7 +255,7 @@ function submitInbound() {
     var boxes = parseInt(document.getElementById('box-qty').value) || 0;
     var cans = parseInt(document.getElementById('cans-per-box').value) || 0;
 
-    if (!barcode || !variety || !vendor) return alert("❌ 請確認欄位皆已填寫並掃描條碼！");
+    if (!barcode || !variety || !vendor) return alert("❌ 請確認欄位皆已填寫並掃描/輸入條碼！");
     let totalCans = boxes * cans;
     if (!confirm(`確定入庫：共 ${totalCans} 罐？`)) return;
 
@@ -268,7 +268,7 @@ function submitAction(actionName, dateId, textareaId, type) {
     var date = document.getElementById(dateId).value;
     var barcodes = document.getElementById(textareaId).value.trim().split('\n').filter(Boolean);
 
-    if (barcodes.length === 0) return alert("❌ 請先點擊相機，至少掃描一罐種子！");
+    if (barcodes.length === 0) return alert("❌ 請先點擊相機掃描，或手動輸入至少一罐種子條碼！");
     let actionText = type === "outbound" ? "領用出庫" : "歸還在庫";
     if (!confirm(`確定要將清單中的 ${barcodes.length} 罐種子【${actionText}】嗎？`)) return;
 
@@ -283,7 +283,7 @@ function submitPlanting() {
     var fSelect = document.getElementById('field-number');
     var fieldNum = fSelect.value === 'custom' ? document.getElementById('field-number-custom').value.trim() : fSelect.value;
 
-    if (barcodes.length === 0) return alert("❌ 請先點擊相機，至少掃描一罐種子！");
+    if (barcodes.length === 0) return alert("❌ 請先點擊相機掃描，或手動輸入至少一罐種子！");
     if (!fieldNum) return alert("❌ 請選擇或輸入要綁定的農地編號！");
     if (!confirm(`確定要把清單中的 ${barcodes.length} 罐種子，種在【 ${fieldNum} 】嗎？`)) return;
 
