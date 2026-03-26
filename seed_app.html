@@ -6,16 +6,19 @@
   <title>🌱 VDS 智慧農業管理系統</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    :root { --bg-color: #f4f6f8; --card-bg: #ffffff; --text-color: #2c3e50; --border-color: #dce1e6; --input-bg: #ffffff; --label-color: #34495e; --sub-text: #7f8c8d; 
-            --primary: #2E7D32; --outbound: #d35400; --plant: #8e44ad; --return: #2980b9; 
-            --mat-in: #16a085; --mat-out: #d35400; --mat-ret: #2980b9; --mat-apply: #8e44ad; 
-            --scout: #27ae60; }
+    :root { 
+        --bg-color: #f4f6f8; --card-bg: #ffffff; --text-color: #2c3e50; --border-color: #dce1e6; 
+        --input-bg: #ffffff; --label-color: #34495e; --sub-text: #7f8c8d; 
+        --primary: #2E7D32; --outbound: #d35400; --plant: #8e44ad; --return: #2980b9; 
+        --mat-in: #16a085; --mat-out: #d35400; --mat-ret: #2980b9; --mat-apply: #8e44ad; 
+        --scout: #27ae60; 
+    }
     body { background-color: var(--bg-color); padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text-color); margin: 0; }
     
     .home-header { text-align: center; margin-top: 20px; margin-bottom: 30px; }
     .home-header h2 { color: var(--text-color); margin: 0 0 5px 0; font-size: 26px; font-weight: 900; }
     .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 480px; margin: 0 auto; }
-    .menu-card { background: white; border-radius: 20px; padding: 30px 15px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.06); border: 1px solid var(--border-color); cursor: pointer; }
+    .menu-card { background: white; border-radius: 20px; padding: 30px 15px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.06); border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s;}
     .menu-card:active { transform: scale(0.95); }
     .menu-icon { font-size: 45px; margin-bottom: 12px; }
     .menu-title { font-size: 18px; font-weight: 900; color: var(--text-color); }
@@ -25,7 +28,7 @@
     .back-btn { background: none; border: none; color: var(--text-color); font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 15px; display: flex; align-items: center; gap: 5px; padding: 10px; border-radius: 10px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 480px; margin-left: auto; margin-right: auto; }
     
     .tab-container { display: flex; gap: 5px; margin-bottom: 20px; max-width: 480px; margin-left: auto; margin-right: auto; flex-wrap: wrap; }
-    .tab-btn { flex: 1 1 22%; height: 45px; border-radius: 10px; border: 2px solid var(--border-color); background: white; font-size: 13px; font-weight: bold; color: var(--sub-text); cursor: pointer; padding: 0; }
+    .tab-btn { flex: 1 1 22%; height: 45px; border-radius: 10px; border: 2px solid var(--border-color); background: white; font-size: 13px; font-weight: bold; color: var(--sub-text); cursor: pointer; padding: 0; transition: 0.3s;}
     
     .tab-btn.active.seed-inbound { background: var(--primary); color: white; border-color: var(--primary); }
     .tab-btn.active.seed-outbound { background: var(--outbound); color: white; border-color: var(--outbound); }
@@ -49,7 +52,7 @@
     .scan-btn { background: linear-gradient(135deg, #34495e, #2c3e50); color: white; border: none; border-radius: 12px; height: 60px; font-size: 18px; font-weight: bold; width: 100%; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
     .camera-upload-btn { background: linear-gradient(135deg, #f39c12, #d35400); color: white; border: none; border-radius: 12px; height: 60px; font-size: 18px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 5px; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; position: relative; overflow: hidden; }
     .camera-upload-btn input[type="file"] { position: absolute; top: 0; left: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
-    #image-preview { width: 100%; max-height: 250px; object-fit: cover; border-radius: 12px; margin-top: 10px; display: none; border: 2px solid var(--border-color); }
+    #image-preview, #scout-image-preview { width: 100%; max-height: 250px; object-fit: cover; border-radius: 12px; margin-top: 10px; display: none; border: 2px solid var(--border-color); }
 
     .submit-btn { color: white; border: none; border-radius: 15px; height: 70px; width: 100%; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 25px; display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.2; box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
     .custom-input { display: none; margin-top: 8px; border-color: var(--secondary) !important; background-color: #fffdf5 !important; }
@@ -88,12 +91,13 @@
     .success-footer { padding: 20px; text-align: center; display: flex; flex-direction: column; gap: 12px; }
     .btn-print { background: #0288D1; color: white; border: none; border-radius: 12px; height: 60px; font-size: 18px; font-weight: bold; display: flex; justify-content: center; align-items: center; text-decoration: none; }
     .btn-close { background: #95a5a6; color: white; border: none; border-radius: 12px; height: 50px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .scan-count-badge { background-color: #e74c3c; color: white; font-size: 12px; padding: 2px 8px; border-radius: 10px; margin-left: 5px; display: none; }
   </style>
 </head>
 <body>
 
 <div id="loading-mask"><div class="spinner"></div><div id="loading-text" style="font-weight:bold; color:#2E7D32;">系統處理中...</div></div>
-<div id="success-modal"><div class="success-card"><div id="modal-title" class="success-header">🎉 處理成功！</div><div id="success-content" class="success-body">加載中...</div><div class="success-footer"><button class="btn-close" onclick="closeSuccessModal()">返回繼續作業</button></div></div></div>
+<div id="success-modal"><div class="success-card"><div id="modal-title" class="success-header">🎉 處理成功！</div><div id="success-content" class="success-body">加載中...</div><div class="success-footer"><a id="btn-print-link" href="#" target="_blank" class="btn-print" style="display:none;">🖨️ 開啟標籤並列印</a><button class="btn-close" onclick="closeSuccessModal()">返回繼續作業</button></div></div></div>
 
 <div id="home-view">
     <div class="home-header"><h2>VDS 智慧農業系統</h2><span class="sub-title">Hệ thống Quản lý VDS</span></div>
@@ -107,29 +111,94 @@
 
 <div id="seed-module" style="display: none;">
     <button class="back-btn" onclick="goHome()">⬅️ 返回主選單</button>
-    <div class="tab-container"><button class="tab-btn active seed-inbound" onclick="switchTab('seed', 'inbound')">📦 進貨</button><button class="tab-btn seed-outbound" onclick="switchTab('seed', 'outbound')">🚜 領用</button><button class="tab-btn seed-return" onclick="switchTab('seed', 'return')">🔄 歸還</button><button class="tab-btn seed-plant" onclick="switchTab('seed', 'plant')">🌍 種植</button></div>
-    <div id="seed-inbound-section" class="card"><h3 style="color: var(--primary);">🌱 種子進貨</h3><label>📅 日期</label><input type="date" id="inbound-date"><label>📸 1. 條碼</label><input type="text" id="original-barcode"><label>🥕 2. 品種</label><select id="seed-variety"><option value="日本黑田五寸">日本黑田五寸</option><option value="向陽二號">向陽二號</option></select><label>🏢 3. 廠商</label><select id="seed-vendor"><option value="生生種苗">生生種苗</option><option value="農友種苗">農友種苗</option></select><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"><div><label>📦 箱數</label><input type="number" id="box-qty" value="1"></div><div><label>🥫 每箱數量</label><input type="number" id="cans-per-box" value="50"></div></div><button class="submit-btn" style="background: var(--primary);" onclick="submitSeedInbound()"><span>📤 建立批號</span></button></div>
-    <div id="seed-outbound-section" class="card" style="display: none;"><h3 style="color: var(--outbound);">🚜 批次領用</h3><label>📅 日期</label><input type="date" id="outbound-date"><label>📸 掃描 <span id="outbound-count" class="scan-count-badge">0</span></label><button class="scan-btn" onclick="scanMultiBarcode('vds-outbound-barcodes', 'outbound-count')">📷 連掃</button><textarea id="vds-outbound-barcodes" rows="4"></textarea><button class="submit-btn" style="background: var(--outbound);" onclick="submitSeedAction('種子領用_寫入', 'outbound-date', 'vds-outbound-barcodes', 'seed-outbound')"><span>確認出庫</span></button></div>
-    <div id="seed-return-section" class="card" style="display: none;"><h3 style="color: var(--return);">🔄 退回歸還</h3><label>📅 日期</label><input type="date" id="return-date"><label>📸 掃描 <span id="return-count" class="scan-count-badge">0</span></label><button class="scan-btn" onclick="scanMultiBarcode('vds-return-barcodes', 'return-count')">📷 連掃</button><textarea id="vds-return-barcodes" rows="4"></textarea><button class="submit-btn" style="background: var(--return);" onclick="submitSeedAction('種子歸還_寫入', 'return-date', 'vds-return-barcodes', 'seed-return')"><span>確認退回</span></button></div>
-    <div id="seed-plant-section" class="card" style="display: none;"><h3 style="color: var(--plant);">🌍 批次綁定</h3><label>📅 日期</label><input type="date" id="plant-date"><label>📸 掃描 <span id="plant-count" class="scan-count-badge">0</span></label><button class="scan-btn" onclick="scanMultiBarcode('vds-plant-barcodes', 'plant-count')">📷 連掃</button><textarea id="vds-plant-barcodes" rows="4"></textarea><label>📍 農地</label><input type="text" id="seed-field-number" placeholder="輸入農地"><button class="submit-btn" style="background: var(--plant);" onclick="submitSeedPlanting()"><span>確認種植</span></button></div>
+    <div class="tab-container">
+        <button class="tab-btn active seed-inbound" onclick="switchTab('seed', 'inbound')">📦 進貨</button>
+        <button class="tab-btn seed-outbound" onclick="switchTab('seed', 'outbound')">🚜 領用</button>
+        <button class="tab-btn seed-return" onclick="switchTab('seed', 'return')">🔄 歸還</button>
+        <button class="tab-btn seed-plant" onclick="switchTab('seed', 'plant')">🌍 種植</button>
+    </div>
+    
+    <div id="seed-inbound-section" class="card">
+        <h3 style="color: var(--primary);">🌱 種子進貨</h3>
+        <label>📅 日期</label><input type="date" id="inbound-date">
+        <label>📸 1. 條碼</label><button class="scan-btn" onclick="scanSingleBarcode('original-barcode')" style="margin-bottom:8px;">📷 掃描</button><input type="text" id="original-barcode" placeholder="輸入條碼...">
+        <label>🥕 2. 品種</label><select id="seed-variety" onchange="checkCustom('seed-variety')"><option value="" disabled selected>請選擇...</option><option value="日本黑田五寸">日本黑田五寸</option><option value="向陽二號">向陽二號</option><option value="custom">✏️ 其他</option></select><input type="text" id="seed-variety-custom" class="custom-input" placeholder="輸入品種">
+        <label>🏢 3. 廠商</label><select id="seed-vendor" onchange="checkCustom('seed-vendor')"><option value="" disabled selected>請選擇...</option><option value="生生種苗">生生種苗</option><option value="農友種苗">農友種苗</option><option value="custom">✏️ 其他</option></select><input type="text" id="seed-vendor-custom" class="custom-input" placeholder="輸入廠商">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"><div><label>📦 箱數</label><input type="number" id="box-qty" value="1"></div><div><label>🥫 每箱數量</label><input type="number" id="cans-per-box" value="50"></div></div>
+        <button class="submit-btn" style="background: var(--primary);" onclick="submitSeedInbound()"><span>📤 建立批號</span></button>
+    </div>
+    
+    <div id="seed-outbound-section" class="card" style="display: none;">
+        <h3 style="color: var(--outbound);">🚜 批次領用</h3>
+        <label>📅 日期</label><input type="date" id="outbound-date">
+        <label>📸 掃描 <span id="outbound-count" class="scan-count-badge">0</span></label><button class="scan-btn" onclick="scanMultiBarcode('vds-outbound-barcodes', 'outbound-count')" style="margin-bottom:8px;">📷 連掃</button><textarea id="vds-outbound-barcodes" rows="4" placeholder="掃描或輸入條碼..."></textarea>
+        <button class="submit-btn" style="background: var(--outbound);" onclick="submitSeedAction('種子領用_寫入', 'outbound-date', 'vds-outbound-barcodes', 'seed-outbound')"><span>確認出庫</span></button>
+    </div>
+    
+    <div id="seed-return-section" class="card" style="display: none;">
+        <h3 style="color: var(--return);">🔄 退回歸還</h3>
+        <label>📅 日期</label><input type="date" id="return-date">
+        <label>📸 掃描 <span id="return-count" class="scan-count-badge">0</span></label><button class="scan-btn" onclick="scanMultiBarcode('vds-return-barcodes', 'return-count')" style="margin-bottom:8px;">📷 連掃</button><textarea id="vds-return-barcodes" rows="4" placeholder="掃描或輸入條碼..."></textarea>
+        <button class="submit-btn" style="background: var(--return);" onclick="submitSeedAction('種子歸還_寫入', 'return-date', 'vds-return-barcodes', 'seed-return')"><span>確認退回</span></button>
+    </div>
+    
+    <div id="seed-plant-section" class="card" style="display: none;">
+        <h3 style="color: var(--plant);">🌍 批次綁定</h3>
+        <label>📅 日期</label><input type="date" id="plant-date">
+        <label>📸 掃描 <span id="plant-count" class="scan-count-badge">0</span></label><button class="scan-btn" onclick="scanMultiBarcode('vds-plant-barcodes', 'plant-count')" style="margin-bottom:8px;">📷 連掃</button><textarea id="vds-plant-barcodes" rows="4" placeholder="掃描或輸入條碼..."></textarea>
+        <label>📍 農地</label><input type="text" id="seed-field-number" placeholder="輸入綁定農地">
+        <button class="submit-btn" style="background: var(--plant);" onclick="submitSeedPlanting()"><span>確認種植</span></button>
+    </div>
 </div>
 
 <div id="mat-module" style="display: none;">
     <button class="back-btn" onclick="goHome()">⬅️ 返回主選單</button>
-    <div class="tab-container"><button class="tab-btn active mat-inbound" onclick="switchTab('mat', 'inbound')">📦 進貨</button><button class="tab-btn mat-outbound" onclick="switchTab('mat', 'outbound')">🚜 領用</button><button class="tab-btn mat-return" onclick="switchTab('mat', 'return')">🔄 歸還</button><button class="tab-btn mat-apply" onclick="switchTab('mat', 'apply')">🌍 施用</button></div>
-    <div id="mat-inbound-section" class="card"><h3 style="color: var(--mat-in);">📦 資材進貨</h3><label>📅 日期</label><input type="date" id="mat-inbound-date"><label>📸 條碼</label><input type="text" id="mat-barcode"><label>🏷️ 種類</label><select id="mat-type"><option value="肥料">🌱 肥料</option><option value="農藥">🧪 農藥</option></select><label>✏️ 品名</label><input type="text" id="mat-name"><label>➕ 數量</label><input type="number" id="mat-qty" value="1"><button class="submit-btn" style="background: var(--mat-in);" onclick="submitMatInbound()"><span>📦 確認入庫</span></button></div>
-    <div id="mat-outbound-section" class="card" style="display: none;"><h3 style="color: var(--mat-out);">🚜 倉庫領出</h3><label>📅 日期</label><input type="date" id="mat-outbound-date"><label>📸 條碼</label><input type="text" id="mat-outbound-barcode"><label>➖ 數量</label><input type="number" id="mat-outbound-qty" value="1"><button class="submit-btn" style="background: var(--mat-out);" onclick="submitMatAction('資材領用_寫入', 'mat-outbound-date', 'mat-outbound-barcode', 'mat-outbound-qty', 'mat-outbound')"><span>🚜 確認領出</span></button></div>
-    <div id="mat-return-section" class="card" style="display: none;"><h3 style="color: var(--mat-ret);">🔄 退回庫存</h3><label>📅 日期</label><input type="date" id="mat-return-date"><label>📸 條碼</label><input type="text" id="mat-return-barcode"><label>➕ 數量</label><input type="number" id="mat-return-qty" value="1"><button class="submit-btn" style="background: var(--mat-ret);" onclick="submitMatAction('資材歸還_寫入', 'mat-return-date', 'mat-return-barcode', 'mat-return-qty', 'mat-return')"><span>🔄 確認退回</span></button></div>
+    <div class="tab-container">
+        <button class="tab-btn active mat-inbound" onclick="switchTab('mat', 'inbound')">📦 進貨</button>
+        <button class="tab-btn mat-outbound" onclick="switchTab('mat', 'outbound')">🚜 領用</button>
+        <button class="tab-btn mat-return" onclick="switchTab('mat', 'return')">🔄 歸還</button>
+        <button class="tab-btn mat-apply" onclick="switchTab('mat', 'apply')">🌍 施用</button>
+    </div>
+    
+    <div id="mat-inbound-section" class="card">
+        <h3 style="color: var(--mat-in);">📦 資材進貨</h3>
+        <label>📅 日期</label><input type="date" id="mat-inbound-date">
+        <label>📸 條碼</label><button class="scan-btn" style="background: #16a085; margin-bottom:8px;" onclick="scanSingleBarcode('mat-barcode')">📷 掃描</button><input type="text" id="mat-barcode" placeholder="輸入條碼...">
+        <label>🏷️ 種類</label><select id="mat-type"><option value="肥料">🌱 肥料</option><option value="農藥">🧪 農藥</option></select>
+        <label>✏️ 品名</label><input type="text" id="mat-name" placeholder="例如：特優根肥料 20kg">
+        <label>➕ 數量</label><input type="number" id="mat-qty" value="1" min="1">
+        <button class="submit-btn" style="background: var(--mat-in);" onclick="submitMatInbound()"><span>📦 確認入庫</span></button>
+    </div>
+    
+    <div id="mat-outbound-section" class="card" style="display: none;">
+        <h3 style="color: var(--mat-out);">🚜 倉庫領出</h3>
+        <label>📅 日期</label><input type="date" id="mat-outbound-date">
+        <label>📸 條碼</label><button class="scan-btn" style="background: #d35400; margin-bottom:8px;" onclick="scanSingleBarcode('mat-outbound-barcode')">📷 掃描</button><input type="text" id="mat-outbound-barcode" placeholder="輸入條碼...">
+        <label>➖ 數量</label><input type="number" id="mat-outbound-qty" value="1" min="0.1" step="0.1">
+        <button class="submit-btn" style="background: var(--mat-out);" onclick="submitMatAction('資材領用_寫入', 'mat-outbound-date', 'mat-outbound-barcode', 'mat-outbound-qty', 'mat-outbound')"><span>🚜 確認領出</span></button>
+    </div>
+    
+    <div id="mat-return-section" class="card" style="display: none;">
+        <h3 style="color: var(--mat-ret);">🔄 退回庫存</h3>
+        <label>📅 日期</label><input type="date" id="mat-return-date">
+        <label>📸 條碼</label><button class="scan-btn" style="background: #2980b9; margin-bottom:8px;" onclick="scanSingleBarcode('mat-return-barcode')">📷 掃描</button><input type="text" id="mat-return-barcode" placeholder="輸入條碼...">
+        <label>➕ 數量</label><input type="number" id="mat-return-qty" value="1" min="0.1" step="0.1">
+        <button class="submit-btn" style="background: var(--mat-ret);" onclick="submitMatAction('資材歸還_寫入', 'mat-return-date', 'mat-return-barcode', 'mat-return-qty', 'mat-return')"><span>🔄 確認退回</span></button>
+    </div>
+    
     <div id="mat-apply-section" class="card" style="display: none;">
         <h3 style="color: var(--mat-apply);">🌍 田間多農地施用</h3>
         <label>📅 日期</label><input type="date" id="mat-apply-date">
+        
         <label>🛒 1. 加入混合桶</label>
-        <div style="display: flex; gap: 8px; margin-bottom: 5px;"><input type="text" id="mat-apply-add-barcode" placeholder="條碼" style="flex: 2;"><input type="number" id="mat-apply-add-qty" placeholder="用量" style="flex: 1;"></div>
+        <div style="display: flex; gap: 8px; margin-bottom: 5px;"><input type="text" id="mat-apply-add-barcode" placeholder="條碼" style="flex: 2;"><input type="number" id="mat-apply-add-qty" placeholder="用量" style="flex: 1;" min="0.1" step="0.1"></div>
         <button onclick="addMixItem()" style="background: #e8daef; color: #8e44ad; font-weight: bold; border: 2px solid #8e44ad; width: 100%; padding: 12px; border-radius: 10px; cursor: pointer;">➕ 加入混合桶</button>
         <div class="mix-list" id="mix-items-container"><div style="color: #95a5a6; text-align: center; margin-top: 15px;">混合桶是空的</div></div>
+        
         <label>📍 2. 農地 (可多選)</label>
-        <div class="field-grid" id="mat-fields-container"><div class="field-btn" onclick="toggleField(this, 'A區-01')">A區-01</div><div class="field-btn" onclick="toggleField(this, 'A區-02')">A區-02</div></div>
-        <input type="text" id="mat-field-number-custom" class="custom-input" placeholder="手動輸入農地">
+        <div class="field-grid" id="mat-fields-container"><div class="field-btn" onclick="toggleField(this, 'A區-01')">A區-01</div><div class="field-btn" onclick="toggleField(this, 'A區-02')">A區-02</div><div class="field-btn" onclick="toggleField(this, 'B區-01')">B區-01</div><div class="field-btn" onclick="toggleField(this, 'custom')">✏️ 其他</div></div>
+        <input type="text" id="mat-field-number-custom" class="custom-input" placeholder="手動輸入農地 (多個請用逗號分開)">
+        
         <label>📸 3. 拍照存證</label><div class="camera-upload-btn">📷 開啟相機<input type="file" accept="image/*" capture="environment" onchange="compressAndPreviewImage(event)"></div><img id="image-preview" src="" alt="照片預覽">
         <button class="submit-btn" style="background: var(--mat-apply);" onclick="submitMatApplyMix()"><span>🌍 上傳混合施用紀錄</span></button>
     </div>
@@ -194,6 +263,7 @@
 </div>
 
 <script>
+// ================= 全域變數與初始化 =================
 const LIFF_ID = "2009601199-exo5jfDe"; 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz0awiapo_XZJ_BmF52MNVLTi2OwOfPsBRl-VjtdvcNslWDLsA-YBdgmbWKO6GxECnF/exec"; 
 let currentCompressedImage = "";
@@ -207,11 +277,40 @@ window.onload = function() {
     liff.init({ liffId: LIFF_ID }).then(() => { if (!liff.isLoggedIn()) liff.login(); }).catch(err => console.error(err));
 };
 
+// ================= UI 導航與切換邏輯 =================
 function openModule(moduleId) { document.getElementById('home-view').style.display = 'none'; document.getElementById('seed-module').style.display = 'none'; document.getElementById('mat-module').style.display = 'none'; document.getElementById('scout-module').style.display = 'none'; document.getElementById(moduleId + '-module').style.display = 'block'; window.scrollTo(0,0); }
 function goHome() { document.getElementById('seed-module').style.display = 'none'; document.getElementById('mat-module').style.display = 'none'; document.getElementById('scout-module').style.display = 'none'; document.getElementById('home-view').style.display = 'block'; window.scrollTo(0,0); currentCompressedImage = ""; }
 function switchTab(module, tab) { document.querySelectorAll(`#${module}-module .card`).forEach(sec => sec.style.display = 'none'); document.querySelectorAll(`#${module}-module .tab-btn`).forEach(btn => btn.classList.remove('active')); document.getElementById(`${module}-${tab}-section`).style.display = 'block'; document.querySelector(`.${module}-${tab}`).classList.add('active'); }
 function toggleField(element, val) { if (val === 'custom') { let customInput = document.getElementById('mat-field-number-custom'); if (element.classList.contains('active')) { element.classList.remove('active'); customInput.style.display = 'none'; } else { element.classList.add('active'); customInput.style.display = 'block'; customInput.focus(); } return; } if (element.classList.contains('active')) { element.classList.remove('active'); selectedFields = selectedFields.filter(f => f !== val); } else { element.classList.add('active'); selectedFields.push(val); } }
 function checkCustom(type) { var sel = document.getElementById(type), inp = document.getElementById(type + '-custom'); if (sel.value === 'custom') { inp.style.display = 'block'; inp.focus(); } else { inp.style.display = 'none'; inp.value = ''; } }
+
+// ================= 掃描與相機壓縮 =================
+function scanSingleBarcode(targetInputId) { if (liff.isInClient() && liff.isApiAvailable('scanCodeV2')) { liff.scanCodeV2().then(result => { document.getElementById(targetInputId).value = result.value; }).catch(err => {}); } else { document.getElementById(targetInputId).value = "TEST-" + Math.floor(Math.random() * 100); } }
+
+function scanMultiBarcode(textareaId, countBadgeId) {
+    if (liff.isInClient() && liff.isApiAvailable('scanCodeV2')) {
+        liff.scanCodeV2().then(result => {
+            let val = result.value.trim();
+            let el = document.getElementById(textareaId);
+            let currentList = el.value ? el.value.split('\n') : [];
+            if (currentList.includes(val)) { alert("⚠️ 這罐【" + val + "】已經在清單裡囉！不用重複掃。"); } 
+            else {
+                currentList.push(val);
+                el.value = currentList.join('\n');
+                let badge = document.getElementById(countBadgeId);
+                badge.innerText = "已掃 " + currentList.length + " 罐";
+                badge.style.display = "inline-block";
+            }
+            setTimeout(() => { scanMultiBarcode(textareaId, countBadgeId); }, 500);
+        }).catch(err => {});
+    } else {
+        if (!liff.isInClient()) {
+            let el = document.getElementById(textareaId); let randomId = "VDS-TEST-" + Math.floor(Math.random() * 100);
+            el.value = el.value ? el.value + '\n' + randomId : randomId;
+            document.getElementById(countBadgeId).innerText = "已掃 " + el.value.split('\n').length + " 罐"; document.getElementById(countBadgeId).style.display = "inline-block";
+        } else alert("❌ 需在手機 LINE APP 使用！");
+    }
+}
 
 function compressAndPreviewImage(event) {
     const file = event.target.files[0]; if (!file) return;
@@ -235,15 +334,35 @@ function compressAndPreviewImage(event) {
     }
 }
 
+// ================= 🛒 混合桶邏輯 =================
+function addMixItem() {
+    let bc = document.getElementById('mat-apply-add-barcode').value.trim();
+    let qty = parseFloat(document.getElementById('mat-apply-add-qty').value) || 0;
+    if (!bc || qty <= 0) return alert("❌ 請先輸入條碼，並填寫大於 0 的數量！");
+    
+    let exists = mixItemsList.find(i => i.barcode === bc);
+    if (exists) { exists.qty += qty; } else { mixItemsList.push({ barcode: bc, qty: qty }); }
+    
+    document.getElementById('mat-apply-add-barcode').value = '';
+    document.getElementById('mat-apply-add-qty').value = '';
+    renderMixList();
+}
+function removeMixItem(index) { mixItemsList.splice(index, 1); renderMixList(); }
+function renderMixList() {
+    let container = document.getElementById('mix-items-container');
+    if (mixItemsList.length === 0) { container.innerHTML = '<div style="color: #95a5a6; text-align: center; margin-top: 15px;">混合桶目前是空的</div>'; return; }
+    let html = '';
+    mixItemsList.forEach((item, idx) => {
+        html += `<div class="mix-item"><div><span style="font-weight:bold; color:var(--mat-apply); font-size:16px;">${item.barcode}</span><br><span style="color:#7f8c8d; font-size:14px;">施用量: ${item.qty} 單位</span></div><button class="mix-item-del" onclick="removeMixItem(${idx})">刪除</button></div>`;
+    });
+    container.innerHTML = html;
+}
+
 // ================= 🧮 發芽率開關與計算機邏輯 =================
 function toggleGerminationCalc() {
     var isChecked = document.getElementById('scout-germ-toggle').checked;
-    if (isChecked) {
-        document.getElementById('germination-calc-box').style.display = 'block';
-        calcGermRate(); // 顯示時自動試算一次
-    } else {
-        document.getElementById('germination-calc-box').style.display = 'none';
-    }
+    if (isChecked) { document.getElementById('germination-calc-box').style.display = 'block'; calcGermRate(); } 
+    else { document.getElementById('germination-calc-box').style.display = 'none'; }
 }
 
 function calcGermRate() {
@@ -265,17 +384,113 @@ function calcGermRate() {
     }
 }
 
-// ================= 🚶‍♂️ 巡田紀錄 API =================
+// ================= 🚀 API 呼叫區塊：種子模組 =================
+function submitSeedInbound() {
+    var date = document.getElementById('inbound-date').value;
+    var barcode = document.getElementById('original-barcode').value.trim();
+    var vSelect = document.getElementById('seed-variety');
+    var variety = vSelect.value === 'custom' ? document.getElementById('seed-variety-custom').value.trim() : vSelect.value;
+    var venSelect = document.getElementById('seed-vendor');
+    var vendor = venSelect.value === 'custom' ? document.getElementById('seed-vendor-custom').value.trim() : venSelect.value;
+    var boxes = parseInt(document.getElementById('box-qty').value) || 0;
+    var cans = parseInt(document.getElementById('cans-per-box').value) || 0;
+
+    if (!barcode || !variety || !vendor) return alert("❌ 請確認欄位皆已填寫並輸入條碼！");
+    let totalCans = boxes * cans;
+    if (!confirm(`確定入庫：共 ${totalCans} 罐？`)) return;
+
+    showLoading("正在生成 PDF 標籤檔案...");
+    fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "種子進貨_寫入", date, barcode, variety, vendor, boxes, cansPerBox: cans, totalCans }) })
+    .then(res => res.json()).then(data => handleResponse(data, "seed-inbound")).catch(() => hideLoading(true));
+}
+
+function submitSeedAction(actionName, dateId, textareaId, type) {
+    var date = document.getElementById(dateId).value;
+    var barcodes = document.getElementById(textareaId).value.trim().split('\n').filter(Boolean);
+    if (barcodes.length === 0) return alert("❌ 請先掃描或輸入至少一罐種子條碼！");
+    let actionText = type === "seed-outbound" ? "領用出庫" : "退回在庫";
+    if (!confirm(`確定要將清單中的 ${barcodes.length} 罐種子【${actionText}】嗎？`)) return;
+
+    showLoading(`正在批次處理中...`);
+    fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: actionName, date: date, vdsBarcodes: barcodes }) })
+    .then(res => res.json()).then(data => handleResponse(data, type)).catch(() => hideLoading(true));
+}
+
+function submitSeedPlanting() {
+    var date = document.getElementById('plant-date').value;
+    var barcodes = document.getElementById('vds-plant-barcodes').value.trim().split('\n').filter(Boolean);
+    var fieldNum = document.getElementById('seed-field-number').value.trim();
+    
+    if (barcodes.length === 0) return alert("❌ 請先掃描或輸入至少一罐種子！");
+    if (!fieldNum) return alert("❌ 請輸入要綁定的農地編號！");
+    if (!confirm(`確定要將這 ${barcodes.length} 罐種子，種在【 ${fieldNum} 】嗎？`)) return;
+
+    showLoading("正在批次綁定農地資料...");
+    fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "種子種植_寫入", date: date, vdsBarcodes: barcodes, fieldNum: fieldNum }) })
+    .then(res => res.json()).then(data => handleResponse(data, "seed-plant")).catch(() => hideLoading(true));
+}
+
+// ================= 🚀 API 呼叫區塊：肥料農藥模組 =================
+function submitMatInbound() {
+    var date = document.getElementById('mat-inbound-date').value;
+    var barcode = document.getElementById('mat-barcode').value.trim();
+    var type = document.getElementById('mat-type').value; 
+    var name = document.getElementById('mat-name').value.trim(); 
+    var qty = parseFloat(document.getElementById('mat-qty').value) || 0;
+    
+    if (!barcode || !type || !name || qty <= 0) return alert("❌ 請確認所有欄位！");
+    if (!confirm(`確定入庫：【${name}】共 ${qty} 單位？`)) return;
+    
+    showLoading("更新資材庫存...");
+    fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "資材進貨_寫入", date, barcode, type, name, qty }) })
+    .then(res => res.json()).then(data => handleResponse(data, "mat-inbound")).catch(() => hideLoading(true));
+}
+
+function submitMatAction(actionName, dateId, barcodeId, qtyId, type) {
+    var date = document.getElementById(dateId).value; 
+    var barcode = document.getElementById(barcodeId).value.trim(); 
+    var qty = parseFloat(document.getElementById(qtyId).value) || 0;
+    
+    if (!barcode || qty <= 0) return alert("❌ 請確認條碼與數量！");
+    let actionText = type === "mat-outbound" ? "領出" : "退回";
+    if (!confirm(`確定要${actionText} ${qty} 單位的資材嗎？`)) return;
+    
+    showLoading(`正在處理${actionText}...`);
+    fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: actionName, date: date, barcode: barcode, qty: qty }) })
+    .then(res => res.json()).then(data => handleResponse(data, type)).catch(() => hideLoading(true));
+}
+
+function submitMatApplyMix() {
+    var date = document.getElementById('mat-apply-date').value;
+    let finalFields = [...selectedFields];
+    let customInput = document.getElementById('mat-field-number-custom');
+    if (customInput.style.display === 'block' && customInput.value.trim() !== '') { finalFields.push(customInput.value.trim()); }
+    
+    if (mixItemsList.length === 0) return alert("❌ 混合桶內沒有任何資材！請先掃描並加入。");
+    if (finalFields.length === 0) return alert("❌ 請選擇至少一塊施用的農地！");
+    if (!currentCompressedImage) if(!confirm("⚠️ 未上傳現場照片，確定送出嗎？")) return;
+    
+    let fieldsString = finalFields.join(', '); 
+    if (!confirm(`確定在【${fieldsString}】施用了混合桶內的 ${mixItemsList.length} 種資材嗎？`)) return;
+
+    showLoading("正在整批上傳履歷與照片...");
+    fetch(GAS_URL, { 
+        method: 'POST', 
+        body: JSON.stringify({ action: "資材施用_寫入", date: date, items: mixItemsList, fieldNum: fieldsString, imageBase64: currentCompressedImage }) 
+    }).then(res => res.json()).then(data => handleResponse(data, "mat-apply")).catch(() => hideLoading(true));
+}
+
+// ================= 🚀 API 呼叫區塊：巡田紀錄模組 =================
 function submitScout() {
     var date = document.getElementById('scout-date').value;
     var fSelect = document.getElementById('scout-field-number');
     var fieldNum = fSelect.value === 'custom' ? document.getElementById('scout-field-number-custom').value.trim() : fSelect.value;
-    var category = document.getElementById('scout-category').value; // 這邊現在只有生長良好/病蟲害等
+    var category = document.getElementById('scout-category').value; 
     var notes = document.getElementById('scout-notes').value.trim();
 
     if (!fieldNum) return alert("❌ 請選擇或輸入巡視的農地編號！");
     
-    // 如果有勾選【記錄發芽率】
+    // 檢查是否有勾選發芽率計算
     if (document.getElementById('scout-germ-toggle').checked) {
         let actualVal = document.getElementById('scout-actual').value;
         if (!actualVal) return alert("❌ 您已勾選發芽率紀錄，請輸入「實際數到幾株」！");
@@ -283,7 +498,7 @@ function submitScout() {
         let stats = calcGermRate();
         if (stats) {
             let autoText = `【發芽率調查：${stats.rate.toFixed(1)}%】\n實測 ${stats.actual} 株 / 滿苗標準應為 ${stats.expected.toFixed(1)} 株\n(設定條件: 測量長${document.getElementById('scout-len').value}cm, 株距${document.getElementById('scout-space').value}cm, ${document.getElementById('scout-rows').value}行)\n┈┈┈┈┈┈\n`;
-            notes = autoText + notes; // 將算好的發芽率資料，蓋在手打的備註前面
+            notes = autoText + notes; 
         }
     }
 
@@ -297,9 +512,7 @@ function submitScout() {
     .then(res => res.json()).then(data => handleResponse(data, "scout")).catch(() => hideLoading(true));
 }
 
-function submitSeedInbound() {} function submitSeedAction() {} function submitSeedPlanting() {}
-function submitMatInbound() {} function submitMatAction() {} function submitMatApplyMix() {}
-
+// ================= UI 彈出視窗處理 =================
 function showLoading(text) { document.getElementById('loading-text').innerText = text; document.getElementById('loading-mask').style.display = 'flex'; }
 function hideLoading(error) { document.getElementById('loading-mask').style.display = 'none'; if(error) alert("⚠️ 連線失敗。"); }
 
@@ -307,25 +520,52 @@ function handleResponse(data, type) {
     hideLoading(false);
     let titleEl = document.getElementById('modal-title');
     if (type === "scout") { titleEl.innerText = "🚶‍♂️ 紀錄上傳成功"; titleEl.style.background = "linear-gradient(135deg, #27ae60, #1e8449)"; }
+    else if (type.includes("inbound")) { titleEl.innerText = "🎉 處理成功！"; titleEl.style.background = "linear-gradient(135deg, #2E7D32, #1b5e20)"; }
+    else if (type.includes("outbound") || type === "seed-plant") { titleEl.innerText = "🚜 處理成功！"; titleEl.style.background = "linear-gradient(135deg, #d35400, #a04000)"; }
+    else if (type.includes("return")) { titleEl.innerText = "🔄 處理成功！"; titleEl.style.background = "linear-gradient(135deg, #2980b9, #1f618d)"; }
+    else if (type === "mat-apply") { titleEl.innerText = "🌍 履歷上傳成功"; titleEl.style.background = "linear-gradient(135deg, #8e44ad, #5b2c6f)"; }
     else { titleEl.innerText = "🎉 處理成功！"; titleEl.style.background = "linear-gradient(135deg, #2E7D32, #1b5e20)"; } 
     
-    let msg = data.msg || data.messageText;
+    let msg = data.msg || data.messageText || "作業已完成。";
+    let urlMatch = msg.match(/(https:\/\/drive\.google\.com[^\s]+)/);
+    let pdfUrl = urlMatch ? urlMatch[0] : "";
     document.getElementById('success-content').innerText = msg.replace(/(https:\/\/drive\.google\.com[^\s]+)/, "").trim();
+    
+    let printBtn = document.getElementById('btn-print-link');
+    if (type === "seed-inbound" && pdfUrl) { printBtn.href = pdfUrl; printBtn.style.display = "flex"; } else { printBtn.style.display = "none"; }
+    
     document.getElementById('success-modal').style.display = 'flex';
 }
 
 function closeSuccessModal() {
     document.getElementById('success-modal').style.display = 'none';
-    currentCompressedImage = "";
+    
+    // 清除欄位
+    ['original-barcode', 'vds-outbound-barcodes', 'vds-return-barcodes', 'vds-plant-barcodes', 'mat-barcode', 'mat-outbound-barcode', 'mat-return-barcode'].forEach(id => {
+        if(document.getElementById(id)) document.getElementById(id).value = '';
+    });
+    
+    // 清除巡田欄位
     document.getElementById('scout-notes').value = '';
     document.getElementById('scout-actual').value = '';
-    
-    // 把發芽率計算機收起來，取消勾選
     document.getElementById('scout-germ-toggle').checked = false;
     document.getElementById('germination-calc-box').style.display = 'none';
     
+    // 清空照片
+    currentCompressedImage = "";
+    let previewMat = document.getElementById('image-preview');
+    if(previewMat) { previewMat.style.display = 'none'; previewMat.src = ''; }
     let previewScout = document.getElementById('scout-image-preview');
     if(previewScout) { previewScout.style.display = 'none'; previewScout.src = ''; }
+    
+    // 清空資材混合桶
+    mixItemsList = [];
+    renderMixList();
+    document.querySelectorAll('.field-btn').forEach(btn => btn.classList.remove('active'));
+    selectedFields = []; document.getElementById('mat-field-number-custom').style.display = 'none';
+    
+    // 重置徽章
+    document.querySelectorAll('.scan-count-badge').forEach(badge => badge.style.display = 'none');
 }
 </script>
 </body>
