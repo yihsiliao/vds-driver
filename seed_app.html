@@ -8,13 +8,22 @@
   <style>
     :root {
         --bg-color: #f4f6f8; --card-bg: #ffffff; --text-color: #2c3e50; --border-color: #dce1e6;
-        --input-bg: #ffffff; --label-color: #34495e; --sub-text: #7f8c8d; --divider: #ecf0f1;
-        --primary: #2E7D32; --secondary: #f39c12;
+        --input-bg: #ffffff; --label-color: #34495e; --sub-text: #7f8c8d;
+        --primary: #2E7D32; --secondary: #f39c12; --outbound: #d35400;
     }
-    body { background-color: var(--bg-color); padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: var(--text-color); min-height: 100vh; margin: 0; }
+    body { background-color: var(--bg-color); padding: 15px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text-color); margin: 0; }
+    
+    /* 分頁切換按鈕設計 */
+    .tab-container { display: flex; gap: 10px; margin-bottom: 20px; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .tab-btn { flex: 1; height: 50px; border-radius: 12px; border: 2px solid var(--border-color); background: white; font-size: 18px; font-weight: bold; color: var(--sub-text); cursor: pointer; transition: 0.3s; }
+    .tab-btn.active.inbound-tab { background: var(--primary); color: white; border-color: var(--primary); }
+    .tab-btn.active.outbound-tab { background: var(--outbound); color: white; border-color: var(--outbound); }
+
     .card { background: var(--card-bg); padding: 25px 20px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 480px; margin: 0 auto; box-sizing: border-box; border: 1px solid var(--border-color); }
     
-    h3 { color: var(--primary); text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 26px; letter-spacing: 1px; }
+    h3 { text-align: center; margin: 0 0 5px 0; font-weight: 800; font-size: 26px; letter-spacing: 1px; }
+    .title-inbound { color: var(--primary); }
+    .title-outbound { color: var(--outbound); }
     .sub-title { font-size: 14px; color: var(--sub-text); font-weight: 500; text-align: center; display: block; margin-bottom: 25px; }
     
     label { display: block; font-weight: 700; margin-top: 18px; margin-bottom: 8px; font-size: 16px; color: var(--label-color); }
@@ -22,180 +31,160 @@
     
     select, input[type="text"], input[type="date"], input[type="number"] { 
         width: 100%; height: 55px; font-size: 18px; font-weight: 600; border: 2px solid var(--border-color); 
-        border-radius: 12px; background-color: var(--input-bg); padding-left: 15px; appearance: none; outline: none; 
-        box-sizing: border-box; color: var(--text-color); transition: 0.2s;
+        border-radius: 12px; background-color: var(--input-bg); padding-left: 15px; box-sizing: border-box;
     }
-    select:focus, input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15); }
     
     .scan-btn { 
         background: linear-gradient(135deg, #34495e, #2c3e50); color: white; border: none; border-radius: 12px; 
         height: 60px; font-size: 18px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 5px; margin-bottom: 10px;
         display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
-    .scan-btn:active { transform: scale(0.98); }
     
-    #original-barcode { background-color: #f8f9fa; border-color: #bdc3c7; color: #16a085; font-family: monospace; letter-spacing: 1px; }
+    #original-barcode, #vds-barcode { background-color: #f8f9fa; border-color: #bdc3c7; color: #16a085; font-family: monospace; letter-spacing: 1px; }
 
     .submit-btn { 
-        background: linear-gradient(135deg, var(--primary), #1b5e20); color: white; border: none; border-radius: 15px; 
-        height: 70px; width: 100%; font-size: 20px; font-weight: 800; cursor: pointer; margin-top: 30px; 
-        box-shadow: 0 6px 15px rgba(46, 125, 50, 0.3); transition: 0.2s; display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.2;
+        color: white; border: none; border-radius: 15px; height: 70px; width: 100%; font-size: 20px; font-weight: 800; 
+        cursor: pointer; margin-top: 30px; display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.2;
     }
-    .submit-btn:active { transform: scale(0.97); }
+    .btn-inbound { background: linear-gradient(135deg, var(--primary), #1b5e20); box-shadow: 0 6px 15px rgba(46, 125, 50, 0.3); }
+    .btn-outbound { background: linear-gradient(135deg, var(--outbound), #a04000); box-shadow: 0 6px 15px rgba(211, 84, 0, 0.3); }
     .btn-sub { font-size: 13px; font-weight: 500; opacity: 0.9; margin-top: 2px; }
 
-    .custom-input { display: none; margin-top: 8px; border-color: var(--secondary) !important; background-color: #fffdf5 !important; }
-
-    #loading-mask { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
+    .custom-input { display: none; margin-top: 8px; }
+    #loading-mask { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; }
     .spinner { width: 45px; height: 45px; border: 5px solid var(--border-color); border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    #loading-text { font-size: 18px; color: var(--primary); font-weight: bold; }
     
-    #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 10px; padding: 16px; position: fixed; z-index: 10000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 16px; font-weight: bold; opacity: 0; transition: opacity 0.3s, bottom 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-    #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
-
-    /* ★ 專屬列印成功彈跳視窗 */
+    /* 彈跳視窗 */
     #success-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10001; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-    .success-card { background: white; width: 100%; max-width: 360px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out; display: flex; flex-direction: column; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .success-card { background: white; width: 100%; max-width: 360px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
     .success-header { background: linear-gradient(135deg, #2E7D32, #1b5e20); color: white; padding: 20px; text-align: center; font-weight: bold; font-size: 24px; }
     .success-body { padding: 20px; font-size: 16px; color: #333; line-height: 1.6; white-space: pre-wrap; background-color: #f9f9f9; font-family: monospace; }
-    .success-footer { padding: 20px; background: white; text-align: center; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 12px; }
-    .btn-print { background: #0288D1; color: white; border: none; border-radius: 12px; height: 60px; font-size: 20px; font-weight: bold; width: 100%; cursor: pointer; display: flex; justify-content: center; align-items: center; text-decoration: none; box-shadow: 0 4px 10px rgba(2, 136, 209, 0.3); }
-    .btn-print:active { transform: scale(0.97); }
-    .btn-close { background: #95a5a6; color: white; border: none; border-radius: 12px; height: 50px; font-size: 16px; font-weight: bold; width: 100%; cursor: pointer; }
+    .success-footer { padding: 20px; text-align: center; display: flex; flex-direction: column; gap: 12px; }
+    .btn-print { background: #0288D1; color: white; border: none; border-radius: 12px; height: 60px; font-size: 20px; font-weight: bold; display: flex; justify-content: center; align-items: center; text-decoration: none; }
+    .btn-close { background: #95a5a6; color: white; border: none; border-radius: 12px; height: 50px; font-size: 16px; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
 
 <div id="loading-mask">
     <div class="spinner"></div>
-    <div id="loading-text">系統初始化中...</div>
+    <div id="loading-text" style="font-weight:bold; color:#2E7D32;">系統處理中...</div>
 </div>
-<div id="toast"></div>
 
 <div id="success-modal">
     <div class="success-card">
-        <div class="success-header">🎉 入庫成功！</div>
+        <div id="modal-title" class="success-header">🎉 處理成功！</div>
         <div id="success-content" class="success-body">加載中...</div>
         <div class="success-footer">
-            <a id="btn-print-link" href="#" target="_blank" class="btn-print">🖨️ 開啟標籤並列印</a>
+            <a id="btn-print-link" href="#" target="_blank" class="btn-print" style="display:none;">🖨️ 開啟標籤並列印</a>
             <button class="btn-close" onclick="closeSuccessModal()">返回繼續作業</button>
         </div>
     </div>
 </div>
 
-<div class="card">
-    <h3>🌱 VDS 倉儲管理</h3>
-    <span class="sub-title">Hệ thống kho & truy xuất nguồn gốc</span>
+<div class="tab-container">
+    <button class="tab-btn active inbound-tab" onclick="switchTab('inbound')">📦 進貨作業</button>
+    <button class="tab-btn outbound-tab" onclick="switchTab('outbound')">🚜 領用作業</button>
+</div>
+
+<div id="inbound-section" class="card">
+    <h3 class="title-inbound">🌱 VDS 種子進貨</h3>
+    <span class="sub-title">Nhập kho hạt giống</span>
     
-    <label>📅 進貨日期 <span>(Ngày nhập kho)</span></label>
+    <label>📅 進貨日期</label>
     <input type="date" id="inbound-date">
 
-    <label>📸 1. 原廠種子條碼 <span>(Quét mã vạch gốc)</span></label>
-    <button class="scan-btn" onclick="scanOriginalBarcode()">
-        <span style="font-size: 24px;">📷</span> 點擊打開相機掃描
-    </button>
-    <input type="text" id="original-barcode" placeholder="掃描結果會出現在這裡..." readonly>
+    <label>📸 1. 原廠種子條碼</label>
+    <button class="scan-btn" onclick="scanBarcode('original-barcode')">📷 掃描原廠條碼</button>
+    <input type="text" id="original-barcode" placeholder="掃描結果..." readonly>
 
-    <label>🥕 2. 品種名稱 <span>(Tên giống)</span></label>
+    <label>🥕 2. 品種名稱</label>
     <select id="seed-variety" onchange="checkCustom('seed-variety')">
         <option value="" disabled selected>請選擇品種...</option>
         <option value="日本黑田五寸">日本黑田五寸</option>
         <option value="向陽二號">向陽二號</option>
-        <option value="改良紅輝">改良紅輝</option>
         <option value="custom">✏️ 其他 (自行輸入)</option>
     </select>
-    <input type="text" id="seed-variety-custom" class="custom-input" placeholder="請輸入品種名稱">
+    <input type="text" id="seed-variety-custom" class="custom-input" placeholder="請輸入品種">
 
-    <label>🏢 3. 供應廠商 <span>(Nhà cung cấp)</span></label>
+    <label>🏢 3. 供應廠商</label>
     <select id="seed-vendor" onchange="checkCustom('seed-vendor')">
         <option value="" disabled selected>請選擇廠商...</option>
         <option value="生生種苗">生生種苗</option>
         <option value="農友種苗">農友種苗</option>
-        <option value="已知生技">已知生技</option>
         <option value="custom">✏️ 其他 (自行輸入)</option>
     </select>
-    <input type="text" id="seed-vendor-custom" class="custom-input" placeholder="請輸入廠商名稱">
+    <input type="text" id="seed-vendor-custom" class="custom-input" placeholder="請輸入廠商">
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-        <div>
-            <label>📦 箱數 <span>(Số thùng)</span></label>
-            <input type="number" id="box-qty" value="1" min="1" style="text-align: center;">
-        </div>
-        <div>
-            <label>🥫 每箱罐數 <span>(Lon/Thùng)</span></label>
-            <input type="number" id="cans-per-box" value="50" min="1" style="text-align: center;">
-        </div>
+        <div><label>📦 箱數</label><input type="number" id="box-qty" value="1" min="1" style="text-align:center;"></div>
+        <div><label>🥫 每箱罐數</label><input type="number" id="cans-per-box" value="50" min="1" style="text-align:center;"></div>
     </div>
 
-    <button class="submit-btn" onclick="submitInbound()">
-        <span>📤 生成 VDS 專屬批號與標籤</span>
-        <span class="btn-sub">Tạo mã lô & in tem</span>
+    <button class="submit-btn btn-inbound" onclick="submitInbound()">
+        <span>📤 生成批號與標籤</span><span class="btn-sub">Tạo mã lô & in tem</span>
+    </button>
+</div>
+
+<div id="outbound-section" class="card" style="display: none;">
+    <h3 class="title-outbound">🚜 VDS 種子領用</h3>
+    <span class="sub-title">Xuất kho hạt giống</span>
+    
+    <label>📅 領用日期</label>
+    <input type="date" id="outbound-date">
+
+    <label>📸 掃描種子身分證</label>
+    <button class="scan-btn" onclick="scanBarcode('vds-barcode')" style="background: linear-gradient(135deg, #d35400, #a04000);">
+        <span style="font-size: 24px;">📷</span> 掃描 VDS 標籤
+    </button>
+    <input type="text" id="vds-barcode" placeholder="請掃描我們印出來的 QR Code" readonly>
+
+    <button class="submit-btn btn-outbound" onclick="submitOutbound()">
+        <span>🚜 確認領用出庫</span><span class="btn-sub">Xác nhận xuất kho</span>
     </button>
 </div>
 
 <script>
-// ==========================================
-// 系統設定
-// ==========================================
-const LIFF_ID = "2009601199-exo5jfDe"; // 您的全新 LIFF ID
-// 這裡保留您上次貼過來的 GAS 網址！(請確認是最新部署的那個)
+const LIFF_ID = "2009601199-exo5jfDe"; 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz0awiapo_XZJ_BmF52MNVLTi2OwOfPsBRl-VjtdvcNslWDLsA-YBdgmbWKO6GxECnF/exec"; 
 
 window.onload = function() {
     document.getElementById('inbound-date').valueAsDate = new Date();
-    
-    liff.init({ liffId: LIFF_ID }).then(function() {
-        if (!liff.isLoggedIn()) { liff.login(); return; }
-        document.getElementById('loading-mask').style.display = 'none';
-    }).catch(function(err) {
-        document.getElementById('loading-mask').style.display = 'none';
-        console.error(err);
-    });
+    document.getElementById('outbound-date').valueAsDate = new Date();
+    liff.init({ liffId: LIFF_ID }).then(() => {
+        if (!liff.isLoggedIn()) liff.login();
+    }).catch(err => console.error(err));
 };
 
+// 切換分頁邏輯
+function switchTab(tab) {
+    document.getElementById('inbound-section').style.display = (tab === 'inbound') ? 'block' : 'none';
+    document.getElementById('outbound-section').style.display = (tab === 'outbound') ? 'block' : 'none';
+    
+    document.querySelector('.inbound-tab').classList.toggle('active', tab === 'inbound');
+    document.querySelector('.outbound-tab').classList.toggle('active', tab === 'outbound');
+}
+
 function checkCustom(type) {
-    var select = document.getElementById(type);
-    var input = document.getElementById(type + '-custom');
-    if (select.value === 'custom') { 
-        input.style.display = 'block'; input.focus(); 
-    } else { 
-        input.style.display = 'none'; input.value = ''; 
-    }
+    var sel = document.getElementById(type), inp = document.getElementById(type + '-custom');
+    if (sel.value === 'custom') { inp.style.display = 'block'; inp.focus(); } else { inp.style.display = 'none'; inp.value = ''; }
 }
 
-function showToast(text) {
-    var x = document.getElementById("toast"); 
-    x.innerHTML = text; x.className = "show"; 
-    setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
-}
-
-function scanOriginalBarcode() {
+// 共用的掃描功能
+function scanBarcode(targetInputId) {
     if (liff.isInClient() && liff.isApiAvailable('scanCodeV2')) {
         liff.scanCodeV2().then(result => {
-            var barcodeInput = document.getElementById('original-barcode');
-            barcodeInput.value = result.value;
-            barcodeInput.style.backgroundColor = "#e8f5e9";
-            barcodeInput.style.borderColor = "#2E7D32";
-            setTimeout(() => { 
-                barcodeInput.style.backgroundColor = "#f8f9fa"; 
-                barcodeInput.style.borderColor = "#bdc3c7";
-            }, 1500);
-            showToast("✅ 條碼掃描成功！");
-        }).catch(error => {
-            alert("⚠️ 掃碼取消或發生錯誤");
-        });
+            document.getElementById(targetInputId).value = result.value;
+        }).catch(err => alert("⚠️ 掃碼取消"));
     } else {
         if (!liff.isInClient()) {
-            document.getElementById('original-barcode').value = "TEST-JP-99812";
-            showToast("💻 電腦版測試模式：已載入假條碼");
-        } else {
-            alert("❌ 掃碼功能需在手機 LINE APP 使用！");
-        }
+            document.getElementById(targetInputId).value = (targetInputId === 'vds-barcode') ? "VDS-TEST-01" : "TEST-JP-123";
+        } else alert("❌ 需在手機 LINE APP 使用！");
     }
 }
 
+// 送出進貨
 function submitInbound() {
     var date = document.getElementById('inbound-date').value;
     var barcode = document.getElementById('original-barcode').value.trim();
@@ -206,80 +195,71 @@ function submitInbound() {
     var boxes = parseInt(document.getElementById('box-qty').value) || 0;
     var cans = parseInt(document.getElementById('cans-per-box').value) || 0;
 
-    if (!barcode) return alert("❌ 請先掃描原廠條碼！");
-    if (!variety) return alert("❌ 請選擇或輸入品種！");
-    if (!vendor) return alert("❌ 請選擇或輸入廠商！");
-    if (boxes < 1 || cans < 1) return alert("❌ 箱數與罐數必須大於 0！");
+    if (!barcode || !variety || !vendor) return alert("❌ 請確認欄位皆已填寫並掃描條碼！");
 
     let totalCans = boxes * cans;
-    if (!confirm(`您即將入庫：\n\n📌 條碼: ${barcode}\n🌱 品種: ${variety}\n🏢 廠商: ${vendor}\n📦 數量: ${boxes} 箱 (共 ${totalCans} 罐)\n\n系統將為您自動生成 ${totalCans} 張標籤，確認無誤嗎？`)) return;
+    if (!confirm(`確定入庫：共 ${totalCans} 罐？`)) return;
 
+    showLoading("正在生成 PDF 標籤檔案...");
+    
+    fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "種子進貨_寫入", date, barcode, variety, vendor, boxes, cansPerBox: cans, totalCans }) })
+    .then(res => res.json()).then(data => handleResponse(data, true)).catch(() => hideLoading(true));
+}
+
+// 送出領用 (新功能！)
+function submitOutbound() {
+    var date = document.getElementById('outbound-date').value;
+    var vdsBarcode = document.getElementById('vds-barcode').value.trim();
+
+    if (!vdsBarcode) return alert("❌ 請先掃描我們印出來的 VDS 專屬條碼！");
+    if (!confirm(`確定要將【 ${vdsBarcode} 】領用出庫嗎？`)) return;
+
+    showLoading("正在更新雲端庫存狀態...");
+
+    fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: "種子領用_寫入", date: date, vdsBarcode: vdsBarcode }) })
+    .then(res => res.json()).then(data => handleResponse(data, false)).catch(() => hideLoading(true));
+}
+
+function showLoading(text) {
+    document.getElementById('loading-text').innerText = text;
     document.getElementById('loading-mask').style.display = 'flex';
-    document.getElementById('loading-text').innerText = "正在生成 PDF 標籤檔案...";
+}
+function hideLoading(error) {
+    document.getElementById('loading-mask').style.display = 'none';
+    if(error) alert("⚠️ 連線失敗，請檢查網路。");
+}
 
-    var payload = {
-        action: "種子進貨_寫入",
-        date: date,
-        barcode: barcode,
-        variety: variety,
-        vendor: vendor,
-        boxes: boxes,
-        cansPerBox: cans,
-        totalCans: totalCans
-    };
-
-    fetch(GAS_URL, { 
-        method: 'POST', 
-        headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-        redirect: "follow", 
-        body: JSON.stringify(payload) 
-    })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('loading-mask').style.display = 'none';
-        if(data.result === "success") {
-            showToast("🎉 進貨成功！");
-            
-            // ★ 將後端傳來的文字分離出網址
-            let msg = data.messageText;
-            let urlRegex = /(https:\/\/drive\.google\.com[^\s]+)/;
-            let urlMatch = msg.match(urlRegex);
-            let pdfUrl = urlMatch ? urlMatch[0] : "";
-            // 把網址和提示文字從原本的訊息中挖掉，讓卡片變乾淨
-            let cleanMsg = msg.replace(urlRegex, "").replace("🖨️ 您的 8x8cm 標籤 PDF 已生成完畢！請點擊下方連結下載並列印：\n\n", "").trim();
-
-            document.getElementById('success-content').innerText = cleanMsg;
-            let printBtn = document.getElementById('btn-print-link');
-            
-            if(pdfUrl) {
-                printBtn.href = pdfUrl;
-                printBtn.style.display = "flex";
-            } else {
-                printBtn.style.display = "none";
-            }
-
-            // 彈出成功畫面
-            document.getElementById('success-modal').style.display = 'flex';
-
-            // 背景還是悄悄發一個 LINE 訊息做紀錄
-            if (liff.isInClient()) {
-                liff.sendMessages([{ type: 'text', text: data.messageText }]).catch(e => console.log(e));
-            }
+function handleResponse(data, isInbound) {
+    hideLoading(false);
+    if(data.result === "success") {
+        document.getElementById('modal-title').innerText = isInbound ? "🎉 入庫成功！" : "🚜 領用成功！";
+        document.getElementById('modal-title').style.background = isInbound ? "linear-gradient(135deg, #2E7D32, #1b5e20)" : "linear-gradient(135deg, #d35400, #a04000)";
+        
+        let msg = data.messageText;
+        let urlMatch = msg.match(/(https:\/\/drive\.google\.com[^\s]+)/);
+        let pdfUrl = urlMatch ? urlMatch[0] : "";
+        
+        document.getElementById('success-content').innerText = msg.replace(/(https:\/\/drive\.google\.com[^\s]+)/, "").trim();
+        
+        let printBtn = document.getElementById('btn-print-link');
+        if(isInbound && pdfUrl) {
+            printBtn.href = pdfUrl;
+            printBtn.style.display = "flex";
         } else {
-            alert("❌ 發生錯誤：" + data.msg);
+            printBtn.style.display = "none"; // 領用不需要列印按鈕
         }
-    })
-    .catch(error => {
-        document.getElementById('loading-mask').style.display = 'none';
-        alert("⚠️ 連線失敗，請檢查網路。");
-    });
+
+        document.getElementById('success-modal').style.display = 'flex';
+        if (liff.isInClient()) liff.sendMessages([{ type: 'text', text: msg }]).catch(e => console.log(e));
+    } else {
+        alert("❌ 發生錯誤：" + data.msg);
+    }
 }
 
 function closeSuccessModal() {
     document.getElementById('success-modal').style.display = 'none';
-    // 關閉後，順便把條碼框清空，方便掃描下一箱
     document.getElementById('original-barcode').value = '';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('vds-barcode').value = '';
 }
 </script>
 </body>
