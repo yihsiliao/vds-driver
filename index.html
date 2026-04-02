@@ -1036,8 +1036,10 @@ function submitHarvest() {
     .then(data => {
         if(data.result === "success") {
             if (typeof liff !== 'undefined' && liff.isInClient()) {
-                // ★ 改由接收後端回傳的 data.messageText
-                liff.sendMessages([{ type: 'text', text: data.messageText }]).then(() => {
+                // 自動判斷：如果有 flexMessage 就發送華麗卡片，否則降級發送純文字
+                let linePayload = data.flexMessage ? data.flexMessage : { type: 'text', text: data.messageText };
+                
+                liff.sendMessages([linePayload]).then(() => {
                     document.getElementById('loading-mask').style.display = 'none'; 
                     showToast(isCorrection ? "✅ 更正回報成功！" : "✅ 回報成功！"); 
                     setTimeout(() => liff.closeWindow(), 1500);
@@ -1046,7 +1048,7 @@ function submitHarvest() {
                 });
             } else {
                 document.getElementById('loading-mask').style.display = 'none'; showToast("✅ 網頁測試成功"); 
-                alert("將送出以下內容：\n\n" + data.messageText);
+                alert("網頁版不支援顯示華麗卡片，但資料已成功寫入！");
             }
         } else { document.getElementById('loading-mask').style.display = 'none'; alert("❌ 寫入失敗：" + data.msg); }
     })
